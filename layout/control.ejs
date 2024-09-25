@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en" theme="<%=session.usuario.tema || 'purple' %>">
+<% if(userLayout['/control']?.ver){ %>
+
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="/src/public/favicon/logo.png" rel="icon" sizes="32x32" type="image/png">
+
+    <title>REHF</title>
+
+    <!---------------------- CSS ---------------------->
+
+    <!-- lib global -->
+    <link href="/src/public/lib/boxicons/css/boxicons.min.css" rel="stylesheet">
+
+    <!-- lib control -->
+    <link href="/src/private/document/alarm/alarm.min.css" rel="stylesheet">
+
+    <!-- layout -->
+    <link href="/src/public/css/theme.css" rel="stylesheet">
+    <link href="/src/private/layout/css/main.css" rel="stylesheet">
+    <link href="/src/private/layout/css/media.css" rel="stylesheet">
+
+    <link href="/src/private/layout/css/error.css" rel="stylesheet">
+    <link href="/src/private/layout/css/spinner.css" rel="stylesheet">
+    <link href="/src/private/layout/css/scroll.css" rel="stylesheet">
+    <link href="/src/private/layout/css/card.css" rel="stylesheet">
+
+
+    <!---------------------- JS ---------------------->
+
+    <!-- lib global -->
+    <script src="/src/public/lib/jquery/jquery-3.7.1.min.js"></script>
+    <script src="/src/public/lib/alarm/sweetalert2@11.min.js"></script>
+
+    <!-- lib control -->
+    <script src="/src/private/document/dropper/dropper.min.js"></script>
+    <script src="/src/private/document/alarm/alarm.min.js"></script>
+
+    <!-- layout -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>const socket = io()</script>
+    <script src="/src/private/layout/js/query.js"></script>
+    <script src="/src/private/layout/js/control.js"></script>
+
+    <!---------------------- Charge ---------------------->
+  </head>
+
+  <body style="height: 100vh !important; height: 100dvh !important;" class="load-spinner">
+    <div class="container drop-unic">
+      <div class="togglebar">
+        <div class="nav-item">
+          <div class="nav-icon">
+            <i class='bx bx-menu'></i>
+          </div>
+        </div>
+      </div>
+      <div class="sidebar">
+        <div class="navbar">
+          <% if(userLayout['/control/inicio']?.ver){ %>
+            <a class="nav-item nav-link" href="/control/inicio">
+              <div class="brand">
+                <div>R</div>
+                <div>E</div>
+                <div>H</div>
+                <div>F</div>
+              </div>
+            </a>
+            <% } %>
+
+              <% if(userLayout['/control/productos']?.ver){ %>
+                <div class="nav-item">
+                  <a class="nav-link" href="/control/productos">
+                    <div class="nav-icon">
+                      <i class="bx bx-store-alt"></i>
+                    </div>
+                    <span class="nav-tittle">Productos</span>
+                  </a>
+                </div>
+                <% } %>
+        </div>
+
+        <div class="navbar">
+          <% if(userLayout['/control/movimientos']?.ver){ %>
+            <div class="nav-item drop top">
+              <div class="nav-icon toggle bx">
+                <i class='bx bx-bar-chart-alt-2'></i>
+                <a class="nav-link" href="/control/movimientos">
+                  <span class="nav-tittle">Movimientos</span>
+                </a>
+              </div>
+              <div class="menu">
+                <% if(userLayout['/control/movimientos/ventas']?.ver){ %>
+                  <div class="nav-item">
+                    <div class="nav-icon">
+                      <i class="bx bx-cart-download"></i>
+                      <a class="nav-link" href="/control/movimientos/ventas">
+                        <span> Ventas </span>
+                      </a>
+                    </div>
+                  </div>
+                  <% } %>
+
+                    <% if(userLayout['/control/movimientos/ventas']?.ver){ %>
+                      <div class="nav-item">
+                        <div class="nav-icon">
+                          <i class='bx bx-cart-add'></i>
+                          <a class="nav-link" href="/control/movimientos/compras">
+                            <span> Compras </span>
+                          </a>
+                        </div>
+                      </div>
+                      <% } %>
+              </div>
+            </div>
+            <% } %>
+
+              <% if(userLayout['/control/mantenimiento']?.ver){ %>
+                <div class="nav-item drop top">
+                  <div class="nav-icon toggle bx">
+                    <i class='bx bx-cube'></i>
+                    <a class="nav-link" href="/control/mantenimiento">
+                      <span class="nav-tittle">Mantenimiento</span>
+                    </a>
+                  </div>
+                  <div class="menu">
+                    <% if(userLayout['/control/mantenimiento/categorias']?.ver){ %>
+                      <div class="nav-item">
+                        <div class="nav-icon">
+                          <i class="bx bx-hive"></i>
+                          <a class="nav-link" href="/control/mantenimiento/categorias">
+                            <span> Categorias </span>
+                          </a>
+                        </div>
+                      </div>
+                      <% } %>
+
+                        <% if(userLayout['/control/mantenimiento/clientes']?.ver){ %>
+                          <div class="nav-item">
+                            <div class="nav-icon">
+                              <i class="bx bx-group"></i>
+                              <a class="nav-link" href="/control/mantenimiento/clientes">
+                                <span> Clientes </span>
+                              </a>
+                            </div>
+                          </div>
+                          <% } %>
+
+                            <% if(userLayout['/control/mantenimiento/inventario']?.ver){ %>
+                              <div class="nav-item">
+                                <div class="nav-icon">
+                                  <i class="bx bx-store"></i>
+                                  <a class="nav-link" href="/control/mantenimiento/inventario">
+                                    <span> Inventario </span>
+                                  </a>
+                                </div>
+                              </div>
+                              <% } %>
+                  </div>
+                </div>
+                <% } %>
+
+                  <% if(userLayout['/control/reportes']?.ver){ %>
+                    <div class="nav-item drop top">
+                      <div class="nav-icon toggle bx">
+                        <i class="bx bx-detail"></i>
+                        <a class="nav-link" href="/control/reportes">
+                          <span class="nav-tittle">Reportes</span>
+                        </a>
+                      </div>
+                      <div class="menu">
+                        <% if(userLayout['/control/reportes/ventas']?.ver){ %>
+                          <div class="nav-item">
+                            <div class="nav-icon">
+                              <i class='bx bxs-cart-download'></i>
+                              <a class="nav-link" href="/control/reportes/ventas">
+                                <span> Ventas </span>
+                              </a>
+                            </div>
+                          </div>
+                          <% } %>
+
+                            <% if(userLayout['/control/reportes/asistencia']?.ver){ %>
+                              <div class="nav-item">
+                                <div class="nav-icon">
+                                  <i class="bx bxs-report"></i>
+                                  <a class="nav-link" href="/control/reportes/asistencia">
+                                    <span> Asistencia </span>
+                                  </a>
+                                </div>
+                              </div>
+                              <% } %>
+
+                                <% if(userLayout['/control/reportes/registros']?.ver){ %>
+                                  <div class="nav-item">
+                                    <div class="nav-icon">
+                                      <i class="bx bxs-file-json"></i>
+                                      <a class="nav-link" href="/control/reportes/registros">
+                                        <span> Registros </span>
+                                      </a>
+                                    </div>
+                                  </div>
+                                  <% } %>
+
+                      </div>
+                    </div>
+                    <% } %>
+
+                      <% if(userLayout['/control/administracion']?.ver){ %>
+                        <div class="nav-item drop top">
+                          <div class="nav-icon toggle bx">
+                            <i class="bx bx-crown"></i>
+                            <a class="nav-link" href="/control/administracion">
+                              <span class="nav-tittle">Administracion</span>
+                            </a>
+                          </div>
+                          <div class="menu">
+                            <% if(userLayout['/control/administracion/acceso']?.ver){ %>
+                              <div class="nav-item">
+                                <div class="nav-icon">
+                                  <i class="bx bx-paint-roll"></i>
+                                  <a class="nav-link" href="/control/administracion/acceso">
+                                    <span> Acceso </span>
+                                  </a>
+                                </div>
+                              </div>
+                              <% } %>
+
+                                <% if(userLayout['/control/administracion/usuarios']?.ver){ %>
+                                  <div class="nav-item">
+                                    <div class="nav-icon">
+                                      <i class="bx bx-user"></i>
+                                      <a class="nav-link" href="/control/administracion/usuarios">
+                                        <span> Usuarios </span>
+                                      </a>
+                                    </div>
+                                  </div>
+                                  <% } %>
+
+                                    <% if(userLayout['/control/administracion/bot']?.ver){ %>
+                                      <div class="nav-item">
+                                        <div class="nav-icon">
+                                          <i class="bx bx-bot"></i>
+                                          <a class="nav-link" href="/control/administracion/bot">
+                                            <span> Bot </span>
+                                          </a>
+                                        </div>
+                                      </div>
+                                      <% } %>
+
+                          </div>
+                        </div>
+                        <% } %>
+
+                          <% if(userLayout['/control/servidor']?.ver){ %>
+                            <div class="nav-item drop top">
+                              <div class="nav-icon toggle bx">
+                                <i class="bx bx-shield-quarter"></i>
+                                <a class="nav-link" href="/control/servidor">
+                                  <span class="nav-tittle">Servidor</span>
+                                </a>
+                              </div>
+                              <div class="menu">
+                                <% if(userLayout['/control/servidor/cpu']?.ver){ %>
+                                  <div class="nav-item">
+                                    <div class="nav-icon">
+                                      <i class='bx bx-brain'></i>
+                                      <a class="nav-link" href="/control/servidor/cerebro">
+                                        <span> Cerebro </span>
+                                      </a>
+                                    </div>
+                                  </div>
+                                  <% } %>
+
+                                    <% if(userLayout['/control/servidor/cpu']?.ver){ %>
+                                      <div class="nav-item">
+                                        <div class="nav-icon">
+                                          <i class="bx bx-server"></i>
+                                          <a class="nav-link" href="/control/servidor/cpu">
+                                            <span> CPU </span>
+                                          </a>
+                                        </div>
+                                      </div>
+                                      <% } %>
+
+                                        <% if(userLayout['/control/servidor/terminal']?.ver){ %>
+                                          <div class="nav-item">
+                                            <div class="nav-icon">
+                                              <i class="bx bx-terminal"></i>
+                                              <a class="nav-link" href="/control/servidor/terminal">
+                                                <span> Terminal </span>
+                                              </a>
+                                            </div>
+                                          </div>
+                                          <% } %>
+
+                              </div>
+                            </div>
+                            <% } %>
+
+        </div>
+
+        <div class="navbar">
+          <% if(userLayout['/control/mensajes']?.ver){ %>
+            <div class="nav-item drop bottom">
+              <div class="nav-icon toggle bx">
+                <i class='bx bx-envelope'></i>
+                <a class="nav-link" href="/control/mensajes">
+                  <span class="nav-tittle">Mensajes</span>
+                </a>
+              </div>
+              <div class="menu">
+                <div>
+                  <a class="nav-item">
+                    <div class="rounded-circle">
+                      <img src="/src/img/users/_1087161e-a115-4d9c-a783-2d3af917d1f3.jpg">
+                    </div>
+                    <div class="data">
+                      <span>Jhon Doe</span>
+                      <span>15 minutes ago</span>
+                    </div>
+                  </a>
+                  <a class="nav-item">
+                    <div class="rounded-circle">
+                      <img src="/src/img/users/_cc53803c-0a62-427f-884d-8aa67ea5152f.jpg">
+                    </div>
+                    <div class="data">
+                      <span>Jhon Doe</span>
+                      <span>15 minutes ago</span>
+                    </div>
+                  </a>
+                </div>
+                <a onclick="chargePage('/control/mensajes')" class="show-more">Ver todos los mensajes</a>
+              </div>
+            </div>
+            <% } %>
+
+              <% if(userLayout['/control/notificaciones']?.ver){ %>
+                <div class="nav-item drop bottom">
+                  <div class="nav-icon toggle bx">
+                    <i class='bx bx-bell'></i>
+                    <a class="nav-link" href="/control/notificaciones">
+                      <span class="nav-tittle">Notificaiones</span>
+                    </a>
+                  </div>
+                  <div class="menu">
+                    <div>
+                      <div class="nav-item">
+                        <a class="data">
+                          <span>Profile updated</span>
+                          <span>15 minutes ago</span>
+                        </a>
+                      </div>
+                      <div class="nav-item">
+                        <a class="data">
+                          <span>New user added</span>
+                          <span>15 minutes ago</span>
+                        </a>
+                      </div>
+                    </div>
+                    <a onclick="chargePage('/control/notificaciones')" class="show-more">Ver todas las
+                      notificaciones</a>
+                  </div>
+                </div>
+                <% } %>
+
+
+
+                  <div class="nav-item drop top">
+                    <div class="nav-icon toggle bx">
+                      <i class='bx bx-cog'></i>
+                      <span class="nav-tittle">Ajustes</span>
+                    </div>
+                    <div class="menu">
+                      <div class="nav-item">
+                        <div class="nav-icon">
+                          <a class="nav-link" href="/auth/logout">
+                            <i class='bx bx-log-out'></i>
+                            <span>Desconectar</span>
+                          </a>
+                        </div>
+                      </div>
+                      <div class="nav-theme">
+                        <a class="theme-op theme-purple" data-theme="purple"></a>
+                        <a class="theme-op theme-blue" data-theme="blue"></a>
+                        <a class="theme-op theme-orange" data-theme="orange"></a>
+                        <a class="theme-op theme-green" data-theme="green"></a>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="nav-item">
+                    <a class="nav-link" href="/control/perfil">
+                      <div class="nav-icon">
+                        <div class="img">
+                          <img src="<%=session.usuario.foto_src_small %>">
+                        </div>
+                      </div>
+                      <span class="nav-tittle">
+                        <%=session.usuario.usuario %>
+                          <br>
+                          <%=session.usuario.rol_nombre %>
+                      </span>
+                    </a>
+                    <div class="menu">
+
+                    </div>
+                  </div>
+        </div>
+      </div>
+      <div class="side-content scroll-y">
+        <div>
+          <div class="content">
+            <div class="data-body">
+              <%-body%>
+
+            </div>
+            <div class="content-foot card">
+              <div>
+                © <a href="/control">REHF</a>, Todos los derechos reservados.
+              </div>
+              <div>
+                Diseñada por <a href="https://github.com/HannsMP">Hanns MP</a>
+                <br>
+                DISTRIBUIDO por: <a href="https://github.com/HannsMP">Hanns MP</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+
+  <% } %>
+
+</html>

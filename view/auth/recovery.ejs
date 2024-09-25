@@ -1,0 +1,96 @@
+  <!---------------------- JS ---------------------->
+
+<!-- login -->
+<script src="/src/public/auth/recovery/index.js"></script>
+
+<!--------------------- BODY --------------------->
+
+<div class="dash-box">
+  <div class="form-box">
+    <span class="form-head"> Recuperar Cuenta </span>
+    <div class="form-body">
+      <% if(form=='user' ) { %>
+        <form action="/auth/recovery" method="post">
+
+          <div class="input-box">
+            <input name="usuario" type="text" value="<%=recovery?.usuario %>" required>
+            <i class='bx bx-user'></i>
+            <label for="usuario">Usuario</label>
+          </div>
+
+          <button class="btn">Siguiente</button>
+        </form>
+        <% } %>
+
+          <% if(form=='code' ) { %>
+            <form action="/auth/recovery" method="post">
+
+              <input name="usuario" type="hidden" value="<%=recovery?.usuario %>">
+
+              <div class="input-box">
+                <input name="codigo" type="text" value="<%=recovery?.codigo %>" required>
+                <i class='bx bx-terminal'></i>
+                <label for="codigo">Codigo de recuperacion</label>
+              </div>
+
+              <button class="btn">Siguiente</button>
+            </form>
+            <% } %>
+
+              <% if(form=='pass' ) { %>
+                <form action="/auth/recovery" method="post">
+
+                  <input name="usuario" type="hidden" value="<%=recovery?.usuario %>">
+
+                  <input name="codigo" type="hidden" value="<%=recovery?.codigo %>">
+
+                  <div class="input-box">
+                    <input name="clave" type="password" value="<%=recovery?.clave %>" required>
+                    <i class='bx bx-show'></i>
+                    <label for="clave">Contraseña</label>
+                  </div>
+                  <div class="input-box">
+                    <input name="repetirClave" type="password" value="<%=recovery?.repetirClave %>" required>
+                    <i class='bx bx-show'></i>
+                    <label for="repetirClave">Repetir Contraseña</label>
+                  </div>
+
+                  <button class="btn">Enviar</button>
+                </form>
+                <% } %>
+    </div>
+    <div class="form-foot">
+      <a href="/auth/login">Iniciar Sesion</a>
+    </div>
+  </div>
+</div>
+<% if (typeof alert !=='undefined' ) { %>
+  <script>
+    const Toast = Swal.mixin({
+      toast: true,
+      position: "bottom-end",
+      showConfirmButton: false,
+      timer: Number('<%=alert.timer %>'),
+      timerProgressBar: true,
+      color: 'rgb(255, 255, 255)',
+      background: 'rgb(161, 8, 171, .5)',
+      didOpen: (toast) => {
+        toast.onmouseenter = Swal.stopTimer;
+        toast.onmouseleave = Swal.resumeTimer;
+      }
+    });
+
+    const fire = Toast.fire({
+      icon: '<%=alert.icon %>',
+      title: '<%=alert.title %>',
+      text: '<%=alert.text %>'
+    })
+  </script>
+  <% if(typeof alert.redirect !=='undefined' ){ %>
+    <script>
+      fire.then(_ => {
+        window.location.href = '<%=alert.redirect %>'
+      })
+    </script>
+    <% } %>
+      <% } %>

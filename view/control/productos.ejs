@@ -1,0 +1,74 @@
+<div class="content-header">
+  <!---------------------- CSS ---------------------->
+
+  <!-- lib control -->
+  <link href="/src/private/lib/selector/selector.min.css" rel="stylesheet">
+  <link href="/src/private/lib/catalogue/catalogue.min.css" rel="stylesheet">
+
+  <!-- layout -->
+  <link href="/src/private/layout/css/form.css" rel="stylesheet">
+  <link href="/src/private/layout/css/input.css" rel="stylesheet">
+  <link href="/src/private/layout/css/btn.css" rel="stylesheet">
+
+  <!---------------------- JS ---------------------->
+
+  <!-- lib control -->
+  <script src="/src/private/lib/selector/selector.min.js"></script>
+  <script src="/src/private/lib/catalogue/catalogue.min.js"></script>
+
+  <!-- layout -->
+  <script src="/src/private/lib/input/input.min.js"></script>
+
+  <!---------------------- BODY ---------------------->
+
+  <div class="content-tittle">Productos</div>
+  <div class="content-path">
+    <a href="/control">/control</a>
+    <a href="/control/productos">/productos</a>
+  </div>
+</div>
+
+<div class="content-body">
+  <div class="menu-body">
+    <div id="catalogo"></div>
+  </div>
+  <div class="menu-side">
+    <div class="card" id="categoria-filtro">
+      <div class="card-head">
+        <h3 class="card-tittle">Filtros</h3>
+      </div>
+      <div class="card-body">
+        <div class="card-form">
+          <div class="form-box">
+            <form>
+              <div class="form-body">
+                <div class="form-col">
+                  <input type="hidden" name="id">
+                  <div class="input-box">
+                    <input name="codigo" type="text" oninput="inputUppercase(this, 50)" required>
+                    <label for="codigo">Codigo:</label>
+                  </div>
+                  <div class="input-box">
+                    <input name="producto" type="text" oninput="inputCapitalize(this, 50)" required>
+                    <label for="producto">Nombre del Producto:</label>
+                  </div>
+                </div>
+                <div class="form-col">
+                  <div class="input-box">
+                    <input class="selector" type="search" placeholder="Buscar categoria...">
+                    <label for="categoria">Categoria:</label>
+                  </div>
+                </div>
+              </div>
+            </form>
+            <div class="form-foot">
+              <a class="btn btn-success">Buscar</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/src/private/routes/productos/index.js"></script>

@@ -1,0 +1,103 @@
+<div class="content-header">
+  <!---------------------- CSS ---------------------->
+
+  <!-- lib control -->
+  <link href="/src/private/lib/imagen/imagen.min.css" rel="stylesheet">
+  <link href="/src/private/lib/formError/formError.min.css" rel="stylesheet">
+  <link href="/src/private/lib/code/code.min.css" rel="stylesheet">
+
+  <!-- layout -->
+  <link href="/src/private/layout/css/form.css" rel="stylesheet">
+  <link href="/src/private/layout/css/input.css" rel="stylesheet">
+  <link href="/src/private/layout/css/btn.css" rel="stylesheet">
+
+  <!---------------------- JS ---------------------->
+
+  <!-- lib control -->
+  <script src="/src/private/lib/chart/chart.umd.min.js"></script>
+  <script src="/src/private/lib/imagen/imagen.min.js"></script>
+  <script src="/src/private/lib/formatTime/formatTime.min.js"></script>
+  <script src="/src/private/lib/formError/formError.min.js"></script>
+
+  <!-- layout -->
+  <script src="/src/private/lib/input/input.min.js"></script>
+
+  <!---------------------- BODY ---------------------->
+
+  <div class="content-tittle">Bot</div>
+  <div class="content-path">
+    <a href="/control">/control</a>
+    <a href="/control/administracion">/administracion</a>
+    <a href="/control/administracion/bot">/bot</a>
+  </div>
+</div>
+
+<div class="content-body">
+  <div class="menu-body">
+    <div class="card" id="card-bot">
+      <div class="card-head">
+        <h3 class="card-tittle"> Bot Whatsapp </h3>
+        <div class="f-row">
+          <% if(session.permiso.eliminar){ %>
+            <a class="btn btn-danger"><i class='bx bx-log-out-circle'></i></a>
+            <% } %>
+              <% if(session.permiso.agregar){ %>
+                <a class="btn btn-info"><i class='bx bx-qr'></i></a>
+                <% } %>
+        </div>
+      </div>
+      <div class="cards">
+        <div class="card-data" id="bot-avatar">
+          <div class="card-icon">
+            <i class="bx bxs-user"></i>
+            <img id="bot-foto">
+          </div>
+        </div>
+        <div class="card-data">
+          <div class="card-col">
+            <div class="data-box" id="bot-estado">
+              <span class="data-tittle">Estado:</span>
+              <div class="f-row">
+                <small class="data"> </small>
+                <% if(session.permiso.ocultar){ %>
+                  <input class="check-switch check-success" type="checkbox">
+                  <% } %>
+              </div>
+            </div>
+            <div class="data-box" id="bot-usuario">
+              <span class="data-tittle">Usuario:</span>
+              <small class="data"> </small>
+            </div>
+            <div class="data-box" id="bot-id">
+              <span class="data-tittle">Id:</span>
+              <small class="data"> </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <h3 class="card-tittle">Grafico Bot vs Comandos</h3>
+      </div>
+      <div class="card-body">
+        <canvas id="chart-bot-x-comando"></canvas>
+      </div>
+    </div>
+  </div>
+  <% if(session.permiso.agregar){ %>
+    <div class="menu-side" style="display: none;">
+      <div class="card" id="bot-qr">
+        <div class="card-head">
+          <h3 class="card-tittle">Qr</h3>
+          <span id="date-qr"></span>
+        </div>
+        <div class="card-body">
+          <div class="code code-qr scroll-y"></div>
+        </div>
+      </div>
+    </div>
+    <% } %>
+</div>
+
+<script src="/src/private/routes/administracion/bot/index.js"></script>

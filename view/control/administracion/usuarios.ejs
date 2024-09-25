@@ -1,0 +1,211 @@
+<div class="content-header">
+  <!---------------------- CSS ---------------------->
+
+  <!-- lib control -->
+  <link href="/src/private/lib/dataTables/datatables.min.css" rel="stylesheet">
+  <link href="/src/private/lib/selector/selector.min.css" rel="stylesheet">
+  <link href="/src/private/lib/imagen/imagen.min.css" rel="stylesheet">
+  <link href="/src/private/lib/formError/formError.min.css" rel="stylesheet">
+
+  <!-- layout -->
+  <link href="/src/private/layout/css/form.css" rel="stylesheet">
+  <link href="/src/private/layout/css/input.css" rel="stylesheet">
+  <link href="/src/private/layout/css/btn.css" rel="stylesheet">
+
+  <!---------------------- JS ---------------------->
+
+  <!-- lib control -->
+  <script src="/src/private/lib/dataTables/datatables.min.js"></script>
+  <script src="/src/private/lib/selector/selector.min.js"></script>
+  <script src="/src/private/lib/imagen/imagen.min.js"></script>
+  <script src="/src/private/lib/formatTime/formatTime.min.js"></script>
+  <script src="/src/private/lib/formError/formError.min.js"></script>
+
+  <!-- layout -->
+  <script src="/src/private/lib/input/input.min.js"></script>
+  <script src="/src/private/lib/Tables/tables.min.js"></script>
+
+  <!---------------------- BODY ---------------------->
+
+  <div class="content-tittle">Usuarios</div>
+  <div class="content-path">
+    <a href="/control">/control</a>
+    <a href="/control/administracion">/administracion</a>
+    <a href="/control/administracion/usuarios">/usuarios</a>
+  </div>
+</div>
+
+<div class="content-body">
+  <div class="menu-body">
+    <div class="card">
+      <div class="card-head">
+        <h3 class="card-tittle">Tabla de Usuarios</h3>
+        <div class="f-row">
+          <% if(session.permiso.eliminar){ %>
+            <a class="btn btn-danger tbl-eliminar"><i class='bx bx-trash'></i></a>
+            <% } %>
+              <% if(session.permiso.editar){ %>
+                <a class="btn btn-warning tbl-editar"><i class='bx bx-pencil'></i></a>
+                <% } %>
+                  <% if(session.permiso.agregar){ %>
+                    <a class="btn btn-info tbl-nuevo"><i class='bx bx-plus'></i></a>
+                    <% } %>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-box">
+          <table id="table-main" style="width: auto;">
+            <thead>
+              <tr>
+                <% if(session.permiso.ocultar){ %>
+                  <th>Estado</th>
+                  <% } %>
+                    <th>Nombres</th>
+                    <th>Apellidos</th>
+                    <th>Usuarios</th>
+                    <th>Email</th>
+                    <th>Telefono</th>
+                    <th>Rol</th>
+                    <th>Creacion</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <div class="cards">
+            <div class="tables-utils">
+              <% if(session.permiso.exportar){ %>
+                <div class="download"></div>
+                <% } %>
+                  <div class="f-row option ">
+                    <% if(session.permiso.eliminar){ %>
+                      <a class="btn btn-danger tbl-eliminar"><i class='bx bx-trash'></i></a>
+                      <% } %>
+                        <% if(session.permiso.editar){ %>
+                          <a class="btn btn-warning tbl-editar"><i class='bx bx-pencil'></i></a>
+                          <% } %>
+                            <% if(session.permiso.agregar){ %>
+                              <a class="btn btn-info tbl-nuevo"><i class='bx bx-plus'></i></a>
+                              <% } %>
+                  </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <% if(session.permiso.agregar || session.permiso.editar){ %>
+    <div class="menu-side" style="display: none;">
+      <% if(session.permiso.agregar){ %>
+        <div class="card" id="table-nuevo" style="display: none;">
+          <div class="card-head">
+            <h3 class="card-tittle">Nuevo Usuario</h3>
+            <a class="card-close"><i class='bx bx-x'></i></a>
+          </div>
+          <div class="card-body">
+            <div class="card-form">
+              <div class="form-box">
+                <form>
+                  <div class="form-body">
+                    <div class="form-col">
+                      <div class="input-box">
+                        <input name="nombres" type="text" oninput="inputCapitalize(this, 50)" required>
+                        <label for="nombres">Nombres (50):</label>
+                      </div>
+                      <div class="input-box">
+                        <input name="apellidos" type="text" oninput="inputCapitalize(this, 50)" required>
+                        <label for="apellidos">Apellidos (50):</label>
+                      </div>
+                      <div class="input-box">
+                        <input name="usuario" type="text" oninput="inputNoSpace(this, 50)" required>
+                        <label for="usuario">Usuario (50):</label>
+                      </div>
+                      <div class="input-box">
+                        <input name="telefono" type="text" oninput="inputInt(this, 20)" required>
+                        <label for="telefono">Telefono (20):</label>
+                      </div>
+                      <div class="input-box">
+                        <input name="email" type="email" oninput="inputNoSpace(this, 50)" required>
+                        <label for="email">Email (50):</label>
+                      </div>
+                    </div>
+                    <div class="form-col">
+                      <div class="input-box">
+                        <input class="selector" type="search" placeholder="Buscar categoria...">
+                        <label for="rol">Rol (1):</label>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-foot">
+                    <a class="btn btn-success">guardar</a>
+                    <div class="f-row">
+                      <input class="check-switch" type="checkbox" checked>
+                      <label>estado</label>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        <% } %>
+
+          <% if(session.permiso.editar){ %>
+            <div class="card" id="table-editar" style="display: none;">
+              <div class="card-head">
+                <h3 class="card-tittle">Editar Usuario</h3>
+                <a class="card-close"><i class='bx bx-x'></i></a>
+              </div>
+              <div class="card-body">
+                <div class="card-form">
+                  <div class="form-box">
+                    <form>
+                      <div class="form-body">
+                        <div class="form-col">
+                          <input type="hidden" name="id">
+                          <div class="input-box">
+                            <input name="nombres" type="text" oninput="inputCapitalize(this, 50)" required>
+                            <label for="nombres">Nombre (50):</label>
+                          </div>
+                          <div class="input-box">
+                            <input name="apellidos" type="text" oninput="inputCapitalize(this, 50)" required>
+                            <label for="apellidos">Apellidos (50):</label>
+                          </div>
+                          <div class="input-box">
+                            <input name="usuario" type="text" oninput="inputNoSpace(this, 50)" required>
+                            <label for="usuario">Usuario (50):</label>
+                          </div>
+                          <div class="input-box">
+                            <input name="telefono" type="text" oninput="inputInt(this, 20); inputLimit(this, 20)"
+                              required>
+                            <label for="telefono">Telefono (20):</label>
+                          </div>
+                          <div class="input-box">
+                            <input name="email" type="email" oninput="inputNoSpace(this, 50)" required>
+                            <label for="email">Email (50):</label>
+                          </div>
+                        </div>
+                        <div class="form-col">
+                          <div class="input-box">
+                            <input class="selector" type="search" placeholder="Buscar categoria...">
+                            <label for="rol">Rol (1):</label>
+                          </div>
+                          <div class="input-box">
+                            <input class="imagen-unic" type="file" accept=".jpg, .jpeg, .png" disabled>
+                            <label for="fotos">Avatar (1):</label>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="form-foot">
+                        <a class="btn btn-success">guardar</a>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <% } %>
+    </div>
+    <% } %>
+</div>
+
+<script src="/src/private/routes/administracion/usuarios/index.js"></script>

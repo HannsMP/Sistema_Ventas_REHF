@@ -1,0 +1,59 @@
+table.witgetTable {
+  border-collapse: collapse;
+  margin: 0 10px;
+
+  thead,
+  tbody,
+  tfoot {
+    width: 100%;
+  }
+
+  thead {
+    border-bottom: 2px solid rgb(255, 255, 255);
+  }
+
+  tbody {
+    border-bottom: 2px solid rgb(38 38 38);
+  }
+
+  tbody .dragger {
+    cursor: pointer;
+  }
+
+  th,
+  tr {
+    height: 100px;
+  }
+
+  tr.hover {
+    background-color: rgb(161, 8, 171);
+  }
+
+  td,
+  td .input-box {
+    vertical-align: middle;
+    border: 0;
+
+    .selected-colletion {
+      justify-content: center !important;
+    }
+  }
+
+  td input {
+    text-align: center;
+  }
+
+  .dragger {
+    padding: 0 10px;
+    cursor: pointer;
+
+    i {
+      font-size: 20px;
+    }
+  }
+
+  .ghost {
+    background-color: rgb(161, 8, 171);
+    position: absolute;
+  }
+}

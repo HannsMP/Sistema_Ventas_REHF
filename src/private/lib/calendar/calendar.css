@@ -1,0 +1,79 @@
+.calendar-box {
+  width: 100%;
+  height: fit-content;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .calendar-dashboard {
+    width: 100%;
+    max-width: 50rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: .5rem;
+
+    .select {
+      display: inline-flex;
+      gap: 1rem;
+    }
+
+    .prev,
+    .next {
+      background-color: rgb(var(--color-3));
+      width: 2rem;
+      height: 2rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: .5rem;
+      border: 1px solid rgb(var(--primary));
+      cursor: pointer;
+    }
+
+    .prev:hover,
+    .next:hover {
+      background-color: rgb(var(--color-2));
+    }
+  }
+
+  .calendar-table {
+    width: 100%;
+    max-width: 50rem;
+    border-spacing: .1rem;
+
+    th {
+      color: rgb(var(--color-8)) !important;
+      padding: .5rem 0;
+      border-bottom: 1px dashed rgb(var(--color-7));
+      border-top: 1px dashed rgb(var(--color-7));
+    }
+
+    td {
+      min-width: 3rem;
+      height: 2rem;
+      border-radius: .3rem;
+      border: 1px solid transparent;
+      text-align: center;
+      padding: .2rem 0;
+    }
+
+    td:hover {
+      border-color: rgb(var(--color-8));
+    }
+
+    td.now {
+      font-weight: bold;
+      background-color: rgb(var(--color-3));
+    }
+    
+    td.select {
+      border-color: rgb(var(--color-8));
+      background-color: rgb(var(--secundary));
+    }
+
+    td.out {
+      opacity: .6;
+    }
+  }
+}

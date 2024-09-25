@@ -1,0 +1,28 @@
+const { resolve } = require('path');
+
+/** @typedef {Array.<(this: import('../../app'), req: import('express').Request, res: import('express').Response, next: import('express').NextFunction)=>void>} routeArr */
+/** @type {{load:boolean, route:string, viewRenderPath:string, viewErrorPath:string, use: routeArr, get: routeArr, post: routeArr}} */
+module.exports = {
+  load: true,
+  route: "/control/perfil",
+  viewRenderPath: resolve('view', 'control', 'perfil.ejs'),
+  viewErrorPath: resolve('view', 'error', '403.ejs'),
+  get: [
+    async function (req, res, next) {
+      let session = this.cache.apiKey.read(req.cookies.apiKey);
+
+      let userLayout = await this.model.tb_permisos.userLayout(session.usuario.id);
+
+      res.render(module.exports.viewRenderPath, { session, userLayout });
+    },
+  ],
+  post: [
+    async function (req, res, next) {
+      let session = this.cache.apiKey.read(req.cookies.apiKey);
+
+      let userLayout = await this.model.tb_permisos.userLayout(session.usuario.id);
+
+      res.render(module.exports.viewRenderPath, { layout: false, session, userLayout });
+    },
+  ]
+}

@@ -1,0 +1,69 @@
+<div class="content-header">
+  <!---------------------- CSS ---------------------->
+
+  <!-- lib control -->
+  <link href="/src/private/lib/dataTables/datatables.min.css" rel="stylesheet">
+  <link href="/src/private/lib/calendar/calendar.min.css" rel="stylesheet">
+
+  <!-- layout -->
+  <link href="/src/private/layout/css/btn.css" rel="stylesheet">
+
+  <!---------------------- JS ---------------------->
+
+  <!-- lib control -->
+  <script src="/src/private/lib/dataTables/datatables.min.js"></script>
+  <script src="/src/private/lib/formatTime/formatTime.min.js"></script>
+  <script src="/src/private/lib/calendar/calendar.min.js"></script>
+
+  <!-- layout -->
+  <script src="/src/private/lib/Tables/tables.min.js"></script>
+
+  <!---------------------- BODY ---------------------->
+
+  <div class="content-tittle">Asistencia</div>
+  <div class="content-path">
+    <a href="/control">/control</a>
+    <a href="/control/reportes">/reportes</a>
+    <a href="/control/reportes/asistencia">/asistencia</a>
+  </div>
+</div>
+<div class="content-body">
+  <div class="menu-body">
+    <div class="card">
+      <div class="card-head">
+        <h3 class="card-tittle">Tabla de Asistencia</h3>
+      </div>
+      <div class="card-body">
+        <div class="table-box">
+          <table id="table-main" style="width: auto;">
+            <thead>
+              <tr>
+                <th>Usuario</th>
+                <th>Telefono</th>
+                <th>Rol</th>
+                <th>Coneccion</th>
+                <th>Desconeccion</th>
+                <th>Fecha</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <div class="cards">
+            <div class="tables-utils">
+              <div class="download"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="menu-side">
+    <div class="card" id="select-date">
+      <div class="card-body">
+        <div class="calendario"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/src/private/routes/reportes/asistencia/index.js"></script>

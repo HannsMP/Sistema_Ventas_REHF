@@ -1,0 +1,44 @@
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.load-spinner {
+  position: relative;
+  overflow: hidden;
+}
+
+.load-spinner::after {
+  content: "";
+  background-color: rgba(var(--color-7), 0.1);
+  backdrop-filter: blur(15px);
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999998;
+}
+
+.load-spinner::before {
+  content: "";
+  color: rgb(var(--secundary));
+  width: 60px;
+  aspect-ratio: 1 / 1;
+  border: 0.25em solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: rotate 0.75s linear infinite;
+  z-index: 999999;
+}

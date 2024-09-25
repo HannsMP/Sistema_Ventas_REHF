@@ -1,0 +1,63 @@
+<div class="content-header">
+<!---------------------- CSS ---------------------->
+
+<!-- lib control -->
+
+<!-- layout -->
+<link href="/src/private/layout/css/btn.css" rel="stylesheet">
+
+<!---------------------- JS ---------------------->
+
+<!-- lib control -->
+<script src="/src/private/lib/chart/chart.umd.min.js"></script>
+
+<!-- layout -->
+
+<!---------------------- BODY ---------------------->
+
+  <div class="content-tittle">Cpu</div>
+  <div class="content-path">
+    <a href="/control/servidor">/Servidor</a>
+    <a href="/control/servidor/cpu">/CPU</a>
+  </div>
+</div>
+<div class="content-body">
+  <div class="menu-body">
+    <div class="card" id="card-cores">
+      <div class="card-head">
+        <h3 class="card-tittle">Procesador:</h3>
+        <div class="f-row">
+          <% if(session.permiso.eliminar){ %>
+            <a class="btn btn-danger" id="btn-power-off">Apagar</a>
+            <% } %>
+              <% if(session.permiso.editar){ %>
+                <a class="btn btn-warning" id="btn-power-reset">Reinicar</a>
+                <% } %>
+        </div>
+      </div>
+      <div class="card-body">
+      </div>
+    </div>
+    <div class="cards">
+      <div class="card" id="card-ram">
+        <div class="card-head">
+          <h3 class="card-tittle">Ram:</h3>
+        </div>
+        <div class="card-body">
+          <canvas></canvas>
+        </div>
+      </div>
+      <div class="card" id="card-disc">
+        <div class="card-head">
+          <h3 class="card-tittle">Disco:</h3>
+          <h3 class="card-tittle"></h3>
+        </div>
+        <div class="card-body">
+          <canvas></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/src/private/routes/servidor/cpu/index.js"></script>

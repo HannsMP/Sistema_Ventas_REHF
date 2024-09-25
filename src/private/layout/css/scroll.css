@@ -1,0 +1,34 @@
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 4px;
+  background-clip: content-box;
+  border: solid 1px transparent;
+}
+
+.scroll-x-dn::-webkit-scrollbar,
+.scroll-y-dn::-webkit-scrollbar {
+  display: none;
+}
+
+.scroll-x.dhb:hover::-webkit-scrollbar,
+.scroll-y.dhb:hover::-webkit-scrollbar {
+  display: block;
+}
+
+.scroll-x {
+  overflow-x: auto;
+}
+
+.scroll-y {
+  overflow-y: auto;
+}
+
+.scroll-x:hover::-webkit-scrollbar-thumb,
+.scroll-y:hover::-webkit-scrollbar-thumb {
+  background-color: rgb(var(--secundary)) !important;
+}

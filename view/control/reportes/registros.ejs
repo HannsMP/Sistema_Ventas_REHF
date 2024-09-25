@@ -1,0 +1,83 @@
+<div class="content-header">
+  <!---------------------- CSS ---------------------->
+
+  <!-- lib control -->
+  <link href="/src/private/lib/code/code.min.css" rel="stylesheet">
+
+  <!-- layout -->
+  <link href="/src/private/layout/css/btn.css" rel="stylesheet">
+
+  <!---------------------- JS ---------------------->
+
+  <!-- lib control -->
+  <script src="/src/private/lib/formatTime/formatTime.min.js"></script>
+  <script src="/src/private/lib/code/code.min.js"></script>
+
+  <!-- layout -->
+
+  <!---------------------- BODY ---------------------->
+
+  <div class="content-tittle">Registros</div>
+  <div class="content-path">
+    <a href="/control">/control</a>
+    <a href="/control/reportes">/reportes</a>
+    <a href="/control/reportes/registros">/registros</a>
+  </div>
+</div>
+<div class="content-body">
+  <div class="menu-body">
+    <div class="card" id="logguer-success">
+      <div class="card-head">
+        <h3 class="card-tittle">Registro Satisfactorios</h3>
+        <div class="f-row">
+          Tamaño: <span id="size"></span> Mb
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="code code-log scroll-y"></div>
+      </div>
+      <div class="card-foot">
+        <% if(session.permiso.exportar){ %>
+          <a class="btn left btn-success" id="download">Descargar</a>
+          <% } %>
+            <a class="btn btn-danger" id="clear">Limpiar</a>
+      </div>
+    </div>
+    <div class="card" id="logguer-warning">
+      <div class="card-head">
+        <h3 class="card-tittle">Registro de Advertencia</h3>
+        <div class="f-row">
+          Tamaño: <span id="size"></span> Mb
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="code code-log scroll-y"></div>
+      </div>
+      <div class="card-foot">
+        <% if(session.permiso.exportar){ %>
+          <a class="btn btn-success" id="download">Descargar</a>
+          <% } %>
+            <a class="btn btn-danger" id="clear">Limpiar</a>
+      </div>
+    </div>
+    <div class="card" id="logguer-error">
+      <div class="card-head">
+        <h3 class="card-tittle">Registro de Peligro</h3>
+        <div class="f-row">
+          Tamaño: <span id="size"></span> Mb
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="code code-log scroll-y"></div>
+      </div>
+      <div class="card-foot">
+        <% if(session.permiso.exportar){ %>
+          <a class="btn btn-success" id="download">Descargar</a>
+          <% } %>
+            <a class="btn btn-danger" id="clear">Limpiar</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/src/private/routes/reportes/registros/index.js"></script>

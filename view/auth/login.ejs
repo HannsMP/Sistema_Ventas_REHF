@@ -1,0 +1,66 @@
+<!---------------------- JS ---------------------->
+
+<!-- login -->
+<script src="/src/public/auth/login/index.js"></script>
+
+<!--------------------- BODY --------------------->
+
+<div class="dash-box" menu="usuario">
+  <div class="form-box">
+    <span class="form-head"> Inicio de Sesion </span>
+    <div class="form-body">
+      <form action="/auth/login" method="post">
+        <div class="input-box">
+          <input name="usuario" type="text" value="<%=login?.usuario%>" required>
+          <i class='bx bx-user'></i>
+          <label for="usuario">Usuario</label>
+        </div>
+        <div class="input-box">
+          <input name="clave" type="password" value="<%=login?.clave%>" required id="pass">
+          <i class='bx bx-show' id="show-pass"></i>
+          <label for="clave">Contraseña</label>
+        </div>
+        <div class="option-box">
+          <div>
+            <input class="check-checked" name="recuerdame" type="checkbox" <% if(login?.recuerdame) { %> checked <% } %>>
+              <label for="recuerdame">Recuerdame</label>
+          </div>
+          <% if(recovery) { %>
+            <a href="/auth/recovery">Recuperar</a>
+            <% } %>
+        </div>
+        <button class="btn">Ingresar</button>
+      </form>
+    </div>
+  </div>
+</div>
+<% if (typeof alert !=='undefined' ) { %>
+  <script>
+    const Toast = Swal.mixin({
+      toast: true,
+      position: "bottom-end",
+      showConfirmButton: false,
+      timer: Number('<%=alert.timer %>'),
+      timerProgressBar: true,
+      color: 'rgb(255, 255, 255)',
+      background: 'rgb(161, 8, 171, .5)',
+      didOpen: (toast) => {
+        toast.onmouseenter = Swal.stopTimer;
+        toast.onmouseleave = Swal.resumeTimer;
+      }
+    });
+
+    const fire = Toast.fire({
+      icon: '<%=alert.icon %>',
+      title: '<%=alert.title %>',
+      text: '<%=alert.text %>'
+    })
+  </script>
+  <% if(typeof alert.redirect !=='undefined' ){ %>
+    <script>
+      fire.then(_ => {
+        window.location.href = '<%=alert.redirect %>'
+      })
+    </script>
+    <% } %>
+      <% } %>

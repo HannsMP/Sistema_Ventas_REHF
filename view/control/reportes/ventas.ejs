@@ -1,0 +1,249 @@
+<div class="content-header">
+  <!---------------------- CSS ---------------------->
+
+  <!-- lib control -->
+  <link href="/src/private/lib/dataTables/datatables.min.css" rel="stylesheet">
+  <link href="/src/private/lib/calendar/calendar.min.css" rel="stylesheet">
+  <link href="/src/private/lib/selector/selector.min.css" rel="stylesheet">
+  <link href="/src/private/lib/formError/formError.min.css" rel="stylesheet">
+
+  <!-- layout -->
+  <link href="/src/private/layout/css/form.css" rel="stylesheet">
+  <link href="/src/private/layout/css/input.css" rel="stylesheet">
+  <link href="/src/private/layout/css/btn.css" rel="stylesheet">
+
+  <!---------------------- JS ---------------------->
+
+  <!-- lib control -->
+  <script src="/src/private/lib/dataTables/datatables.min.js"></script>
+  <script src="/src/private/lib/formatTime/formatTime.min.js"></script>
+  <script src="/src/private/lib/calendar/calendar.min.js"></script>
+  <script src="/src/private/lib/selector/selector.min.js"></script>
+  <script src="/src/private/lib/formError/formError.min.js"></script>
+
+  <!-- layout -->
+  <script src="/src/private/lib/input/input.min.js"></script>
+  <script src="/src/private/lib/Tables/tables.min.js"></script>
+
+  <!---------------------- BODY ---------------------->
+
+  <div class="content-tittle">Ventas</div>
+  <div class="content-path">
+    <a href="/control">/control</a>
+    <a href="/control/reportes">/reportes</a>
+    <a href="/control/reportes/ventas">/ventas</a>
+  </div>
+</div>
+<div class="content-body">
+  <div class="menu-body">
+    <div class="card" id="card-table-main">
+      <div class="card-head">
+        <h3 class="card-tittle">Tabla de Transacciones Ventas</h3>
+        <div class="f-row">
+          <% if(session.permiso.eliminar){ %>
+            <a class="btn btn-danger tbl-eliminar"><i class='bx bx-trash'></i></a>
+            <% } %>
+              <% if(userLayout['/control/movimientos/ventas']?.ver){ %>
+                <a href="/control/movimientos/ventas" class="btn btn-info tbl-nuevo">
+                  <i class='bx bx-plus'></i>
+                </a>
+                <% } %>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-box">
+          <table id="table-main" style="width: auto;">
+            <thead>
+              <tr>
+                <th>Codigo</th>
+                <th>Vendedor</th>
+                <th>Transaccion</th>
+                <th>Descuento</th>
+                <th>Importe</th>
+                <th>Fecha y hora</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <div class="cards">
+            <div class="tables-utils">
+              <div class="download"></div>
+              <div class="f-row option">
+                <% if(session.permiso.eliminar){ %>
+                  <a class="btn btn-danger tbl-eliminar"><i class='bx bx-trash'></i></a>
+                  <% } %>
+                    <% if(userLayout['/control/movimientos/ventas']?.ver){ %>
+                      <a href="/control/movimientos/ventas" class="btn btn-info tbl-nuevo">
+                        <i class='bx bx-plus'></i>
+                      </a>
+                      <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card" id="card-table-ventas" style="display: none;">
+      <div class="card-head">
+        <h3 class="card-tittle">Tabla de Ventas</h3>
+        <div class="f-row">
+          <% if(userLayout['/control/movimientos/ventas']?.eliminar){ %>
+            <a class="btn btn-danger tbl-eliminar"><i class='bx bx-trash'></i></a>
+            <% } %>
+              <% if(userLayout['/control/movimientos/ventas']?.agregar){ %>
+                <a class="btn btn-info tbl-nuevo"><i class='bx bx-plus'></i></a>
+                <% } %>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-box">
+          <table id="table-toggle" style="width: auto;">
+            <thead>
+              <tr>
+                <th>Codigo</th>
+                <th>Producto</th>
+                <th>Categoria</th>
+                <th>Compra</th>
+                <th>Venta</th>
+                <th>Cantidad</th>
+                <th>Descuento</th>
+                <th>Importe</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <div class="cards">
+            <div class="tables-utils">
+              <div class="download-other"></div>
+              <div class="f-row option ">
+                <% if(userLayout['/control/movimientos/ventas']?.eliminar){ %>
+                  <a class="btn btn-danger tbl-eliminar"><i class='bx bx-trash'></i></a>
+                  <% } %>
+                    <% if(userLayout['/control/movimientos/ventas']?.agregar){ %>
+                      <a class="btn btn-info tbl-nuevo"><i class='bx bx-plus'></i></a>
+                      <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="menu-side">
+    <% if(userLayout['/control/movimientos/ventas']?.agregar){ %>
+      <div class="card" id="card-nuevo-ventas" style="display: none;">
+        <div class="card-head">
+          <h3 class="card-tittle">Agregar nueva venta</h3>
+        </div>
+        <div class="card-body">
+          <div class="card-form">
+            <div class="form-box">
+              <form>
+                <div class="form-body">
+                  <div class="form-col">
+                    <input type="hidden" name="transaccion_id">
+                    <div class="input-box">
+                      <input name="cantidad" type="text" oninput="inputInt(this, 10);" required>
+                      <label for="cantidad">Cantidad (10):</label>
+                    </div>
+                  </div>
+                  <div class="form-col">
+                    <div class="input-box">
+                      <input class="selector" type="search" placeholder="Buscar producto..." id="productos">
+                      <label for="productos">Producto (1):</label>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-foot">
+                  <a class="btn btn-success">guardar</a>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <% } %>
+
+        <% if(userLayout['/control/movimientos/ventas']?.editar){ %>
+          <div class="card" id="card-editar-ventas" style="display: none;">
+            <div class="card-head">
+              <h3 class="card-tittle">Editar Venta</h3>
+            </div>
+            <div class="card-body">
+              <div class="card-form">
+                <div class="form-box">
+                  <form>
+                    <div class="form-body">
+                      <div class="form-col">
+                        <input type="hidden" name="id">
+                        <input type="hidden" name="transaccion_id">
+                        <div class="input-box">
+                          <input name="cantidad" type="text" oninput="inputInt(this, 10);" required>
+                          <label for="cantidad">Cantidad (10):</label>
+                        </div>
+                      </div>
+                      <div class="form-col">
+                        <div class="input-box">
+                          <input class="selector" type="search" placeholder="Buscar producto..." id="productos">
+                          <label for="productos">Producto (1):</label>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="form-foot">
+                      <a class="btn btn-success">guardar</a>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+          <% } %>
+
+            <% if(session.permiso.editar){ %>
+              <div class="card" id="card-editar" style="display: none;">
+                <div class="card-head">
+                  <h3 class="card-tittle">Editar Transaccion</h3>
+                </div>
+                <div class="card-body">
+                  <div class="card-form">
+                    <div class="form-box">
+                      <form>
+                        <div class="form-body">
+                          <div class="form-col">
+                            <input type="hidden" name="id">
+                            <div class="input-box">
+                              <input name="inporte_total" type="text" oninput="inputFloat(this, 10, 2);" required>
+                              <label for="inporte_total">Importe (10):</label>
+                            </div>
+                            <div class="input-box">
+                              <input class="selector" type="search" placeholder="Buscar vendedor..." id="vendedor">
+                              <label for="rol">Vendedor (1):</label>
+                            </div>
+                          </div>
+                          <div class="form-col">
+                            <div class="input-box">
+                              <input class="selector" type="search" placeholder="Buscar tipo de Transaccion..."
+                                id="metodo-transaccion">
+                              <label for="rol">Tipo de Transaccion (1):</label>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="form-foot">
+                          <a class="btn btn-success">guardar</a>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <% } %>
+
+                <div class="card" id="select-date">
+                  <div class="card-body">
+                    <div class="calendario"></div>
+                  </div>
+                </div>
+  </div>
+</div>
+
+<script src="/src/private/routes/reportes/ventas/index.js"></script>

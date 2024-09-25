@@ -1,0 +1,150 @@
+<div class="content-header">
+  <!---------------------- CSS ---------------------->
+
+  <!-- lib control -->
+  <link href="/src/private/lib/code/code.min.css" rel="stylesheet">
+
+  <!-- layout -->
+  <link href="/src/private/layout/css/btn.css" rel="stylesheet">
+
+  <!---------------------- JS ---------------------->
+
+  <!-- lib control -->
+  <script src="/src/private/lib/formatTime/formatTime.min.js"></script>
+  <script src="/src/private/lib/code/code.min.js"></script>
+
+  <!-- layout -->
+
+  <!---------------------- BODY ---------------------->
+
+  <div class="content-tittle">Terminal</div>
+  <div class="content-path">
+    <a href="/control/servidor">/Servidor</a>
+    <a href="/control/servidor/terminal">/Terminal</a>
+  </div>
+</div>
+<div class="content-body">
+  <div class="menu-body">
+    <div class="card" id="card-cmd">
+      <div class="card-head">
+        <h3 class="card-tittle">Terminal:</h3>
+        <div class="f-row">
+          <a class="btn btn-info">Descargar</a>
+          <a class="btn btn-danger">Limpiar</a>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="code"></div>
+        <div class="input-box-code">
+          <div>
+            <input class="input-path" value="/" disabled></input>
+            <div class="highlight-bash">
+              <div class="highlight"></div>
+              <input class="input-code" type="text" oninput="inputBash(this);">
+            </div>
+          </div>
+          <a class="input-btn">Enviar</a>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <div class="code"><span class="code-line"><span class="code-row">1</span>Windows (CMD)</span><span
+            class="code-line"><span class="code-row">2</span><span class="code-bracket"> </span>Navegar entre
+            directorios:</span><span class="code-line"><span class="code-row">3</span><span class="code-bracket">
+            </span><span class="code-bracket"> </span><span class="bright-orange weight-bold">cd</span> &lt;ruta&gt;:
+            Cambia al directorio especificado.</span><span class="code-line"><span class="code-row">4</span><span
+              class="code-bracket"> </span><span class="code-bracket"> </span><span
+              class="bright-orange weight-bold">cd</span> ..: Sube un nivel en la jerarquía de directorios.</span><span
+            class="code-line"><span class="code-row">5</span><span class="code-bracket"> </span>Ver las
+            carpetas:</span><span class="code-line"><span class="code-row">6</span><span class="code-bracket">
+            </span><span class="code-bracket"> </span><span class="bright-orange weight-bold">dir</span> : Lista el
+            contenido <span class="bright-orange weight-bold">del</span> directorio actual.</span><span
+            class="code-line"><span class="code-row">7</span><span class="code-bracket"> </span>Crear
+            carpetas:</span><span class="code-line"><span class="code-row">8</span><span class="code-bracket">
+            </span><span class="code-bracket"> </span><span class="bright-orange weight-bold">mkdir</span>
+            &lt;nombre_carpeta&gt;: Crea una nueva carpeta.</span><span class="code-line"><span
+              class="code-row">9</span><span class="code-bracket"> </span>Eliminar carpetas:</span><span
+            class="code-line"><span class="code-row">10</span><span class="code-bracket"> </span><span
+              class="code-bracket"> </span><span class="bright-orange weight-bold">rmdir</span> &lt;nombre_carpeta&gt;:
+            Elimina una carpeta vacía.</span><span class="code-line"><span class="code-row">11</span><span
+              class="code-bracket"> </span><span class="code-bracket"> </span><span
+              class="bright-orange weight-bold">rmdir</span> /s &lt;nombre_carpeta&gt;: Elimina una carpeta y todo su
+            contenido.</span><span class="code-line"><span class="code-row">12</span><span class="code-bracket">
+            </span>Cambiar el nombre de carpetas:</span><span class="code-line"><span class="code-row">13</span><span
+              class="code-bracket"> </span><span class="code-bracket"> </span><span
+              class="bright-orange weight-bold">rename</span> &lt;nombre_actual&gt; &lt;nuevo_nombre&gt;: Cambia el
+            nombre de una carpeta.</span><span class="code-line"><span class="code-row">14</span><span
+              class="code-bracket"> </span>Mover carpetas:</span><span class="code-line"><span
+              class="code-row">15</span><span class="code-bracket"> </span><span class="code-bracket"> </span><span
+              class="bright-orange weight-bold">move</span> &lt;nombre_carpeta&gt; &lt;nueva_ruta&gt;: Mueve una carpeta
+            a una nueva ubicación.</span><span class="code-line"><span class="code-row">16</span><span
+              class="code-bracket"> </span>Abrir archivos:</span><span class="code-line"><span
+              class="code-row">17</span><span class="code-bracket"> </span><span class="code-bracket"> </span><span
+              class="bright-orange weight-bold">start</span> &lt;nombre_archivo&gt;: Abre un archivo con la aplicación
+            predeterminada.</span><span class="code-line"><span class="code-row">18</span><span class="code-bracket">
+            </span>Editar el nombre de archivos:</span><span class="code-line"><span class="code-row">19</span><span
+              class="code-bracket"> </span><span class="code-bracket"> </span><span
+              class="bright-orange weight-bold">rename</span> &lt;nombre_actual&gt; &lt;nuevo_nombre&gt;: Cambia el
+            nombre de un archivo.</span><span class="code-line"><span class="code-row">20</span><span
+              class="code-bracket"> </span>Eliminar archivos:</span><span class="code-line"><span
+              class="code-row">21</span><span class="code-bracket"> </span><span class="code-bracket"> </span><span
+              class="bright-orange weight-bold">del</span> &lt;nombre_archivo&gt;: Elimina un archivo.</span><span
+            class="code-line"><span class="code-row">22</span><span class="code-bracket"> </span>Mover
+            archivos:</span><span class="code-line"><span class="code-row">23</span><span class="code-bracket">
+            </span><span class="code-bracket"> </span><span class="bright-orange weight-bold">move</span>
+            &lt;nombre_archivo&gt; &lt;nueva_ruta&gt;: Mueve un archivo a una nueva ubicación.</span><span
+            class="code-line"><span class="code-row">24</span>Linux (Terminal)</span><span class="code-line"><span
+              class="code-row">25</span><span class="code-bracket"> </span>Navegar entre directorios:</span><span
+            class="code-line"><span class="code-row">26</span><span class="code-bracket"> </span><span
+              class="code-bracket"> </span><span class="bright-orange weight-bold">cd</span> &lt;ruta&gt;: Cambia al
+            directorio especificado.</span><span class="code-line"><span class="code-row">27</span><span
+              class="code-bracket"> </span><span class="code-bracket"> </span><span
+              class="bright-orange weight-bold">cd</span> ..: Sube un nivel en la jerarquía de directorios.</span><span
+            class="code-line"><span class="code-row">28</span><span class="code-bracket"> </span>Ver las
+            carpetas:</span><span class="code-line"><span class="code-row">29</span><span class="code-bracket">
+            </span><span class="code-bracket"> </span>ls: Lista el contenido <span
+              class="bright-orange weight-bold">del</span> directorio actual.</span><span class="code-line"><span
+              class="code-row">30</span><span class="code-bracket"> </span><span class="code-bracket"> </span><span
+              class="bright-orange weight-bold">ls</span> -l: Lista detallada <span
+              class="bright-orange weight-bold">del</span> contenido.</span><span class="code-line"><span
+              class="code-row">31</span><span class="code-bracket"> </span>Crear carpetas:</span><span
+            class="code-line"><span class="code-row">32</span><span class="code-bracket"> </span><span
+              class="code-bracket"> </span><span class="bright-orange weight-bold">mkdir</span> &lt;nombre_carpeta&gt;:
+            Crea una nueva carpeta.</span><span class="code-line"><span class="code-row">33</span><span
+              class="code-bracket"> </span>Eliminar carpetas:</span><span class="code-line"><span
+              class="code-row">34</span><span class="code-bracket"> </span><span class="code-bracket"> </span><span
+              class="bright-orange weight-bold">rmdir</span> &lt;nombre_carpeta&gt;: Elimina una carpeta
+            vacía.</span><span class="code-line"><span class="code-row">35</span><span class="code-bracket">
+            </span><span class="code-bracket"> </span><span class="bright-orange weight-bold">rm</span> -r
+            &lt;nombre_carpeta&gt;: Elimina una carpeta y todo su contenido.</span><span class="code-line"><span
+              class="code-row">36</span><span class="code-bracket"> </span>Cambiar el nombre de carpetas:</span><span
+            class="code-line"><span class="code-row">37</span><span class="code-bracket"> </span><span
+              class="code-bracket"> </span><span class="bright-orange weight-bold">mv</span> &lt;nombre_actual&gt;
+            &lt;nuevo_nombre&gt;: Cambia el nombre de una carpeta.</span><span class="code-line"><span
+              class="code-row">38</span><span class="code-bracket"> </span>Mover carpetas:</span><span
+            class="code-line"><span class="code-row">39</span><span class="code-bracket"> </span><span
+              class="code-bracket"> </span><span class="bright-orange weight-bold">mv</span> &lt;nombre_carpeta&gt;
+            &lt;nueva_ruta&gt;: Mueve una carpeta a una nueva ubicación.</span><span class="code-line"><span
+              class="code-row">40</span><span class="code-bracket"> </span>Abrir archivos:</span><span
+            class="code-line"><span class="code-row">41</span><span class="code-bracket"> </span><span
+              class="code-bracket"> </span><span class="bright-orange weight-bold">xdg-open</span>
+            &lt;nombre_archivo&gt;: Abre un archivo con la aplicación predeterminada.</span><span
+            class="code-line"><span class="code-row">42</span><span class="code-bracket"> </span>Editar el nombre de
+            archivos:</span><span class="code-line"><span class="code-row">43</span><span class="code-bracket">
+            </span><span class="code-bracket"> </span><span class="bright-orange weight-bold">mv</span>
+            &lt;nombre_actual&gt; &lt;nuevo_nombre&gt;: Cambia el nombre de un archivo.</span><span
+            class="code-line"><span class="code-row">44</span><span class="code-bracket"> </span>Eliminar
+            archivos:</span><span class="code-line"><span class="code-row">45</span><span class="code-bracket">
+            </span><span class="code-bracket"> </span><span class="bright-orange weight-bold">rm</span>
+            &lt;nombre_archivo&gt;: Elimina un archivo.</span><span class="code-line"><span
+              class="code-row">46</span><span class="code-bracket"> </span>Mover archivos:</span><span
+            class="code-line"><span class="code-row">47</span><span class="code-bracket"> </span><span
+              class="code-bracket"> </span><span class="bright-orange weight-bold">mv</span> &lt;nombre_archivo&gt;
+            &lt;nueva_ruta&gt;: Mueve un archivo a una nueva ubicación.</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/src/private/routes/servidor/terminal/index.js"></script>
