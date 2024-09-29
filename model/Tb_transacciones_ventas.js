@@ -659,6 +659,7 @@ class tb_transacciones_ventas extends Table {
 
         for (let producto of productos) {
           let { cantidad, producto_id } = producto;
+          producto_id = producto.producto_id = Number(producto_id);
           let { compra, venta } = await this.app.model.tb_productos.readPriceId(producto_id);
 
           let importe = producto.importe = cantidad * venta;

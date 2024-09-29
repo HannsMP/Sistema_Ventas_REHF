@@ -196,7 +196,7 @@ class Table {
     if (!this.isTypeMatch(data, columnInfo))
       throw this.error(
         'COLUMN_TYPE_FIELD',
-        `El parámetro de la columna ${column} debe ser de tipo ${columnInfo.type}, no de tipo ${typeComputed}`
+        `El parámetro de la columna ${column} debe ser de tipo ${columnInfo.type}, no de tipo ${typeof data}`
       );
 
     if (compute?.unic)

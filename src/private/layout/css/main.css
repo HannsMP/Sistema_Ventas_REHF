@@ -285,6 +285,7 @@ html[theme=green] .theme-green,
     right: 0;
     z-index: 0;
     transition: width .2s;
+    scroll-behavior: smooth;
 
     >div {
       width: 100%;

@@ -10,7 +10,7 @@ $('.content-body').ready(async () => {
     let resAsistenciaTbl = await query.post.cookie("/api/asistencia/table/readAll");
     /** @typedef {{agregar:number, editar:number, eliminar:number, exportar:number, ocultar:number, ver:number}} PERMISOS */
     /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[], permisos: PERMISOS}} */
-    let { list: dataAsistencias, permisos: permisosAsistencias } = await resAsistenciaTbl.json();
+    let { list: dataAsistencias } = await resAsistenciaTbl.json();
 
     /* 
       ==================================================
@@ -18,7 +18,13 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    let calendarioBox = document.querySelector('.calendario')
+    let $cardMain = $('#card-main');
+    let cardMain = $cardMain[0];
+
+    let cardMainDownload = cardMain.querySelector('.download');
+
+    let calendarioBox = document.querySelector('.calendario');
+
     let $table = new Tables('#table-main');
 
     /* 
@@ -27,11 +33,6 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    dataAsistencias.forEach(d => {
-      d.usuario = '<div>' + d.usuario + '</div>'
-      d.rol_nombre = '<div>' + d.rol_nombre + '</div>'
-    })
-
     $table.init({
       data: dataAsistencias,
       pageLength: 10,
@@ -39,11 +40,13 @@ $('.content-body').ready(async () => {
       columnDefs: [
         {
           className: 'dtr-tag',
-          targets: 0
+          targets: 0,
+          render: data => '<div>' + data + '</div>'
         },
         {
           className: 'dtr-tag',
-          targets: 2
+          targets: 2,
+          render: data => '<div>' + data + '</div>'
         },
         {
           className: 'dt-type-date',
@@ -67,8 +70,9 @@ $('.content-body').ready(async () => {
         { data: 'fecha_creacion' }
       ],
     })
-    $table.buttons();
 
+    if (permiso.exportar) $table.buttons();
+    else cardMainDownload.innerHTML = '';
 
     let calendar = new Calendar(calendarioBox);
     calendar.on('click', ({ date }) => {
@@ -100,9 +104,9 @@ $('.content-body').ready(async () => {
     socket.on('/asistencias/data/insert', data => {
       $table.add({
         id: data.id,
-        usuario: '<div>' + data.usuario + '</div>',
+        usuario: data.usuario,
         telefono: data.telefono,
-        rol_nombre: '<div>' + data.rol_nombre + '</div>',
+        rol_nombre: data.rol_nombre,
         hora_coneccion: data.hora_coneccion,
         hora_desconeccion: data.hora_desconeccion,
         fecha_creacion: data.fecha_creacion,
@@ -118,5 +122,4 @@ $('.content-body').ready(async () => {
   } catch ({ message, stack }) {
     socket.emit('/err/client', { message, stack, url: window.location.href })
   }
-
 })

@@ -40,20 +40,13 @@ $('.content-body').ready(async () => {
     let btnAddRow = menuBody.querySelector('#add-row');
     let btnGuardar = menuBody.querySelector('#save');
 
+    let $tableHistory = new Tables('#table-historial');
+
     /* 
       ==================================================
       ==================== DATATABLE ====================
       ==================================================
     */
-
-    let $tableHistory = new Tables('#table-historial');
-
-    dataTransaccionesVentas.forEach(d => {
-      d.descuento = d.descuento?.toFixed(2);
-      d.importe_total = d.importe_total?.toFixed(2);
-      d.cliente_nombres = '<div>' + d.cliente_nombres + '</div>';
-      d.metodo_pago_nombre = '<div>' + d.metodo_pago_nombre + '</div>';
-    });
 
     $tableHistory.init({
       data: dataTransaccionesVentas,
@@ -69,10 +62,20 @@ $('.content-body').ready(async () => {
           className: 'dtr-tag',
           orderable: false,
           targets: 1,
+          render: data => '<div>' + data + '</div>'
         },
         {
           className: 'dtr-tag',
           targets: 2,
+          render: data => '<div>' + data + '</div>'
+        },
+        {
+          targets: 3,
+          render: data => data?.toFixed(2)
+        },
+        {
+          targets: 4,
+          render: data => data?.toFixed(2)
         },
         {
           className: 'dt-type-date',
@@ -140,62 +143,77 @@ $('.content-body').ready(async () => {
     /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
     let { list: dataMetodoPago } = await resMetodoPago.json();
 
-    let dataSelectorMetodoPago = new Selector(dataMetodoPago);
-
-    let resProductos = await query.post.cookie("/api/productos/selector/readAll");
-
-    /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-    let { list: dataProductos } = await resProductos.json();
-
-    let dataSelectorProductos = new Selector(dataProductos, 'img');
+    let dataSelectorMetodoPago = new SelectorMap(dataMetodoPago);
 
     /* ===================== SOCKET ===================== */
 
-    socket.on('/productos/data/insert', data => {
-      dataSelectorProductos.add(data.id, data.codigo + ' - ' + data.producto, data.foto_src_small);
-    })
 
-    socket.on('/productos/data/updateId', data => {
-      dataSelectorProductos.upd(data.id, { name: data.codigo + ' - ' + data.producto, src: data.foto_src_small });
-    })
-
-    socket.on('/productos/data/state', data => {
-      if (data.estado)
-        dataSelectorProductos.add(data.id, data.codigo + ' - ' + data.producto, data.foto_src_small);
-      else
-        dataSelectorProductos.rmv(data.id);
-    })
-
-    socket.on('/productos/data/deleteId', data => {
-      dataSelectorProductos.rmv(data.id);
-    })
+    /* 
+      ==================================================
+      ==================== SELECTOR ====================
+      ==================================================
+    */
 
     let resClientes = await query.post.cookie("/api/clientes/selector/readAll");
 
     /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
     let { list: dataClientes } = await resClientes.json();
 
-    let dataSelectorClientes = new Selector(dataClientes);
+    let dataSelectorClientes = new SelectorMap(dataClientes);
 
     /* ===================== SOCKET ===================== */
 
     socket.on('/clientes/data/insert', data => {
-      dataSelectorClientes.add(data.id, data.nombres);
+      dataSelectorClientes.set(data.id, data.nombres);
     })
 
     socket.on('/clientes/data/updateId', data => {
-      dataSelectorClientes.upd(data.id, { name: data.nombres });
+      dataSelectorClientes.set(data.id, { name: data.nombres });
     })
 
     socket.on('/clientes/data/state', data => {
       if (data.estado)
-        dataSelectorClientes.add(data.id, data.nombres);
+        dataSelectorClientes.set(data.id, data.nombres);
       else
-        dataSelectorClientes.rmv(data.id);
+        dataSelectorClientes.delete(data.id);
     })
 
     socket.on('/clientes/data/deleteId', data => {
-      dataSelectorClientes.rmv(data.id);
+      dataSelectorClientes.delete(data.id);
+    })
+
+    /* 
+      ==================================================
+      ==================== SELECTOR ====================
+      ==================================================
+    */
+
+    let resProductos = await query.post.cookie("/api/productos/selector/readAll");
+
+    /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
+    let { list: dataProductos } = await resProductos.json();
+
+    let dataSelectorProductos = new SelectorMap(dataProductos, 'img');
+
+    /* ===================== SOCKET ===================== */
+
+    socket.on('/productos/data/insert', data => {
+      dataSelectorProductos.set(data.id, data.codigo + ' - ' + data.producto, data.foto_src_small);
+    })
+
+    socket.on('/productos/data/updateId', data => {
+      dataSelectorProductos.set(data.id, { name: data.codigo + ' - ' + data.producto, src: data.foto_src_small });
+    })
+
+    socket.on('/productos/data/state', data => {
+      if (data.estado)
+        dataSelectorProductos.set(data.id, data.codigo + ' - ' + data.producto, data.foto_src_small);
+      else
+        dataSelectorProductos.delete(data.id);
+    })
+
+    socket.on('/productos/data/deleteId', data => {
+      dataSelectorProductos.delete(data.id);
     })
 
     /* 
@@ -205,7 +223,7 @@ $('.content-body').ready(async () => {
     */
 
     let metodoPagoSelectorUnic = new SelectorUnic(inputSelectorMetodoPago, dataSelectorMetodoPago, true);
-    let clientesSelectorUnic = new SelectorUnic(inputSelectorCliente, dataSelectorClientes);
+    let clientesSelectorUnic = new SelectorUnic(inputSelectorCliente, dataSelectorClientes, true);
 
     /* 
       ==================================================
@@ -214,7 +232,6 @@ $('.content-body').ready(async () => {
     */
 
     metodoPagoSelectorUnic.on('selected', async indexer => {
-
       let resMetodoPago = await query.post.json.cookie("/api/tipo_metodo_pago/code/read", { id: indexer.id });
 
       /** @type {{data: {nombre:string, contador: number, igv:number}}} */
@@ -235,14 +252,14 @@ $('.content-body').ready(async () => {
       inputIgv.valueIgv = data.igv;
     })
 
-    metodoPagoSelectorUnic.on('diselected', () => {
+    metodoPagoSelectorUnic.on('deselected', () => {
       inputIgv.value = `- %`;
       inputIgv.valueIgv = undefined;
     })
 
     /* 
       ==================================================
-      ================== CLICK ADD ROW ==================
+      ================== REFRESH DATA RESULT ==================
       ==================================================
     */
 
@@ -262,6 +279,13 @@ $('.content-body').ready(async () => {
         = inputImporteTotal.value
         = importeTotal;
     }
+
+    /* 
+      ==================================================
+      ================== CLICK ADD ROW ==================
+      ==================================================
+    */
+
     let clickAddRow = _ => {
       let inputBoxCount = textToHtml(`
           <div class="input-box" style="width: 100%;;">
@@ -288,8 +312,8 @@ $('.content-body').ready(async () => {
 
       let beforeChage;
 
-      selector.on('selected', async indexer => {
-        let resProductos = await query.post.json.cookie("/api/productos/table/readPriceId", { id: indexer.id });
+      selector.on('selected', async dataSelected => {
+        let resProductos = await query.post.json.cookie("/api/productos/table/readPriceId", { id: dataSelected.id });
 
         /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
         let { list } = await resProductos.json();
@@ -310,7 +334,7 @@ $('.content-body').ready(async () => {
         row.tr.removeAttribute('ignore')
       })
 
-      selector.on('diselected', _ => {
+      selector.on('deselected', _ => {
         row.set.precio();
         row.set.total();
 
@@ -325,7 +349,7 @@ $('.content-body').ready(async () => {
         if (row != r) return;
 
         if (selector.selected[0])
-          selector.diselect(selector.selected[0].id)
+          selector.deselect(selector.selected[0].id)
 
         delete inputBoxCount
         delete inputBoxSelect
@@ -418,13 +442,16 @@ $('.content-body').ready(async () => {
     */
 
     socket.on('/transacciones_ventas/data/insert', data => {
+      let row = $table.get('#' + data.id);
+      if (row) return;
+
       $tableHistory.add({
         id: data.id,
         codigo: data.codigo,
-        descuento: data.descuento.toFixed(2),
-        cliente_nombres: '<div>' + data.cliente_nombres + '</div>',
-        metodo_pago_nombre: '<div>' + data.metodo_pago_nombre + '</div>',
-        importe_total: data.importe_total.toFixed(2),
+        descuento: data,
+        cliente_nombres: data.cliente_nombres,
+        metodo_pago_nombre: data.metodo_pago_nombre,
+        importe_total: data,
         hora: formatTime('hh:mm:ss TT')
       });
     })
@@ -435,11 +462,11 @@ $('.content-body').ready(async () => {
 
       $tableHistory.update({
         cliente_id: data.cliente_id,
-        cliente_nombres: '<div>' + data.cliente_nombres + '</div>',
+        cliente_nombres: data.cliente_nombres,
         metodo_pago_id: data.metodo_pago_id,
-        metodo_pago_nombre: '<div>' + data.metodo_pago_nombre + '</div>',
-        descuento: data.descuento.toFixed(2),
-        importe_total: data.importe_total.toFixed(2)
+        metodo_pago_nombre: data.metodo_pago_nombre,
+        descuento: data.descuento,
+        importe_total: data.importe_total
       });
     })
 

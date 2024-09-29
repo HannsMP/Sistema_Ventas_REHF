@@ -11,7 +11,7 @@ $('.content-body').ready(async () => {
     /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
     let { list: dataCategorias } = await resCategorias.json();
 
-    let dataSelectorCategorias = new Selector(dataCategorias);
+    let dataSelectorCategorias = new SelectorMap(dataCategorias);
 
     /* 
       ==================================================
@@ -46,13 +46,24 @@ $('.content-body').ready(async () => {
     let { list: dataProductos } = await resProductosTbl.json();
 
     let catalogoBox = document.getElementById('catalogo');
-    let catalogo = new Catalogue(catalogoBox, 20);
-
-    dataProductos.forEach(d => {
-      d.venta = d.venta?.toFixed(2);
-    })
-
-    catalogo.charge(dataProductos);
+    let catalogo = new Catalogue(catalogoBox, (data) => {
+      return `
+      <div class="product">
+        <div class="product-imagen">
+          <img src="${data.src}" class="imagen">
+          <span class="product-counter">${data.cantidad}</span>
+        </div>
+        <div class="product-details">
+          <span class="detail-name">${data.producto}</span>
+          <span class="detail-category">${data.categoria_nombre}</span>
+          <p class="detail-description scroll-y">${data.descripcion}</p>
+          <div class="details-data">
+            <span class="detail-code">${data.codigo}</span>
+            <span class="detail-price">s/ ${data.venta?.toFixed(2)}</span>
+          </div>
+        </div>
+      </div>`
+    }, dataProductos, 20);
 
     /* 
       ==================================================
@@ -80,11 +91,11 @@ $('.content-body').ready(async () => {
       else
         url.searchParams.delete('codigo');
 
-      if (selected.length) {
+      if (selected.size) {
         if (url.searchParams.has('selected'))
-          url.searchParams.set('selected', selected.map(({ id }) => id).join(','));
+          url.searchParams.set('selected', [...selected].join(','));
         else
-          url.searchParams.append('selected', selected.map(({ id }) => id).join(','));
+          url.searchParams.append('selected', [...selected].join(','));
       }
       else
         url.searchParams.delete('selected');
@@ -98,7 +109,7 @@ $('.content-body').ready(async () => {
       /** @type {string} */
       let findCodigo = filtroCodigo.value;
       /** @type {Set<number>} */
-      let findSelected = new Set(filtroSelectorMulti.selected.map(s => s.id));
+      let findSelected = new Set(filtroSelectorMulti.selected.map(s => Number(s.id)));
 
       if (change)
         updUrl(findProducto, findCodigo, findSelected);
@@ -106,17 +117,17 @@ $('.content-body').ready(async () => {
       if (findCodigo || findProducto || findSelected.size) {
         cardBody.classList.add('load-spinner');
         catalogo.filter(data => {
+
           /** @type {{ producto:string, codigo:string, categoria_id:number }} */
           let { producto, codigo, categoria_id } = data,
             is = false;
-
           if (findCodigo && findCodigo != '')
             is = is || codigo.startsWith(findCodigo);
           else
             is = true;
 
           if (findProducto && findProducto != '')
-            is = is && producto.includes(findProducto);
+            is = is && producto.toLowerCase().includes(findProducto.toLowerCase());
 
           if (findSelected.size)
             is = is && findSelected.has(categoria_id);
@@ -126,7 +137,7 @@ $('.content-body').ready(async () => {
         cardBody.classList.remove('load-spinner');
       }
       else
-        catalogo.filter();
+        catalogo.reset();
     }
 
     btnFiltro.addEventListener('click', () => search());
@@ -160,12 +171,12 @@ $('.content-body').ready(async () => {
     /* ===================== SOCKET ===================== */
 
     socket.on('/productos/data/insert', data => {
-      catalogo.insert({
+      catalogo.set({
         id: data.id,
         codigo: data.codigo,
         producto: data.producto,
         descripcion: data.descripcion,
-        venta: 's/ ' + data.venta.toFixed(2),
+        venta: data.venta,
         cantidad: data.cantidad,
         categoria_id: data.categoria_id,
         categoria_nombre: data.categoria_nombre,
@@ -175,11 +186,11 @@ $('.content-body').ready(async () => {
     })
 
     socket.on('/productos/data/updateId', data => {
-      catalogo.update(data.id, {
+      catalogo.set(data.id, {
         codigo: data.codigo,
         producto: data.producto,
         descripcion: data.descripcion,
-        venta: 's/ ' + data.venta.toFixed(2),
+        venta: data.venta,
         cantidad: data.cantidad,
         categoria_id: data.categoria_id,
         categoria_nombre: data.categoria_nombre,
@@ -189,12 +200,12 @@ $('.content-body').ready(async () => {
 
     socket.on('/productos/data/state', data => {
       if (data.estado) {
-        catalogo.insert({
+        catalogo.set({
           id: data.id,
           codigo: data.codigo,
           producto: data.producto,
           descripcion: data.descripcion,
-          venta: 's/ ' + data.venta.toFixed(2),
+          venta: data.venta,
           cantidad: data.cantidad,
           categoria_id: data.categoria_id,
           categoria_nombre: data.categoria_nombre,
@@ -212,12 +223,12 @@ $('.content-body').ready(async () => {
 
     socket.on('/productos/categorias/state', data => {
       if (data.estado) {
-        data.data.forEach(d => catalogo.insert({
+        data.data.forEach(d => catalogo.set({
           id: d.id,
           codigo: d.codigo,
           producto: d.producto,
           descripcion: d.descripcion,
-          venta: 's/ ' + d.venta.toFixed(2),
+          venta: d.venta,
           cantidad: d.cantidad,
           categoria_id: d.categoria_id,
           categoria_nombre: d.categoria_nombre,
@@ -230,22 +241,22 @@ $('.content-body').ready(async () => {
     })
 
     socket.on('/categorias/data/insert', data => {
-      dataSelectorCategorias.add(data.id, data.nombre);
+      dataSelectorCategorias.set(data.id, data.nombre);
     })
 
     socket.on('/categorias/data/updateId', data => {
-      dataSelectorCategorias.upd(data.id, { name: data.nombre });
+      dataSelectorCategorias.set(data.id, { name: data.nombre });
     })
 
     socket.on('/categorias/data/state', async data => {
       if (data.estado)
-        dataSelectorCategorias.add(data.id, data.nombre);
+        dataSelectorCategorias.set(data.id, data.nombre);
       else
-        dataSelectorCategorias.rmv(data.id);
+        dataSelectorCategorias.delete(data.id);
     })
 
     socket.on('/categorias/data/deleteId', data => {
-      dataSelectorCategorias.rmv(data.id);
+      dataSelectorCategorias.delete(data.id);
     })
 
   } catch ({ message, stack }) {

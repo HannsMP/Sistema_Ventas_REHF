@@ -15,23 +15,23 @@ module.exports = {
       res.status(401).json({ autorization: 'acceso denegado' });
     }
   ],
-  post: [
-    async function (req, res, next) {
-      try {
-        let { query, values } = req.body
+  // post: [
+  //   async function (req, res, next) {
+  //     try {
+  //       let { query, values } = req.body
 
-        let [result] = values
-          ? await this.model.poolValues(query, values)
-          : await this.model.pool(query);
+  //       let [result] = values
+  //         ? await this.model.poolValues(query, values)
+  //         : await this.model.pool(query);
 
-        res.status(200).json({
-          result: result
-        })
-      } catch (e) {
-        res.status(200).json({
-          error: e
-        })
-      }
-    }
-  ]
+  //       res.status(200).json({
+  //         result: result
+  //       })
+  //     } catch (e) {
+  //       res.status(200).json({
+  //         error: e
+  //       })
+  //     }
+  //   }
+  // ]
 }

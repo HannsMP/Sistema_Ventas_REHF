@@ -268,6 +268,7 @@ class Tb_categorias extends Table {
   updateIdState(id, estado) {
     return new Promise(async (res, rej) => {
       try {
+        
         this.constraint('id', id);
         this.constraint('estado', estado);
 

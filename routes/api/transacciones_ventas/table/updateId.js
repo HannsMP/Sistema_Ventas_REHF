@@ -20,9 +20,9 @@ module.exports = {
         } = req.body;
 
         let OkPacket = await this.model.tb_transacciones_ventas.updateId(Number(id), {
-          usuario_id,
+          metodo_pago_id: Number(metodo_pago_id),
+          usuario_id: Number(usuario_id),
           importe_total,
-          metodo_pago_id
         });
 
         let { descuento } = await this.model.tb_transacciones_ventas.refreshId(Number(id));

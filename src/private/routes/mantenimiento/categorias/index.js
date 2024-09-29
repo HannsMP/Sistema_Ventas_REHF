@@ -10,7 +10,7 @@ $('.content-body').ready(async () => {
     let resCategoriasTbl = await query.post.cookie("/api/categorias/table/readAll");
     /** @typedef {{agregar:number, editar:number, eliminar:number, exportar:number, ocultar:number, ver:number}} PERMISOS */
     /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[], permisos: PERMISOS}} */
-    let { list: dataCategorias, permisos: permisosCategorias } = await resCategoriasTbl.json();
+    let { list: dataCategorias } = await resCategoriasTbl.json();
 
     let uniqueNombre = new Set(dataCategorias.map(({ nombre }) => nombre.toLowerCase()));
 
@@ -20,11 +20,21 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    let menuSide = document.querySelector('.menu-side');
+    let sideContent = document.querySelector('.side-content');
+
+    let $cardMain = $('#card-main');
+    let cardMain = $cardMain[0];
+
+    let tblclose = document.querySelectorAll('#table-nuevo .card-close ,#table-editar .card-close');
+    let tblNuevo = cardMain.querySelectorAll('.tbl-nuevo');
+    let tblEditar = cardMain.querySelectorAll('.tbl-editar');
+    let tblEliminar = cardMain.querySelectorAll('.tbl-eliminar');
+    let cardMainDownload = cardMain.querySelector('.download');
 
     let $tableNuevo = $('#table-nuevo');
     let tableNuevo = $tableNuevo[0];
     let inputNuevoText = tableNuevo.querySelectorAll('input[type=text], textarea');
+    let inputNuevoNombre = inputNuevoText[0];
     let inputNuevoCheckbox = tableNuevo.querySelector('input[type=checkbox]');
     let btnNuevo = tableNuevo.querySelector('.btn');
 
@@ -32,6 +42,8 @@ $('.content-body').ready(async () => {
     let tableEditar = $tableEditar[0];
     let inputEditarHidden = tableEditar.querySelector('input[type=hidden]');
     let inputEditarText = tableEditar.querySelectorAll('input[type=text], textarea');
+    let inputEditarNombre = inputEditarText[0];
+    let inputEditarDescripcion = inputEditarText[1];
     let btnEditar = tableEditar.querySelector('.btn');
 
     let calendarioBox = document.querySelector('.calendario');
@@ -67,389 +79,335 @@ $('.content-body').ready(async () => {
       this.disabled = false;
     }
 
-    dataCategorias.forEach(d => {
-      d.descripcion = '<div class="scroll-y">' + d.descripcion + '</div>';
+    /* 
+      ==================================================
+      ================= DATATABLE STATE =================
+      ==================================================
+    */
+
+    $table.init({
+      data: dataCategorias,
+      select: {
+        style: 'single'
+      },
+      order: [[2, 'asc']],
+      columnDefs: [
+        {
+          className: 'dtr-control',
+          orderable: false,
+          targets: 0,
+          render: (data, _, row) => {
+            let i = document.createElement('input');
+            i.classList.add('check-switch');
+            i.setAttribute('type', 'checkbox');
+            i.addEventListener('change', updateIdState.bind(i, row));
+            i.checked = data;
+            return i;
+          }
+        },
+        {
+          className: 'dtr-code',
+          orderable: false,
+          targets: 1,
+        },
+        {
+          className: 'dtr-description',
+          orderable: false,
+          targets: 3,
+          render: data => '<div class="scroll-y">' + data + '</div>'
+        }
+      ],
+      columns: [
+        { data: 'estado' },
+        { data: 'codigo' },
+        { data: 'nombre' },
+        { data: 'descripcion' },
+        { data: 'creacion' },
+        { data: 'producto_cantidad' }
+      ],
     })
 
-    if (permisosCategorias.ocultar) {
+    if (permiso.exportar) $table.buttons();
+    else cardMainDownload.innerHTML = '';
 
-      dataCategorias.forEach(d => {
-        let i = document.createElement('input');
-        i.classList.add('check-switch');
-        i.setAttribute('type', 'checkbox');
-        i.addEventListener('change', updateIdState.bind(i, d));
-        i.checked = d.estado;
-        d.estado = i;
-      });
+    $table.toggleColumn(0, permiso.ocultar);
 
-      /* 
-        ==================================================
-        ================= DATATABLE STATE =================
-        ==================================================
-      */
+    /* 
+      ==================================================
+      ====================== MENU ======================
+      ==================================================
+    */
 
-      $table.init({
-        data: dataCategorias,
-        select: {
-          style: 'single'
-        },
-        order: [[2, 'asc']],
-        columnDefs: [
-          {
-            className: 'dtr-control',
-            orderable: false,
-            targets: 0,
-          },
-          {
-            className: 'dtr-code',
-            orderable: false,
-            targets: 1,
-          },
-          {
-            className: 'dtr-description',
-            orderable: false,
-            targets: 3,
-          }
-        ],
-        columns: [
-          { data: 'estado' },
-          { data: 'codigo' },
-          { data: 'nombre' },
-          { data: 'descripcion' },
-          { data: 'creacion' },
-          { data: 'producto_cantidad' }
-        ],
-      })
-      $table.buttons();
-    }
-    else {
-
-      /* 
-        ==================================================
-        ==================== DATATABLE ====================
-        ==================================================
-      */
-
-      $table.init({
-        data: dataCategorias,
-        select: {
-          style: 'single'
-        },
-        order: [[1, 'asc']],
-        columnDefs: [
-          {
-            className: 'dtr-code',
-            orderable: false,
-            targets: 0,
-          },
-          {
-            className: 'dtr-description',
-            orderable: false,
-            targets: 2,
-          }
-        ],
-        columns: [
-          { data: 'codigo' },
-          { data: 'nombre' },
-          { data: 'descripcion' },
-          { data: 'creacion' },
-          { data: 'producto_cantidad' }
-        ],
-      })
-      $table.buttons();
+    let toggleMenu = {
+      now: 'table',
+      nuevo() {
+        this.emptyEditar();
+        this.now = 'nuevo';
+        $$tableNuevo.show('fast');
+        tableEditar.style.display = 'none';
+        sideContent.scrollTop = tableNuevo.offsetTop - sideContent.offsetTop - 100;
+      },
+      editar() {
+        this.emptyNuevo();
+        this.now = 'editar';
+        $tableEditar.show('fast');
+        tableNuevo.style.display = 'none';
+        sideContent.scrollTop = tableEditar.offsetTop - sideContent.offsetTop - 100;
+      },
+      close() {
+        this.emptyNuevo();
+        this.emptyEditar();
+        this.now = 'table';
+        tableNuevo.style.display = 'none';
+        tableEditar.style.display = 'none';
+      },
+      toggleNuevo(state = tableNuevo?.style?.display == 'none') {
+        tableNuevo.style.display = state ? '' : 'none';
+      },
+      toggleEditar(state = tableEditar?.style?.display == 'none') {
+        tableEditar.style.display = state ? '' : 'none';
+      },
+      emptyNuevo() {
+        if (this.now != 'nuevo') return;
+        inputNuevoText.forEach(i => i.value = '');
+      },
+      emptyEditar() {
+        if (this.now != 'editar') return;
+        inputEditarText.forEach(i => i.value = '');
+      },
     }
 
     /* 
       ==================================================
-      ================ EXISTET MENU SIDE ================
+      =================== CALENDARIO ===================
       ==================================================
     */
 
-    if (menuSide) {
+    let calendar = new Calendar(calendarioBox);
 
-      /* 
-        ==================================================
-        ====================== MENU ======================
-        ==================================================
-      */
-
-      let toggleMenu = {
-        now: 'table',
-        nuevo() {
-          this.emptyEditar();
-          tableNuevo && ($tableNuevo.show('fast'));
-          tableEditar && (tableEditar.style.display = 'none');
-          this.now = 'nuevo';
-        },
-        editar() {
-          this.emptyNuevo();
-          tableNuevo && (tableNuevo.style.display = 'none');
-          tableEditar && ($tableEditar.show('fast'));
-          this.now = 'editar';
-        },
-        close() {
-          this.emptyNuevo();
-          this.emptyEditar();
-          tableNuevo && (tableNuevo.style.display = 'none');
-          tableEditar && (tableEditar.style.display = 'none');
-          this.now = 'table';
-        },
-        toggleNuevo(state = tableNuevo?.style?.display == 'none') {
-          tableNuevo && (tableNuevo.style.display = state ? '' : 'none');
-        },
-        toggleEditar(state = tableEditar?.style?.display == 'none') {
-          tableEditar && (tableEditar.style.display = state ? '' : 'none');
-        },
-        emptyNuevo() {
-          if (this.now != 'nuevo') return;
-          inputNuevoText.forEach(i => i.value = '');
-        },
-        emptyEditar() {
-          if (this.now != 'editar') return;
-          inputEditarText.forEach(i => i.value = '');
-        },
-      }
-
-      /* 
-        ==================================================
-        =================== CALENDARIO ===================
-        ==================================================
-      */
-
-      let calendar = new Calendar(calendarioBox);
-
-      calendar.on('click', ({ date }) => {
-        $table.search(formatTime('YYYY-MM-DD', date));
-        toggleMenu.close();
-        $table.datatable.rows().deselect();
-
-        let url = new URL(window.location.href);
-        let fotmatDate = formatTime('YYYY/MM/DD', date)
-
-        if (url.searchParams.has('calendar_select'))
-          url.searchParams.set('calendar_select', fotmatDate);
-        else
-          url.searchParams.append('calendar_select', fotmatDate);
-
-        history.pushState({}, '', url.toString())
-      })
+    calendar.on('click', ({ date }) => {
+      $table.search(formatTime('YYYY-MM-DD', date));
+      toggleMenu.close();
+      $table.datatable.rows().deselect();
 
       let url = new URL(window.location.href);
-      if (url.searchParams.has('calendar_select')) {
-        let fotmatDate = url.searchParams.get('calendar_select');
-        calendar.setDate(fotmatDate);
-      }
+      let fotmatDate = formatTime('YYYY/MM/DD', date)
 
-      /* 
-        ==================================================
-        =================== CLOSE MENU ===================
-        ==================================================
-      */
+      if (url.searchParams.has('calendar_select'))
+        url.searchParams.set('calendar_select', fotmatDate);
+      else
+        url.searchParams.append('calendar_select', fotmatDate);
 
-      let tblclose = document.querySelectorAll('#table-nuevo .card-close ,#table-editar .card-close');
-      tblclose.forEach(btn => btn.addEventListener('click', () => toggleMenu.close()));
+      history.pushState({}, '', url.toString())
+    })
 
-      /* 
-        ==================================================
-        ================= PERMISO AGREGAR =================
-        ==================================================
-      */
-
-      if (permisosCategorias.agregar) {
-
-        /* 
-          ==================================================
-          ================= UNIQUE AGREGAR =================
-          ==================================================
-        */
-
-        let inputNuevoNombre = inputNuevoText[0];
-        inputNuevoNombre.addEventListener('input', () => {
-          let val = inputNuevoNombre.value;
-          if (!uniqueNombre.has(val?.toLowerCase()))
-            return inputNuevoNombre.except = null;
-          inputNuevoNombre.except = `El Nombre '${val}' ya existe.`;
-          ev && formError(inputNuevoNombre.except, inputNuevoNombre.parentNode);
-        })
-
-        /* 
-          ==================================================
-          =================== OPEN NUEVO ===================
-          ==================================================
-        */
-
-        let tblNuevo = document.querySelectorAll('.tbl-nuevo');
-        tblNuevo.forEach(btn => btn.addEventListener('click', () => toggleMenu.nuevo()));
-
-        /* 
-          ==================================================
-          =================== NUEVA DATA ===================
-          ==================================================
-        */
-
-        btnNuevo.addEventListener('click', async () => {
-          if (inputNuevoNombre.except)
-            return formError(inputNuevoNombre.except, inputNuevoNombre.parentNode);
-
-          let jsonData = {};
-
-          inputNuevoText.forEach(i => {
-            let column = i.getAttribute('name');
-            let value = i.value;
-            if (!value) return formError(`Se requiere un valor para ${column}`, i.parentNode);
-            jsonData[column] = value;
-          })
-
-          jsonData.estado = inputNuevoCheckbox.checked ? 1 : 0;
-
-          let resUsuarios = await query.post.json.cookie("/api/categorias/table/insert", jsonData);
-
-          /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-          let { err } = await resUsuarios.json();
-
-          if (err)
-            return alarm.warn('No se pudo agregar')
-
-          alarm.success(`Fila Agregada`);
-          toggleMenu.close();
-        })
-
-      }
-
-      /* 
-        ==================================================
-        ================= PERMISO EDITAR =================
-        ==================================================
-      */
-
-      if (permisosCategorias.editar) {
-
-        /* 
-          ==================================================
-          =================== OPEN EDITAR ===================
-          ==================================================
-        */
-
-        let inputEditarNombre = inputEditarText[0];
-        let inputEditarDescripcion = inputEditarText[1];
-
-        let tblEditar = document.querySelectorAll('.tbl-editar');
-        tblEditar.forEach(btn => btn.addEventListener('click', async () => {
-          let id = $table.selected();
-          if (!id) return alarm.warn('Selecciona una fila');
-
-          toggleMenu.editar();
-          let row = $table.get('#' + id);
-
-          inputEditarNombre.placeholder
-            = inputEditarNombre.beforeValue
-            = inputEditarNombre.value
-            = row.nombre;
-
-          inputEditarDescripcion.placeholder
-            = inputEditarDescripcion.beforeValue
-            = inputEditarDescripcion.value
-            = row.descripcion.replace(/<div class="scroll-y">([\s\S]*?)<\/div>/, (_, p) => p);
-
-          inputEditarHidden.value = row.id;
-        }))
-
-        /* 
-          ==================================================
-          ================== UNIQUE EDITAR ==================
-          ==================================================
-        */
-
-        inputEditarNombre.addEventListener('input', () => {
-          let val = inputEditarNombre.value;
-          if (inputEditarNombre.beforeValue == val || !uniqueNombre.has(val?.toLowerCase()))
-            return inputEditarNombre.except = null;
-          inputEditarNombre.except = `El Nombre '${val}' ya existe.`;
-          ev && formError(inputEditarNombre.except, inputEditarNombre.parentNode);
-        })
-
-        /* 
-          ==================================================
-          =================== EDITAR DATA ===================
-          ==================================================
-        */
-
-        btnEditar.addEventListener('click', async () => {
-          if (inputEditarNombre.except)
-            return formError(inputEditarNombre.except, inputEditarNombre.parentNode);
-
-          let jsonData = {};
-
-          let id = inputEditarHidden.value;
-          jsonData.id = id;
-
-          inputEditarText.forEach(i => {
-            let column = i.getAttribute('name');
-            let value = i.value;
-            if (!value) return formError(`Se requiere un valor para ${column}`, i.parentNode);
-            jsonData[column] = value;
-          })
-
-          let resUsuarios = await query.post.json.cookie("/api/categorias/table/updateId", jsonData);
-
-          /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-          let { err } = await resUsuarios.json();
-
-          if (err)
-            return alarm.warn('No se pudo Editar');
-
-          alarm.success(`Fila actualizada`);
-          toggleMenu.close();
-        })
-      }
+    let url = new URL(window.location.href);
+    if (url.searchParams.has('calendar_select')) {
+      let fotmatDate = url.searchParams.get('calendar_select');
+      calendar.setDate(fotmatDate);
     }
+
+    /* 
+      ==================================================
+      =================== CLOSE MENU ===================
+      ==================================================
+    */
+
+    tblclose.forEach(btn => btn.addEventListener('click', () => toggleMenu.close()));
+
+    /* 
+      ==================================================
+      ================= PERMISO AGREGAR =================
+      ==================================================
+    */
+
+    if (!permiso.agregar) tblNuevo.forEach(t => t.style.display = 'none');
+
+    /* 
+      ==================================================
+      ================= UNIQUE AGREGAR =================
+      ==================================================
+    */
+
+    inputNuevoNombre.addEventListener('input', () => {
+      let val = inputNuevoNombre.value;
+      if (!uniqueNombre.has(val?.toLowerCase()))
+        return inputNuevoNombre.except = null;
+      inputNuevoNombre.except = `El Nombre '${val}' ya existe.`;
+      ev && formError(inputNuevoNombre.except, inputNuevoNombre.parentNode);
+    })
+
+    /* 
+      ==================================================
+      =================== OPEN NUEVO ===================
+      ==================================================
+    */
+
+    tblNuevo.forEach(btn => btn.addEventListener('click', () => toggleMenu.nuevo()));
+
+    /* 
+      ==================================================
+      =================== NUEVA DATA ===================
+      ==================================================
+    */
+
+    btnNuevo.addEventListener('click', async () => {
+      if (inputNuevoNombre.except)
+        return formError(inputNuevoNombre.except, inputNuevoNombre.parentNode);
+
+      let jsonData = {};
+
+      inputNuevoText.forEach(i => {
+        let column = i.getAttribute('name');
+        let value = i.value;
+        if (!value) return formError(`Se requiere un valor para ${column}`, i.parentNode);
+        jsonData[column] = value;
+      })
+
+      jsonData.estado = inputNuevoCheckbox.checked ? 1 : 0;
+
+      let resUsuarios = await query.post.json.cookie("/api/categorias/table/insert", jsonData);
+
+      /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
+      let { err } = await resUsuarios.json();
+
+      if (err)
+        return alarm.warn('No se pudo agregar')
+
+      alarm.success(`Fila Agregada`);
+      toggleMenu.close();
+    })
+
+
+
+    /* 
+      ==================================================
+      ================= PERMISO EDITAR =================
+      ==================================================
+    */
+
+    if (!permiso.editar) tblEditar.forEach(t => t.style.display = 'none');
+
+    /* 
+      ==================================================
+      =================== OPEN EDITAR ===================
+      ==================================================
+    */
+
+    tblEditar.forEach(btn => btn.addEventListener('click', async () => {
+      let id = $table.selected();
+      if (!id) return alarm.warn('Selecciona una fila');
+
+      toggleMenu.editar();
+      let row = $table.get('#' + id);
+
+      inputEditarNombre.placeholder
+        = inputEditarNombre.beforeValue
+        = inputEditarNombre.value
+        = row.nombre;
+
+      inputEditarDescripcion.placeholder
+        = inputEditarDescripcion.beforeValue
+        = inputEditarDescripcion.value
+        = row.descripcion;
+
+      inputEditarHidden.value = row.id;
+    }))
+
+    /* 
+      ==================================================
+      ================== UNIQUE EDITAR ==================
+      ==================================================
+    */
+
+    inputEditarNombre.addEventListener('input', () => {
+      let val = inputEditarNombre.value;
+      if (inputEditarNombre.beforeValue == val || !uniqueNombre.has(val?.toLowerCase()))
+        return inputEditarNombre.except = null;
+      inputEditarNombre.except = `El Nombre '${val}' ya existe.`;
+      ev && formError(inputEditarNombre.except, inputEditarNombre.parentNode);
+    })
+
+    /* 
+      ==================================================
+      =================== EDITAR DATA ===================
+      ==================================================
+    */
+
+    btnEditar.addEventListener('click', async () => {
+      if (inputEditarNombre.except)
+        return formError(inputEditarNombre.except, inputEditarNombre.parentNode);
+
+      let jsonData = {};
+
+      let id = inputEditarHidden.value;
+      jsonData.id = id;
+
+      inputEditarText.forEach(i => {
+        let column = i.getAttribute('name');
+        let value = i.value;
+        if (!value) return formError(`Se requiere un valor para ${column}`, i.parentNode);
+        jsonData[column] = value;
+      })
+
+      let resUsuarios = await query.post.json.cookie("/api/categorias/table/updateId", jsonData);
+
+      /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
+      let { err } = await resUsuarios.json();
+
+      if (err)
+        return alarm.warn('No se pudo Editar');
+
+      alarm.success(`Fila actualizada`);
+      toggleMenu.close();
+      $table.datatable.rows().deselect();
+    })
+
+
     /* 
       ==================================================
       ================ PERMISO ELIMINAR ================
       ==================================================
     */
 
-    if (permisosCategorias.eliminar) {
+    if (!permiso.eliminar) tblEliminar.forEach(t => t.style.display = 'none');
 
-      /* 
-        ==================================================
-        ================== ELIMINAR DATA ==================
-        ==================================================
-      */
+    /* 
+      ==================================================
+      ================== ELIMINAR DATA ==================
+      ==================================================
+    */
 
-      let tblEliminar = document.querySelectorAll('.tbl-eliminar');
-      tblEliminar.forEach(btn => btn.addEventListener('click', async () => {
-        let id = $table.selected();
-        if (!id) return alarm.warn('Selecciona una fila');
+    tblEliminar.forEach(btn => btn.addEventListener('click', async () => {
+      let id = $table.selected();
+      if (!id) return alarm.warn('Selecciona una fila');
 
-        Swal.fire({
-          title: "Está seguro?",
-          text: "No podrás revertir esto!",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonColor: "rgb(13, 204, 242)",
-          cancelButtonColor: "rgb(220, 53, 69)",
-          confirmButtonText: "Si, borralo!",
-          cancelButtonText: "Cancelar",
-          background: 'rgb(24, 20, 47)',
-          color: 'rgb(255, 255, 255)',
-        })
-          .then(async (result) => {
-            if (result.isConfirmed) {
-              let resCategorias = await query.post.json.cookie("/api/categorias/table/deleteId", { id });
+      Swal.fire({
+        title: "Está seguro?",
+        text: "No podrás revertir esto!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "rgb(13, 204, 242)",
+        cancelButtonColor: "rgb(220, 53, 69)",
+        confirmButtonText: "Si, borralo!",
+        cancelButtonText: "Cancelar",
+        background: 'rgb(24, 20, 47)',
+        color: 'rgb(255, 255, 255)',
+      })
+        .then(async (result) => {
+          if (result.isConfirmed) {
+            let resCategorias = await query.post.json.cookie("/api/categorias/table/deleteId", { id });
 
-              /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-              let { err } = await resCategorias.json();
+            /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
+            let { err } = await resCategorias.json();
 
-              if (err)
-                return alarm.error(`Fila no Eliminada`);
+            if (err)
+              return alarm.error(`Fila no Eliminada`);
 
-              alarm.success(`Fila eliminada`);
-            }
-          });
-      }))
-
-    }
+            alarm.success(`Fila eliminada`);
+          }
+        });
+    }))
 
     /* 
       ==================================================
@@ -460,30 +418,26 @@ $('.content-body').ready(async () => {
     socket.on('/categorias/data/insert', data => {
       let row = $table.get('#' + data.id);
       if (row) return;
-      let i = document.createElement('input');
-      i.classList.add('check-switch');
-      i.setAttribute('type', 'checkbox');
-      i.addEventListener('change', updateIdState.bind(i, { nombre: data.nombre, id: data.id }));
-      i.checked = data.estado;
 
       $table.add({
         id: data.id,
-        estado: i,
+        estado: data.estado,
         nombre: data.nombre,
         codigo: data.codigo,
-        descripcion: '<div class="scroll-y">' + data.descripcion + '</div>',
+        descripcion: data.descripcion,
         creacion: formatTime('YYYY-MM-DD hh:mm:ss'),
         producto_cantidad: 0
       });
       uniqueNombre.add(data.nombre?.toLowerCase());
     })
 
-    let tblEditar = document.querySelectorAll('.tbl-editar');
     socket.on('/categorias/data/updateId', data => {
       let row = $table.get('#' + data.id);
+      if (!row) return;
+
       $table.update('#' + data.id, {
         nombre: data.nombre,
-        descripcion: '<div class="scroll-y">' + data.descripcion + '</div>'
+        descripcion: data.descripcion
       });
       uniqueNombre.delete(row.nombre?.toLowerCase());
       uniqueNombre.add(data.nombre?.toLowerCase());
@@ -495,7 +449,11 @@ $('.content-body').ready(async () => {
 
     socket.on('/categorias/data/state', data => {
       let row = $table.get('#' + data.id);
-      if (row?.estado) row.estado.checked = data.estado;
+      if (!row) return;
+
+      $table.update('#' + data.id, {
+        estado: data.estado,
+      });
     })
 
     socket.on('/categorias/data/deleteId', data => {

@@ -3,9 +3,9 @@
 
   <!-- lib control -->
   <link href="/src/private/lib/dataTables/datatables.min.css" rel="stylesheet">
+  <link href="/src/private/lib/calendar/calendar.min.css" rel="stylesheet">
   <link href="/src/private/lib/selector/selector.min.css" rel="stylesheet">
   <link href="/src/private/lib/imagen/imagen.min.css" rel="stylesheet">
-  <link href="/src/private/lib/catalogue/catalogue.css" rel="stylesheet">
 
   <!-- layout -->
   <link href="/src/private/layout/css/form.css" rel="stylesheet">
@@ -15,12 +15,16 @@
   <!---------------------- JS ---------------------->
 
   <!-- lib control -->
+  <script src="/src/private/lib/dataTables/datatables.min.js"></script>
   <script src="/src/private/lib/chart/chart.umd.min.js"></script>
+  <script src="/src/private/lib/calendar/calendar.min.js"></script>
   <script src="/src/private/lib/selector/selector.min.js"></script>
   <script src="/src/private/lib/imagen/imagen.min.js"></script>
+  <script src="/src/private/lib/formError/formError.min.js"></script>
 
   <!-- layout -->
   <script src="/src/private/lib/input/input.min.js"></script>
+  <script src="/src/private/lib/Tables/tables.min.js"></script>
 
   <!---------------------- BODY ---------------------->
 
@@ -35,42 +39,200 @@
   <div class="menu-body">
     <div class="card">
       <div class="card-head">
+        <h3 class="card-tittle">Control de colores</h3>
+      </div>
+      <div class="card-body">
+        <div class="card-form">
+          <div class="form-box">
+            <form>
+              <style>
+                input[type=color]~label {
+                  color: rgb(var(--color-8)) !important;
+                  top: 2px !important;
+                }
+
+                /* Estilo base para el input de color */
+                input[type="color"] {
+                  -webkit-appearance: none;
+                  -moz-appearance: none;
+                  appearance: none;
+                  overflow: hidden;
+                  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+                  transition: box-shadow 0.3s ease, transform 0.3s ease;
+                  display: inline-flex;
+                  vertical-align: bottom;
+                  border: none;
+                  border-radius: 2px;
+                  padding: 0;
+                  height: 40px;
+                  width: 100%;
+                  cursor: pointer;
+                  z-index: 1;
+                }
+
+                input[type="color"]::-webkit-color-swatch-wrapper {
+                  padding: 0;
+                }
+
+                input[type="color"]::-webkit-color-swatch {
+                  border: 0;
+                  border-radius: 2px 2px 0 0;
+                }
+
+                input[type="color"]::-moz-color-swatch {
+                  border: 0;
+                  border-radius: 2px 2px 0 0;
+                }
+
+                .pantone-card {
+                  background: #fff;
+                  display: grid;
+                  width: 100%;
+                  border-radius: 10px;
+                  box-shadow: 0 2px 4px #0001;
+                  border: 4px solid #fff;
+                }
+
+                output {
+                  display: block;
+                  background: #fff;
+                  color: black !important;
+                  font-size: 28px;
+                  padding: 16px;
+                  line-height: 1em;
+                  font-family: 'helvetica', sans-serif;
+
+                  &:before {
+                    content: 'HEXADECIMAL';
+                    font-size: 14px;
+                    font-weight: bold;
+                    display: block;
+                  }
+                }
+              </style>
+              <div class="form-body">
+                <div class="form-col">
+                  <div class="pantone-card">
+                    <input type="color" id="--primary">
+                    <output>--primary</output>
+                  </div>
+                  <div class="pantone-card">
+                    <input type="color" id="--secundary">
+                    <output>--secundary</output>
+                  </div>
+                  <div class="pantone-card">
+                    <input type="color" id="--state-1">
+                    <output>--state-1</output>
+                  </div>
+                  <div class="pantone-card">
+                    <input type="color" id="--state-2">
+                    <output>--state-2</output>
+                  </div>
+                  <div class="pantone-card">
+                    <input type="color" id="--state-3">
+                    <output>--state-3</output>
+                  </div>
+                  <div class="pantone-card">
+                    <input type="color" id="--state-4">
+                    <output>--state-4</output>
+                  </div>
+                  <div class="pantone-card">
+                    <input type="color" id="--color-0">
+                    <output>--color-0</output>
+                  </div>
+                  <div class="pantone-card">
+                    <input type="color" id="--color-1">
+                    <output>--color-1</output>
+                  </div>
+                </div>
+                <div class="form-col">
+                  <div class="pantone-card">
+                    <input type="color" id="--color-2">
+                    <output>--color-2</output>
+                  </div>
+                  <div class="pantone-card">
+                    <input type="color" id="--color-3">
+                    <output>--color-3</output>
+                  </div>
+                  <div class="pantone-card">
+                    <input type="color" id="--color-4">
+                    <output>--color-4</output>
+                  </div>
+                  <div class="pantone-card">
+                    <input type="color" id="--color-5">
+                    <output>--color-5</output>
+                  </div>
+                  <div class="pantone-card">
+                    <input type="color" id="--color-6">
+                    <output>--color-6</output>
+                  </div>
+                  <div class="pantone-card">
+                    <input type="color" id="--color-7">
+                    <output>--color-7</output>
+                  </div>
+                  <div class="pantone-card">
+                    <input type="color" id="--color-8">
+                    <output>--color-8</output>
+                  </div>
+                  <div class="pantone-card">
+                    <input type="color" id="--color-9">
+                    <output>--color-9</output>
+                  </div>
+                </div>
+              </div>
+            </form>
+            <div class="form-foot">
+              <a class="btn btn-success" id="descarga-theme">Descargar</a>
+              <a class="btn btn-danger" id="restablecer-theme">Restablecer</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card" id="card-main">
+      <div class="card-head">
         <h3 class="card-tittle">Categorias</h3>
-        <a class="btn btn-info"><i class='bx bx-plus'></i></a>
+        <div class="f-row">
+          <a class="btn btn-danger tbl-eliminar">
+            <i class='bx bx-trash'></i>
+          </a>
+          <a class="btn btn-warning tbl-editar">
+            <i class='bx bx-pencil'></i>
+          </a>
+          <a class="btn btn-info tbl-nuevo">
+            <i class='bx bx-plus'></i>
+          </a>
+        </div>
       </div>
       <div class="card-body">
         <div class="table-box">
           <table id="table-main" style="width: auto;">
             <thead>
               <tr>
-                <th>Ajustes</th>
+                <th>Estado</th>
                 <th>Nombre</th>
                 <th>Edad</th>
-                <th>Ciudad</th>
                 <th>Ocupacion</th>
-                <th>Fecha</th>
                 <th>Salario</th>
+                <th>Fecha</th>
               </tr>
             </thead>
-            <tbody> </tbody>
-            <tfoot>
-              <tr>
-                <th>Ajustes</th>
-                <th>Nombre</th>
-                <th>Edad</th>
-                <th>Ciudad</th>
-                <th>Ocupacion</th>
-                <th>Fecha</th>
-                <th>Salario</th>
-              </tr>
-            </tfoot>
           </table>
 
           <div class="tables-utils">
             <div class="download"></div>
             <div class="option">
-              <input class="check-switch" type="checkbox">
-              <a class="btn btn-danger"><i class='bx bx-trash'></i></a>
+              <div class="f-row">
+                <a class="btn btn-danger tbl-eliminar">
+                  <i class='bx bx-trash'></i>
+                </a>
+                <a class="btn btn-warning tbl-editar">
+                  <i class='bx bx-pencil'></i>
+                </a>
+                <a class="btn btn-info tbl-nuevo">
+                  <i class='bx bx-plus'></i>
+                </a>
+              </div>
             </div>
           </div>
         </div>
@@ -110,25 +272,6 @@
         </div>
         <div class="card-body">
           <canvas id="bar-chart"></canvas>
-        </div>
-
-      </div>
-
-      <div class="card">
-        <div class="card-head">
-          <h3 class="card-tittle">pie-chart</h3>
-        </div>
-        <div class="card-body">
-          <canvas id="pie-chart"></canvas>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-head">
-          <h3 class="card-tittle">doughnut-chart</h3>
-        </div>
-        <div class="card-body">
-          <canvas id="doughnut-chart"></canvas>
         </div>
       </div>
     </div>
@@ -282,5 +425,5 @@
   </div>
 </div>
 
-<script src="/src/private/lib/catalogue/Catalogue.js"></script>
 <script src="/src/private/routes/test.js"></script>
+<script src="/src/private/routes/color.js"></script>

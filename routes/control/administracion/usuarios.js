@@ -23,16 +23,17 @@ module.exports = {
   ],
   post: [
     async function (req, res, next) {
-      let { usuario } = this.cache.apiKey.read(req.cookies.apiKey);
+      let session = this.cache.apiKey.read(req.cookies.apiKey);
 
-      let userLayout = await this.model.tb_permisos.userLayoutAll(usuario.id);
+      let userLayout = await this.model.tb_permisos.userLayoutAll(session.usuario.id);
 
       let permiso = userLayout[module.exports.route];
 
-      if (!permiso.ver)
-        return res.status(403).render(module.exports.viewErrorPath, { session: { usuario }, userLayout });
+      if (!permiso.ver) return res.status(403).render(module.exports.viewErrorPath, { layout: false, session, userLayout });
 
-      res.render(module.exports.viewRenderPath, { layout: false, session: { usuario, permiso }, userLayout });
+      session.permiso = permiso;
+
+      res.render(module.exports.viewRenderPath, { layout: false, session, userLayout });
     },
   ]
 }

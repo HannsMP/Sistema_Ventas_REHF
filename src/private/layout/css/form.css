@@ -89,6 +89,7 @@
     input[type=email],
     input[type=search],
     input[type=password] {
+      font-family: "Fira Code", "Consolas", "Lucida Console", "Courier New", monospace;
       background-color: transparent;
       outline: none;
       width: 100%;

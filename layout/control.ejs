@@ -30,18 +30,23 @@
 
     <!---------------------- JS ---------------------->
 
+    <script>
+      var permiso = JSON.parse(decodeURI('<%= encodeURI(JSON.stringify(session.permiso)) %>'));
+      var permisosLayout = JSON.parse(decodeURI('<%= encodeURI(JSON.stringify(userLayout)) %>'));
+    </script>
     <!-- lib global -->
     <script src="/src/public/lib/jquery/jquery-3.7.1.min.js"></script>
     <script src="/src/public/lib/alarm/sweetalert2@11.min.js"></script>
 
+    <script src="/socket.io/socket.io.js"></script>
     <!-- lib control -->
     <script src="/src/private/document/dropper/dropper.min.js"></script>
     <script src="/src/private/document/alarm/alarm.min.js"></script>
+    <script src="/src/private/document/reconectSocket/reconectSocket.min.js"></script>
+
+    <script src="/src/private/lib/query/query.min.js"></script>
 
     <!-- layout -->
-    <script src="/socket.io/socket.io.js"></script>
-    <script>const socket = io()</script>
-    <script src="/src/private/layout/js/query.js"></script>
     <script src="/src/private/layout/js/control.js"></script>
 
     <!---------------------- Charge ---------------------->

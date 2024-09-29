@@ -12,7 +12,7 @@ module.exports = {
   description: `Muestra las ventas hechas en forma de tabla, con calculo de descriptivo. 
   Uso: */ventas [fecha]* 
   fecha: 
-    * * : sin especificar muestra las ventas del dia actual.
+    * *: sin especificar muestra las ventas del dia actual.
     *ayer*: muestra las ventas de un dia anterior al actual.
 
     Para fecha espefica:

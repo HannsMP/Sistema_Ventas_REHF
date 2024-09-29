@@ -9,13 +9,19 @@ class Tables {
     this.table.classList.add('load-spinner');
 
     this.datatable = this.i.DataTable({
+      data: config.data || [],
       rowId: 'id',
-      pageLength: config.pageLength || 50,
       autoWidth: false,
-      searching: true,
       ordering: true,
       paging: true,
+      pageLength: config.pageLength || 50,
       select: config.select,
+      order: config.order,
+      searching: true,
+      searchDelay: 200,
+      columns: config.columns,
+      deferRender: true,
+      columnDefs: config.columnDefs,
       language: {
         decimal: '',
         emptyTable: 'No hay datos disponibles en la tabla',
@@ -81,11 +87,9 @@ class Tables {
       initComplete: (settings, json) => {
         this.table.classList.remove('load-spinner');
       },
-      data: config.data || [],
-      order: config.order,
-      columnDefs: config.columnDefs,
-      columns: config.columns,
     });
+
+    this.config = config;
 
     if (autoparam) {
       let timeoutId;
@@ -118,18 +122,13 @@ class Tables {
     }
   }
   selected() {
-    let tblSelect = this.table.querySelector('.selected');
-    return Number(tblSelect?.id);
+    return this.datatable.row({ selected: true }).data()?.id;
   }
   selecteds() {
-    let tblSelect = this.table.querySelectorAll('.selected');
-    let ids = [];
-    tblSelect.forEach(t => ids.push(t?.id));
-    return ids;
+    return this.datatable.rows({ selected: true }).data().toArray().map(row => row.id);
   }
   data(data) {
-    this.datatable
-      .clear();
+    this.datatable.clear();
     this.add(...data);
   }
   add(...data) {
@@ -158,5 +157,11 @@ class Tables {
   }
   buttons(here = '.tables-utils .download') {
     this.datatable.buttons().container().appendTo(here);
+  }
+  toggleColumn(index, state) {
+    this.datatable.column(index).visible(state)
+  }
+  toggleSelect(state, defaultStyle = this.config?.select?.style || 'single') {
+    this.datatable.select.style(state ? defaultStyle : 'api');
   }
 }

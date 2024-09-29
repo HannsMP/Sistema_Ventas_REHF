@@ -24,14 +24,14 @@ module.exports = {
         let OkPacket = productoVendido.producto_id == producto_id
           ? await this.model.tb_ventas.updateId(Number(id), {
             importe: cantidad * (productoVendido.importe / productoVendido.cantidad),
-            producto_id,
+            producto_id: Number(producto_id),
             cantidad,
           })
           : await this.model.tb_ventas.updateId(Number(id), {
             importe: cantidad * (
               await this.model.tb_productos.readPriceId(Number(producto_id))
             ).venta,
-            producto_id,
+            producto_id: Number(producto_id),
             cantidad,
           });
 

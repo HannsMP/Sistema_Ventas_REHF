@@ -27,6 +27,7 @@ const Time = require('./utils/Time');
 /** @typedef {(this: App, req: import('express').Request, res: import('express').Response, next: import('express').NextFunction)=>void} callbackRoute */
 
 class App {
+  estado = 0;
   /* Utils */
   time = new Time(0, "[YYYY/MM/DD hh:mm:ss tt]");
   logSuccess = new Logger(
@@ -129,7 +130,6 @@ class App {
 
     // ready server
     await this.listen();
-    this.logSuccess.writeStart(`[App] http://${this.config.SERVER.ip}:${this.config.SERVER.port}`);
 
     // ready bot
     if (this.config.BOT.autoRun)
@@ -148,10 +148,25 @@ class App {
 
   listen() {
     return new Promise((res, rej) => {
-      this.listener = this.server.listen(this.config.SERVER.port, function (err) {
-        if (err) return rej(err);
-        res(this);
+      if (this.estado) return res();
+      this.listener = this.server.listen(this.config.SERVER.port, e => {
+        if (e) return rej(e);
+        this.logSuccess.writeStart(`[App] http://${this.config.SERVER.ip}:${this.config.SERVER.port}`);
+        this.estado = 1;
+        res();
       })
+    })
+  }
+  close() {
+    return new Promise(res => {
+      if (!this.estado) return res();
+      this.socket.io.close();
+      this.listener.close();
+      this.listener.closeAllConnections();
+      this.listener.closeIdleConnections();
+      this.logSuccess.writeStart(`[App] close`);
+      this.estado = 0;
+      res();
     })
   }
 }

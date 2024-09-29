@@ -14,7 +14,7 @@ module.exports = {
 
         let { id } = req.body;
 
-        let [list] = await this.model.tb_productos.readPriceIds(id);
+        let [list] = await this.model.tb_productos.readPriceIds(Number(id));
 
         res.status(200).json({ list })
       } catch (e) {

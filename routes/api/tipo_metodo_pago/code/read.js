@@ -14,7 +14,7 @@ module.exports = {
 
         let { id } = req.body;
 
-        let data = await this.model.tipo_metodo_pago.readId(id);
+        let data = await this.model.tipo_metodo_pago.readId(Number(id));
 
         res.status(200).json({ data })
       } catch (e) {

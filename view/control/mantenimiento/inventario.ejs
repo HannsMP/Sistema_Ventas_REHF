@@ -39,19 +39,19 @@
 
 <div class="content-body">
   <div class="menu-body">
-    <div class="card">
+    <div class="card" id="card-main">
       <div class="card-head">
         <h3 class="card-tittle">Tabla de Inventario</h3>
         <div class="f-row">
-          <% if(session.permiso.eliminar){ %>
-            <a class="btn btn-danger tbl-eliminar"><i class='bx bx-trash'></i></a>
-            <% } %>
-              <% if(session.permiso.editar){ %>
-                <a class="btn btn-warning tbl-editar"><i class='bx bx-pencil'></i></a>
-                <% } %>
-                  <% if(session.permiso.agregar){ %>
-                    <a class="btn btn-info tbl-nuevo"><i class='bx bx-plus'></i></a>
-                    <% } %>
+          <a class="btn btn-danger tbl-eliminar" <% if(!session.permiso.eliminar){ %> style="display: none" <% } %> >
+              <i class='bx bx-trash'></i>
+          </a>
+          <a class="btn btn-warning tbl-editar" <% if(!session.permiso.editar){ %> style="display: none" <% } %> >
+              <i class='bx bx-pencil'></i>
+          </a>
+          <a class="btn btn-info tbl-nuevo" <% if(!session.permiso.agregar){ %> style="display: none" <% } %> >
+              <i class='bx bx-plus'></i>
+          </a>
         </div>
       </div>
       <div class="card-body">
@@ -59,158 +59,150 @@
           <table id="table-main" style="width: auto;">
             <thead>
               <tr>
-                <% if(session.permiso.ocultar){ %>
-                  <th>Estado</th>
-                  <% } %>
-                    <th>Codigo</th>
-                    <th>Producto</th>
-                    <th>Descripcion</th>
-                    <th>Compra</th>
-                    <th>Venta</th>
-                    <th>Creacion</th>
-                    <th>Categoria</th>
+                <th>Estado</th>
+                <th>Codigo</th>
+                <th>Producto</th>
+                <th>Descripcion</th>
+                <th>Categoria</th>
+                <th>Compra</th>
+                <th>Venta</th>
+                <th>Creacion</th>
               </tr>
             </thead>
             <tbody></tbody>
           </table>
           <div class="cards">
             <div class="tables-utils">
-              <% if(session.permiso.exportar){ %>
-                <div class="download"></div>
-                <% } %>
-                  <div class="f-row option ">
-                    <% if(session.permiso.eliminar){ %>
-                      <a class="btn btn-danger tbl-eliminar"><i class='bx bx-trash'></i></a>
-                      <% } %>
-                        <% if(session.permiso.editar){ %>
-                          <a class="btn btn-warning tbl-editar"><i class='bx bx-pencil'></i></a>
-                          <% } %>
-                            <% if(session.permiso.agregar){ %>
-                              <a class="btn btn-info tbl-nuevo"><i class='bx bx-plus'></i></a>
-                              <% } %>
-                  </div>
+              <div class="download" <% if(!session.permiso.exportar){ %> style="display: none" <% } %> ></div>
+
+              <div class="f-row option ">
+                <a class="btn btn-danger tbl-eliminar" <% if(!session.permiso.eliminar){ %> style="display: none" <% }
+                    %>>
+                    <i class='bx bx-trash'></i>
+                </a>
+                <a class="btn btn-warning tbl-editar" <% if(!session.permiso.editar){ %> style="display: none" <% } %> >
+                    <i class='bx bx-pencil'></i>
+                </a>
+                <a class="btn btn-info tbl-nuevo" <% if(!session.permiso.agregar){ %> style="display: none" <% } %> >
+                    <i class='bx bx-plus'></i>
+                </a>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-  <% if(session.permiso.agregar || session.permiso.editar){ %>
-    <div class="menu-side">
-      <% if(session.permiso.agregar){ %>
-        <div class="card" id="table-nuevo" style="display: none;">
-          <div class="card-head">
-            <h3 class="card-tittle">Nuevo Producto</h3>
-            <a class="card-close"><i class='bx bx-x'></i></a>
-          </div>
-          <div class="card-body">
-            <div class="card-form">
-              <div class="form-box">
-                <form>
-                  <div class="form-body">
-                    <div class="form-col">
-                      <div class="input-box">
-                        <input name="producto" type="text" oninput="inputCapitalize(this, 50)" required>
-                        <label for="producto">Nombre del Producto (50):</label>
-                      </div>
-                      <div class="input-box">
-                        <input name="compra" type="text" oninput="inputFloat(this, 10, 2);" required>
-                        <label for="compra">Precio de Compra (10):</label>
-                      </div>
-                      <div class="input-box">
-                        <input name="venta" type="text" oninput="inputFloat(this, 10, 2);" required>
-                        <label for="venta">Precio de Venta (10):</label>
-                      </div>
-                      <div class="input-box">
-                        <textarea name="descripcion" class="scroll-y"
-                          oninput="autoHeight(this); inputParagraphCase(this, 250);" required></textarea>
-                        <label for="descripcion">Descripcion (250):</label>
-                      </div>
-                    </div>
-                    <div class="form-col">
-                      <div class="input-box">
-                        <input class="selector" type="search" placeholder="Buscar categoria...">
-                        <label for="categorias">Categorias:</label>
-                      </div>
-                      <div class="input-box">
-                        <input class="imagen-unic" type="file" accept=".jpeg, .jpg, .png, .webp">
-                        <label for="fotos">Nombre:</label>
-                      </div>
-                    </div>
+  <div class="menu-side">
+    <div class="card" id="table-nuevo" style="display: none">
+      <div class="card-head">
+        <h3 class="card-tittle">Nuevo Producto</h3>
+        <a class="card-close"><i class='bx bx-x'></i></a>
+      </div>
+      <div class="card-body">
+        <div class="card-form">
+          <div class="form-box">
+            <form>
+              <div class="form-body">
+                <div class="form-col">
+                  <div class="input-box">
+                    <input name="producto" type="text" oninput="inputCapitalize(this, 50)" required>
+                    <label for="producto">Nombre del Producto (50):</label>
                   </div>
-                  <div class="form-foot">
-                    <a class="btn btn-success">guardar</a>
-                    <div class="f-row">
-                      <input class="check-switch" type="checkbox" checked>
-                      <label>estado</label>
-                    </div>
+                  <div class="input-box">
+                    <input name="compra" type="text" oninput="inputFloat(this, 10, 2);" required>
+                    <label for="compra">Precio de Compra (10):</label>
                   </div>
-                </form>
+                  <div class="input-box">
+                    <input name="venta" type="text" oninput="inputFloat(this, 10, 2);" required>
+                    <label for="venta">Precio de Venta (10):</label>
+                  </div>
+                  <div class="input-box">
+                    <textarea name="descripcion" class="scroll-y"
+                      oninput="autoHeight(this); inputParagraphCase(this, 250);" required></textarea>
+                    <label for="descripcion">Descripcion (250):</label>
+                  </div>
+                </div>
+                <div class="form-col">
+                  <div class="input-box">
+                    <input class="selector" type="search" placeholder="Buscar categoria...">
+                    <label for="categorias">Categorias:</label>
+                  </div>
+                  <div class="input-box">
+                    <input class="imagen-unic" type="file" accept=".jpeg, .jpg, .png, .webp">
+                    <label for="fotos">Nombre:</label>
+                  </div>
+                </div>
               </div>
-            </div>
+              <div class="form-foot">
+                <a class="btn btn-success">guardar</a>
+                <div class="f-row">
+                  <input class="check-switch" type="checkbox" checked>
+                  <label>estado</label>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
-        <% } %>
+      </div>
+    </div>
 
-          <% if(session.permiso.editar){ %>
-            <div class="card" id="table-editar" style="display: none;">
-              <div class="card-head">
-                <h3 class="card-tittle">Editar Producto</h3>
-                <a class="card-close"><i class='bx bx-x'></i></a>
-              </div>
-              <div class="card-body">
-                <div class="card-form">
-                  <div class="form-box">
-                    <form>
-                      <div class="form-body">
-                        <div class="form-col">
-                          <input type="hidden" name="id">
-                          <div class="input-box">
-                            <input name="producto" type="text" oninput="inputCapitalize(this, 50)" required>
-                            <label for="producto">Nombre del Producto (50):</label>
-                          </div>
-                          <div class="input-box">
-                            <input name="compra" type="text" oninput="inputFloat(this, 10, 2);" required>
-                            <label for="compra">Precio de Compra (10):</label>
-                          </div>
-                          <div class="input-box">
-                            <input name="venta" type="text" oninput="inputFloat(this, 10, 2);" required>
-                            <label for="venta">Precio de Venta (10):</label>
-                          </div>
-                          <div class="input-box">
-                            <textarea name="descripcion" class="scroll-y"
-                              oninput="autoHeight(this); inputParagraphCase(this, 250);" required></textarea>
-                            <label for="descripcion">Descripcion (250):</label>
-                          </div>
-                        </div>
-                        <div class="form-col">
-                          <div class="input-box">
-                            <input class="selector" type="search" placeholder="Buscar categoria...">
-                            <label for="categorias">Categorias:</label>
-                          </div>
-                          <div class="input-box">
-                            <input class="imagen-unic" type="file" accept=".jpg, .png">
-                            <label for="fotos">Nombre:</label>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="form-foot">
-                        <a class="btn btn-success">guardar</a>
-                      </div>
-                    </form>
+    <div class="card" id="table-editar" style="display: none">
+      <div class="card-head">
+        <h3 class="card-tittle">Editar Producto</h3>
+        <a class="card-close"><i class='bx bx-x'></i></a>
+      </div>
+      <div class="card-body">
+        <div class="card-form">
+          <div class="form-box">
+            <form>
+              <div class="form-body">
+                <div class="form-col">
+                  <input type="hidden" name="id">
+                  <div class="input-box">
+                    <input name="producto" type="text" oninput="inputCapitalize(this, 50)" required>
+                    <label for="producto">Nombre del Producto (50):</label>
+                  </div>
+                  <div class="input-box">
+                    <input name="compra" type="text" oninput="inputFloat(this, 10, 2);" required>
+                    <label for="compra">Precio de Compra (10):</label>
+                  </div>
+                  <div class="input-box">
+                    <input name="venta" type="text" oninput="inputFloat(this, 10, 2);" required>
+                    <label for="venta">Precio de Venta (10):</label>
+                  </div>
+                  <div class="input-box">
+                    <textarea name="descripcion" class="scroll-y"
+                      oninput="autoHeight(this); inputParagraphCase(this, 250);" required></textarea>
+                    <label for="descripcion">Descripcion (250):</label>
+                  </div>
+                </div>
+                <div class="form-col">
+                  <div class="input-box">
+                    <input class="selector" type="search" placeholder="Buscar categoria...">
+                    <label for="categorias">Categorias:</label>
+                  </div>
+                  <div class="input-box">
+                    <input class="imagen-unic" type="file" accept=".jpg, .png">
+                    <label for="fotos">Nombre:</label>
                   </div>
                 </div>
               </div>
-            </div>
-            <% } %>
-
-              <div class="card" id="select-date">
-                <div class="card-body">
-                  <div class="calendario"></div>
-                </div>
+              <div class="form-foot">
+                <a class="btn btn-success">guardar</a>
               </div>
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
-    <% } %>
+
+    <div class="card" id="select-date">
+      <div class="card-body">
+        <div class="calendario"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script src="/src/private/routes/mantenimiento/inventario/index.js"></script>

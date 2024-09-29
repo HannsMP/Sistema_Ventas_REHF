@@ -22,12 +22,19 @@ document.addEventListener('DOMContentLoaded', () => {
   navTheme.addEventListener('click', async ev => {
     let themeOp = ev.target;
     if (!themeOp.classList.contains('theme-op')) return;
+    let themeBefore = document.documentElement.getAttribute('theme');
     let { theme } = themeOp.dataset;
+    document.documentElement.setAttribute('theme', theme);
+    
     let resChangeTheme = await query.post.json.cookie('/api/usuarios/config/changeTheme', { theme });
-    let { err, theme: themeRes } = await resChangeTheme.json();
-    if (err) return alarm.warn('No se pudo cambiar el tema');
+    let { err, theme: themeAfter } = await resChangeTheme.json();
 
-    document.documentElement.setAttribute('theme', themeRes);
+    if (err) {
+      document.documentElement.setAttribute('theme', themeBefore);
+      return alarm.warn('No se pudo cambiar el tema');
+    }
+
+    document.documentElement.setAttribute('theme', themeAfter);
   })
 
   /* 

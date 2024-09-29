@@ -22,6 +22,9 @@ module.exports = {
           comentario
         } = req.body;
 
+        cliente_id = Number(cliente_id);
+        metodo_pago_id = Number(metodo_pago_id);
+
         let usuario_id = usuario.id;
 
         let { codigo, descuento, listVentas } = await this.model.tb_transacciones_ventas
