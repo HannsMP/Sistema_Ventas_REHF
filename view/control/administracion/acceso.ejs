@@ -86,400 +86,395 @@
       </div>
     </div>
   </div>
-  <% if(session.permiso.agregar || session.permiso.editar){ %>
-    <div class="menu-side" style="display: none;">
-      <style>
-        .table-acceso-side[option=permiso] {
-          input[name=disabled] {
-            display: none;
-          }
-
-          input[name=disabled]:checked {
-            display: inline !important;
-          }
-
-          input[name=disabled]:checked+input[name=permiso] {
-            display: none !important;
-          }
-        }
-
-        .table-acceso-side[option=disabled] input[name=permiso] {
+  <div class="menu-side">
+    <style>
+      .table-acceso-side[option=permiso] {
+        input[name=disabled] {
           display: none;
         }
-      </style>
-      <% if(session.permiso.agregar){ %>
-        <div class="card" id="table-nuevo" style="display: none;">
-          <div class="card-head">
-            <h3 class="card-tittle">Nueva direccion y permisos</h3>
-            <a class="card-close"><i class='bx bx-x'></i></a>
-          </div>
-          <div class="card-body">
-            <div class="card-form">
-              <div class="form-box">
-                <form>
-                  <div class="form-body">
-                    <div class="form-col">
-                      <div class="input-box">
-                        <input name="menu_principal" type="text" oninput="inputLimit(this, 20)" required>
-                        <label for="menu_principal">Principal (20):</label>
-                      </div>
-                      <div class="input-box">
-                        <input name="menu_ruta" type="text" oninput="inputLimit(this, 100)" required>
-                        <label for="menu_ruta">Ruta (100):</label>
-                      </div>
-                      <div class="table-box">
-                        <table class="table-acceso-side" option="permiso">
-                          <thead>
-                            <tr>
-                              <th>Rol</th>
-                              <th><i class='bx bx-show'></i></th>
-                              <th><i class='bx bx-plus'></i></th>
-                              <th><i class='bx bx-pencil'></i></th>
-                              <th><i class='bx bx-trash-alt'></i></th>
-                              <th><i class='bx bx-hide'></i></th>
-                              <th><i class='bx bx-download'></i></th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr rol_id="1" rol_nombre="Administrador">
-                              <td>Administrador</td>
-                              <td class="checked" column="permiso_ver">
-                                <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                <input name="permiso" class="check-checked" type="checkbox">
-                              </td>
-                              <td class="checked" column="permiso_agregar">
-                                <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                <input name="permiso" class="check-checked" type="checkbox">
-                              </td>
-                              <td class="checked" column="permiso_editar">
-                                <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                <input name="permiso" class="check-checked" type="checkbox">
-                              </td>
-                              <td class="checked" column="permiso_eliminar">
-                                <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                <input name="permiso" class="check-checked" type="checkbox">
-                              </td>
-                              <td class="checked" column="permiso_ocultar">
-                                <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                <input name="permiso" class="check-checked" type="checkbox">
-                              </td>
-                              <td class="checked" column="permiso_exportar">
-                                <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                <input name="permiso" class="check-checked" type="checkbox">
-                              </td>
-                            </tr>
-                            <tr rol_id="2" rol_nombre="Gerente">
-                              <td>Gerente</td>
-                              <td class="checked" column="permiso_ver">
-                                <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                <input name="permiso" class="check-checked" type="checkbox">
-                              </td>
-                              <td class="checked" column="permiso_agregar">
-                                <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                <input name="permiso" class="check-checked" type="checkbox">
-                              </td>
-                              <td class="checked" column="permiso_editar">
-                                <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                <input name="permiso" class="check-checked" type="checkbox">
-                              </td>
-                              <td class="checked" column="permiso_eliminar">
-                                <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                <input name="permiso" class="check-checked" type="checkbox">
-                              </td>
-                              <td class="checked" column="permiso_ocultar">
-                                <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                <input name="permiso" class="check-checked" type="checkbox">
-                              </td>
-                              <td class="checked" column="permiso_exportar">
-                                <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                <input name="permiso" class="check-checked" type="checkbox">
-                              </td>
-                            </tr>
-                            <tr rol_id="3" rol_nombre="Supervisor">
-                              <td>Supervisor</td>
-                              <td class="checked" column="permiso_ver">
-                                <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                <input name="permiso" class="check-checked" type="checkbox">
-                              </td>
-                              <td class="checked" column="permiso_agregar">
-                                <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                <input name="permiso" class="check-checked" type="checkbox">
-                              </td>
-                              <td class="checked" column="permiso_editar">
-                                <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                <input name="permiso" class="check-checked" type="checkbox">
-                              </td>
-                              <td class="checked" column="permiso_eliminar">
-                                <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                <input name="permiso" class="check-checked" type="checkbox">
-                              </td>
-                              <td class="checked" column="permiso_ocultar">
-                                <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                <input name="permiso" class="check-checked" type="checkbox">
-                              </td>
-                              <td class="checked" column="permiso_exportar">
-                                <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                <input name="permiso" class="check-checked" type="checkbox">
-                              </td>
-                            </tr>
-                            <tr rol_id="4" rol_nombre="Colaborador">
-                              <td>Colaborador</td>
-                              <td class="checked" column="permiso_ver">
-                                <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                <input name="permiso" class="check-checked" type="checkbox">
-                              </td>
-                              <td class="checked" column="permiso_agregar">
-                                <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                <input name="permiso" class="check-checked" type="checkbox">
-                              </td>
-                              <td class="checked" column="permiso_editar">
-                                <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                <input name="permiso" class="check-checked" type="checkbox">
-                              </td>
-                              <td class="checked" column="permiso_eliminar">
-                                <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                <input name="permiso" class="check-checked" type="checkbox">
-                              </td>
-                              <td class="checked" column="permiso_ocultar">
-                                <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                <input name="permiso" class="check-checked" type="checkbox">
-                              </td>
-                              <td class="checked" column="permiso_exportar">
-                                <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                <input name="permiso" class="check-checked" type="checkbox">
-                              </td>
-                            </tr>
-                            <tr rol_id="5" rol_nombre="Visualizador">
-                              <td>Visualizador</td>
-                              <td class="checked" column="permiso_ver">
-                                <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                <input name="permiso" class="check-checked" type="checkbox">
-                              </td>
-                              <td class="checked" column="permiso_agregar">
-                                <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                <input name="permiso" class="check-checked" type="checkbox">
-                              </td>
-                              <td class="checked" column="permiso_editar">
-                                <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                <input name="permiso" class="check-checked" type="checkbox">
-                              </td>
-                              <td class="checked" column="permiso_eliminar">
-                                <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                <input name="permiso" class="check-checked" type="checkbox">
-                              </td>
-                              <td class="checked" column="permiso_ocultar">
-                                <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                <input name="permiso" class="check-checked" type="checkbox">
-                              </td>
-                              <td class="checked" column="permiso_exportar">
-                                <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                <input name="permiso" class="check-checked" type="checkbox">
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="form-foot">
-                    <a class="btn btn-success">guardar</a>
-                    <input class="check-switch check-danger" id="check-disabled" type="checkbox">
-                    <a class="btn btn-info">Todo</a>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-        <% } %>
 
-          <% if(session.permiso.editar){ %>
-            <div class="card" id="table-editar" style="display: none;">
-              <div class="card-head">
-                <h3 class="card-tittle">Edicion de direccion y permisos</h3>
-                <a class="card-close"><i class='bx bx-x'></i></a>
-              </div>
-              <div class="card-body">
-                <div class="card-form">
-                  <div class="form-box">
-                    <form>
-                      <div class="form-body">
-                        <div class="form-col">
-                          <div class="input-box">
-                            <input name="menu_principal" type="text" oninput="inputLimit(this, 20)" required>
-                            <label for="menu_principal">Principal (20):</label>
-                          </div>
-                          <div class="input-box">
-                            <input name="menu_ruta" type="text" oninput="inputLimit(this, 100)" required>
-                            <label for="menu_ruta">Ruta (100):</label>
-                          </div>
-                          <div class="table-box">
-                            <table class="table-acceso-side" option="permiso">
-                              <thead>
-                                <tr>
-                                  <th>Rol</th>
-                                  <th><i class='bx bx-show'></i></th>
-                                  <th><i class='bx bx-plus'></i></th>
-                                  <th><i class='bx bx-pencil'></i></th>
-                                  <th><i class='bx bx-trash-alt'></i></th>
-                                  <th><i class='bx bx-hide'></i></th>
-                                  <th><i class='bx bx-download'></i></th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                <tr rol_id="1" rol_nombre="Administrador">
-                                  <td>Administrador</td>
-                                  <td class="checked" column="permiso_ver">
-                                    <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                    <input name="permiso" class="check-checked" type="checkbox">
-                                  </td>
-                                  <td class="checked" column="permiso_agregar">
-                                    <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                    <input name="permiso" class="check-checked" type="checkbox">
-                                  </td>
-                                  <td class="checked" column="permiso_editar">
-                                    <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                    <input name="permiso" class="check-checked" type="checkbox">
-                                  </td>
-                                  <td class="checked" column="permiso_eliminar">
-                                    <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                    <input name="permiso" class="check-checked" type="checkbox">
-                                  </td>
-                                  <td class="checked" column="permiso_ocultar">
-                                    <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                    <input name="permiso" class="check-checked" type="checkbox">
-                                  </td>
-                                  <td class="checked" column="permiso_exportar">
-                                    <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                    <input name="permiso" class="check-checked" type="checkbox">
-                                  </td>
-                                </tr>
-                                <tr rol_id="2" rol_nombre="Gerente">
-                                  <td>Gerente</td>
-                                  <td class="checked" column="permiso_ver">
-                                    <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                    <input name="permiso" class="check-checked" type="checkbox">
-                                  </td>
-                                  <td class="checked" column="permiso_agregar">
-                                    <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                    <input name="permiso" class="check-checked" type="checkbox">
-                                  </td>
-                                  <td class="checked" column="permiso_editar">
-                                    <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                    <input name="permiso" class="check-checked" type="checkbox">
-                                  </td>
-                                  <td class="checked" column="permiso_eliminar">
-                                    <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                    <input name="permiso" class="check-checked" type="checkbox">
-                                  </td>
-                                  <td class="checked" column="permiso_ocultar">
-                                    <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                    <input name="permiso" class="check-checked" type="checkbox">
-                                  </td>
-                                  <td class="checked" column="permiso_exportar">
-                                    <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                    <input name="permiso" class="check-checked" type="checkbox">
-                                  </td>
-                                </tr>
-                                <tr rol_id="3" rol_nombre="Supervisor">
-                                  <td>Supervisor</td>
-                                  <td class="checked" column="permiso_ver">
-                                    <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                    <input name="permiso" class="check-checked" type="checkbox">
-                                  </td>
-                                  <td class="checked" column="permiso_agregar">
-                                    <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                    <input name="permiso" class="check-checked" type="checkbox">
-                                  </td>
-                                  <td class="checked" column="permiso_editar">
-                                    <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                    <input name="permiso" class="check-checked" type="checkbox">
-                                  </td>
-                                  <td class="checked" column="permiso_eliminar">
-                                    <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                    <input name="permiso" class="check-checked" type="checkbox">
-                                  </td>
-                                  <td class="checked" column="permiso_ocultar">
-                                    <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                    <input name="permiso" class="check-checked" type="checkbox">
-                                  </td>
-                                  <td class="checked" column="permiso_exportar">
-                                    <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                    <input name="permiso" class="check-checked" type="checkbox">
-                                  </td>
-                                </tr>
-                                <tr rol_id="4" rol_nombre="Colaborador">
-                                  <td>Colaborador</td>
-                                  <td class="checked" column="permiso_ver">
-                                    <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                    <input name="permiso" class="check-checked" type="checkbox">
-                                  </td>
-                                  <td class="checked" column="permiso_agregar">
-                                    <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                    <input name="permiso" class="check-checked" type="checkbox">
-                                  </td>
-                                  <td class="checked" column="permiso_editar">
-                                    <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                    <input name="permiso" class="check-checked" type="checkbox">
-                                  </td>
-                                  <td class="checked" column="permiso_eliminar">
-                                    <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                    <input name="permiso" class="check-checked" type="checkbox">
-                                  </td>
-                                  <td class="checked" column="permiso_ocultar">
-                                    <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                    <input name="permiso" class="check-checked" type="checkbox">
-                                  </td>
-                                  <td class="checked" column="permiso_exportar">
-                                    <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                    <input name="permiso" class="check-checked" type="checkbox">
-                                  </td>
-                                </tr>
-                                <tr rol_id="5" rol_nombre="Visualizador">
-                                  <td>Visualizador</td>
-                                  <td class="checked" column="permiso_ver">
-                                    <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                    <input name="permiso" class="check-checked" type="checkbox">
-                                  </td>
-                                  <td class="checked" column="permiso_agregar">
-                                    <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                    <input name="permiso" class="check-checked" type="checkbox">
-                                  </td>
-                                  <td class="checked" column="permiso_editar">
-                                    <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                    <input name="permiso" class="check-checked" type="checkbox">
-                                  </td>
-                                  <td class="checked" column="permiso_eliminar">
-                                    <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                    <input name="permiso" class="check-checked" type="checkbox">
-                                  </td>
-                                  <td class="checked" column="permiso_ocultar">
-                                    <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                    <input name="permiso" class="check-checked" type="checkbox">
-                                  </td>
-                                  <td class="checked" column="permiso_exportar">
-                                    <input name="disabled" class="check-checked check-danger" type="checkbox">
-                                    <input name="permiso" class="check-checked" type="checkbox">
-                                  </td>
-                                </tr>
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="form-foot">
-                        <a class="btn btn-success">guardar</a>
-                        <input class="check-switch check-danger" id="check-disabled" type="checkbox">
-                        <a class="btn btn-info">Todo</a>
-                      </div>
-                    </form>
+        input[name=disabled]:checked {
+          display: inline !important;
+        }
+
+        input[name=disabled]:checked+input[name=permiso] {
+          display: none !important;
+        }
+      }
+
+      .table-acceso-side[option=disabled] input[name=permiso] {
+        display: none;
+      }
+    </style>
+
+    <div class="card" id="table-nuevo" style="display: none;">
+      <div class="card-head">
+        <h3 class="card-tittle">Nueva direccion y permisos</h3>
+        <a class="card-close"><i class='bx bx-x'></i></a>
+      </div>
+      <div class="card-body">
+        <div class="card-form">
+          <div class="form-box">
+            <form>
+              <div class="form-body">
+                <div class="form-col">
+                  <div class="input-box">
+                    <input name="menu_principal" type="text" oninput="inputLimit(this, 20)" required>
+                    <label for="menu_principal">Principal (20):</label>
+                  </div>
+                  <div class="input-box">
+                    <input name="menu_ruta" type="text" oninput="inputLimit(this, 100)" required>
+                    <label for="menu_ruta">Ruta (100):</label>
+                  </div>
+                  <div class="table-box">
+                    <table class="table-acceso-side" option="permiso">
+                      <thead>
+                        <tr>
+                          <th>Rol</th>
+                          <th><i class='bx bx-show'></i></th>
+                          <th><i class='bx bx-plus'></i></th>
+                          <th><i class='bx bx-pencil'></i></th>
+                          <th><i class='bx bx-trash-alt'></i></th>
+                          <th><i class='bx bx-hide'></i></th>
+                          <th><i class='bx bx-download'></i></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr rol_id="1" rol_nombre="Administrador">
+                          <td>Administrador</td>
+                          <td class="checked" column="permiso_ver">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_agregar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_editar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_eliminar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_ocultar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_exportar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                        </tr>
+                        <tr rol_id="2" rol_nombre="Gerente">
+                          <td>Gerente</td>
+                          <td class="checked" column="permiso_ver">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_agregar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_editar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_eliminar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_ocultar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_exportar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                        </tr>
+                        <tr rol_id="3" rol_nombre="Supervisor">
+                          <td>Supervisor</td>
+                          <td class="checked" column="permiso_ver">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_agregar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_editar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_eliminar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_ocultar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_exportar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                        </tr>
+                        <tr rol_id="4" rol_nombre="Colaborador">
+                          <td>Colaborador</td>
+                          <td class="checked" column="permiso_ver">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_agregar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_editar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_eliminar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_ocultar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_exportar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                        </tr>
+                        <tr rol_id="5" rol_nombre="Visualizador">
+                          <td>Visualizador</td>
+                          <td class="checked" column="permiso_ver">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_agregar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_editar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_eliminar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_ocultar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_exportar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
-            </div>
-            <% } %>
+              <div class="form-foot">
+                <a class="btn btn-success">guardar</a>
+                <input class="check-switch check-danger" id="check-disabled" type="checkbox">
+                <a class="btn btn-info">Todo</a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
-    <% } %>
+
+    <div class="card" id="table-editar" style="display: none;">
+      <div class="card-head">
+        <h3 class="card-tittle">Edicion de direccion y permisos</h3>
+        <a class="card-close"><i class='bx bx-x'></i></a>
+      </div>
+      <div class="card-body">
+        <div class="card-form">
+          <div class="form-box">
+            <form>
+              <div class="form-body">
+                <div class="form-col">
+                  <div class="input-box">
+                    <input name="menu_principal" type="text" oninput="inputLimit(this, 20)" required>
+                    <label for="menu_principal">Principal (20):</label>
+                  </div>
+                  <div class="input-box">
+                    <input name="menu_ruta" type="text" oninput="inputLimit(this, 100)" required>
+                    <label for="menu_ruta">Ruta (100):</label>
+                  </div>
+                  <div class="table-box">
+                    <table class="table-acceso-side" option="permiso">
+                      <thead>
+                        <tr>
+                          <th>Rol</th>
+                          <th><i class='bx bx-show'></i></th>
+                          <th><i class='bx bx-plus'></i></th>
+                          <th><i class='bx bx-pencil'></i></th>
+                          <th><i class='bx bx-trash-alt'></i></th>
+                          <th><i class='bx bx-hide'></i></th>
+                          <th><i class='bx bx-download'></i></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr rol_id="1" rol_nombre="Administrador">
+                          <td>Administrador</td>
+                          <td class="checked" column="permiso_ver">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_agregar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_editar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_eliminar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_ocultar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_exportar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                        </tr>
+                        <tr rol_id="2" rol_nombre="Gerente">
+                          <td>Gerente</td>
+                          <td class="checked" column="permiso_ver">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_agregar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_editar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_eliminar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_ocultar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_exportar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                        </tr>
+                        <tr rol_id="3" rol_nombre="Supervisor">
+                          <td>Supervisor</td>
+                          <td class="checked" column="permiso_ver">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_agregar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_editar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_eliminar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_ocultar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_exportar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                        </tr>
+                        <tr rol_id="4" rol_nombre="Colaborador">
+                          <td>Colaborador</td>
+                          <td class="checked" column="permiso_ver">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_agregar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_editar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_eliminar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_ocultar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_exportar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                        </tr>
+                        <tr rol_id="5" rol_nombre="Visualizador">
+                          <td>Visualizador</td>
+                          <td class="checked" column="permiso_ver">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_agregar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_editar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_eliminar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_ocultar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                          <td class="checked" column="permiso_exportar">
+                            <input name="disabled" class="check-checked check-danger" type="checkbox">
+                            <input name="permiso" class="check-checked" type="checkbox">
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div class="form-foot">
+                <a class="btn btn-success">guardar</a>
+                <input class="check-switch check-danger" id="check-disabled" type="checkbox">
+                <a class="btn btn-info">Todo</a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script src="/src/private/routes/administracion/acceso/index.js"></script>

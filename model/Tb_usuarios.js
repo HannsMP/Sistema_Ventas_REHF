@@ -1,4 +1,5 @@
 const { Table } = require('../utils/UtilsModel');
+const SocketRouter = require('../utils/SocketRouter');
 
 const { hashSync, compareSync } = require('bcryptjs');
 
@@ -35,10 +36,15 @@ const columns = {
  */
 
 class Tb_usuarios extends Table {
-  /** @param {import('../app')} app */  constructor(app) {
+  /** @param {import('../app')} app */
+  constructor(app) {
     super(name);
     this.columns = columns;
     this.app = app;
+
+    this.io = new SocketRouter([
+      '/control/administracion/usuarios',
+    ], app)
   }
   /* 
     ====================================================================================================
@@ -226,6 +232,12 @@ class Tb_usuarios extends Table {
           1
         ])
 
+        this.io.emitRolToJunior(
+          rol_id,
+          '/usuarios/data/insert',
+          _ => this.readIdJoin(result.insertId)
+        )
+
         res(result);
       } catch (e) {
         rej(e);
@@ -334,7 +346,11 @@ class Tb_usuarios extends Table {
           id
         ]);
 
-        this.app.socket.emitUser(id, '/usuarios/perfil/theme', tema);
+        this.app.socket.rootControl.emitUser(
+          id,
+          '/session/usuario/theme', 
+          tema
+        );
 
         res(result);
       } catch (e) {
@@ -406,7 +422,21 @@ class Tb_usuarios extends Table {
   }
   /** 
    * @param {number} id
-   * @returns {Promise<COLUMNS>}
+   * @returns {Promise<{
+   *   id: number,
+   *   nombres: string,
+   *   apellidos: string,
+   *   usuario: string,
+   *   clave: string,
+   *   telefono: string,
+   *   email: string,
+   *   rol_id: number,
+   *   rol_nombre: string,
+   *   foto_id: string,
+   *   foto_src: string,
+   *   creacion: string,
+   *   estado: number
+   * }>}
    */
   readIdJoin(id) {
     return new Promise(async (res, rej) => {
@@ -466,9 +496,10 @@ class Tb_usuarios extends Table {
   *   rol_id: number,
   *   foto_id: number
   * }} data 
+  * @param {number} user_rol_id 
   * @returns {Promise<import('mysql').OkPacket>}
   */
-  updateId(id, data) {
+  updateId(id, data, user_rol_id) {
     return new Promise(async (res, rej) => {
       try {
 
@@ -501,7 +532,8 @@ class Tb_usuarios extends Table {
            email = ?,
            rol_id = ?
          WHERE 
-           id = ?;
+           id = ?
+           AND (1 = ? OR rol_id < ?)
        `, [
           nombres,
           apellidos,
@@ -509,8 +541,25 @@ class Tb_usuarios extends Table {
           telefono,
           email,
           rol_id,
-          id
+          id,
+          user_rol_id,
+          user_rol_id
         ]);
+
+        this.app.socket.rootControl.emitUser(
+          id,
+          '/session/usuario/reload',
+          null,
+          (socketClient) => {
+            let apikey = socketClient.session.apikey;
+            this.app.cache.apiKey.delete(apikey);
+          });
+
+        this.io.emitRolToSenior(
+          rol_id,
+          '/usuarios/data/updateId',
+          _ => this.readIdJoin(id)
+        )
 
         res(result);
       } catch (e) {
@@ -521,9 +570,10 @@ class Tb_usuarios extends Table {
   /**
    * @param {number} id 
    * @param {number} estado 
+   * @param {number} user_rol_id 
    * @returns {Promise<import('mysql').OkPacket>}
    */
-  updateIdState(id, estado) {
+  updateIdState(id, estado, user_rol_id) {
     return new Promise(async (res, rej) => {
       try {
         this.constraint('id', id);
@@ -535,11 +585,30 @@ class Tb_usuarios extends Table {
          SET
            estado = ?
          WHERE 
-           id = ?;
+           id = ?
+           AND (1 = ? OR rol_id < ?)
        `, [
           estado,
-          id
+          id,
+          user_rol_id,
+          user_rol_id
         ]);
+
+        if (!estado) this.app.socket.rootControl.emitUser(
+          id,
+          '/session/usuario/reload',
+          null,
+          socketClient => {
+            let apikey = socketClient.session.apikey;
+            this.app.cache.apiKey.delete(apikey);
+          });
+
+        this.io.emit(
+          '/usuarios/data/state',
+          estado
+            ? _ => this.readIdJoin(id)
+            : { id, estado }
+        )
 
         res(result)
       } catch (e) {
@@ -550,9 +619,10 @@ class Tb_usuarios extends Table {
   /**
    * @param {number} id 
    * @param {string} foto_id 
+   * @param {{id:number, src:string, src_small:string}} [dataEmit] 
    * @returns {Promise<import('mysql').OkPacket>}
    */
-  updateIdFotoId(id, foto_id) {
+  updateIdFotoId(id, foto_id, dataEmit) {
     return new Promise(async (res, rej) => {
       try {
         this.constraint('id', id);
@@ -569,6 +639,27 @@ class Tb_usuarios extends Table {
           foto_id,
           id
         ]);
+
+        this.app.socket.rootControl.emitUser(
+          id,
+          '/session/usuario/avatar',
+          _ => dataEmit || this.app.model.tb_fotos.readId(foto_id),
+          (socketClient, dataSend) => {
+            let apikey = socketClient.session.apikey;
+            let apiData = this.app.cache.apiKey.read(apikey);
+
+            apiData.usuario.foto_id = dataSend.id;
+            apiData.usuario.foto_src = dataSend.src;
+            apiData.usuario.foto_src_small = dataSend.src_small;
+
+            this.app.cache.apiKey.update(apikey, apiData);
+          }
+        )
+
+        this.io.emit(
+          '/usuarios/data/deleteId',
+          dataEmit || this.app.model.tb_fotos.readId(foto_id)
+        )
 
         res(result)
       } catch (e) {
@@ -593,6 +684,11 @@ class Tb_usuarios extends Table {
        `, [
           id
         ]);
+
+        this.io.emit(
+          '/usuarios/data/deleteId',
+          { id }
+        )
 
         res(result)
       } catch (e) {

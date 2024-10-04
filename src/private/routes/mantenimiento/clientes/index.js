@@ -313,13 +313,11 @@ $('.content-body').ready(async () => {
       let selectTipoCliente = nuevoSelectorUnicTipoCliente.selected[0];
       if (!selectTipoCliente) return formError(`Selecciona un Rol`, inputNuevoSelectorTipoCliente.parentNode);
       jsonData.tipo_cliente_id = Number(selectTipoCliente.id);
-      jsonData.tipo_cliente_nombre = '<div>' + selectTipoCliente.name + '</div>';
 
 
       let selectTipoDocumento = nuevoSelectorUnicTipoDocumento.selected[0];
       if (!selectTipoDocumento) return formError(`Selecciona un Rol`, inputNuevoSelectorTipoDocumento.parentNode);
       jsonData.tipo_documento_id = Number(selectTipoDocumento.id);
-      jsonData.tipo_documento_nombre = '<div>' + selectTipoDocumento.name + '</div>';
 
       jsonData.estado = inputNuevoCheckbox.checked ? 1 : 0;
 
@@ -421,12 +419,10 @@ $('.content-body').ready(async () => {
       let selectTipoCliente = editarSelectorUnicTipoCliente.selected[0];
       if (!selectTipoCliente) return formError(`Selecciona un Rol`, inputNuevoSelectorTipoCliente.parentNode);
       jsonData.tipo_cliente_id = Number(selectTipoCliente.id);
-      jsonData.tipo_cliente_nombre = selectTipoCliente.name;
 
       let selectTipoDocumento = editarSelectorUnicTipoDocumento.selected[0];
       if (!selectTipoDocumento) return formError(`Selecciona un Rol`, inputNuevoSelectorTipoDocumento.parentNode);
       jsonData.tipo_documento_id = Number(selectTipoDocumento.id);
-      jsonData.tipo_documento_nombre = selectTipoDocumento.name;
 
       let resCliente = await query.post.json.cookie("/api/clientes/table/updateId", jsonData);
 

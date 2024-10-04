@@ -6,11 +6,15 @@ module.exports = {
   get: [
     function (req, res, next) {
       let apiKey = req.cookies?.apiKey;
-      this.cache.apiKey.delete(apiKey);
-      res.clearCookie('apiKey');
-      res.clearCookie('remember');
+      if (apiKey) {
+        this.cache.apiKey.delete(apiKey);
+        res.clearCookie('apiKey');
+        res.clearCookie('remember');
+        console.log('acabo de cerrar sesion');
+        
+        this.socket.emitApikey(apiKey, '/session/usuario/logout');
+      }
       res.status(200).redirect('/auth/login');
-      this.socket.emitApikey(apiKey, '/usuarios/perfil/logout');
     },
   ]
 }

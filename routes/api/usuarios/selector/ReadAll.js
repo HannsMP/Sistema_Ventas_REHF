@@ -11,7 +11,7 @@ module.exports = {
         let permiso = await this.model.tb_permisos.userPathView(session.usuario.id, module.exports.route);
 
         if (!permiso) return res.status(403).json({ err: 'Tu usuario no tiene Permisos para esta peticion.' });
-
+        
         let list = await this.model.tb_usuarios.selectorReadAll();
 
         return res.status(200).json({ list })

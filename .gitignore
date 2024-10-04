@@ -1,4 +1,5 @@
 .cache
+.temp
 log
 node_modules
 trash

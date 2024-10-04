@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+  let profileImg = document.querySelector('.sidebar #profile img');
 
   document.body.classList.remove("load-spinner");
 
@@ -25,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let themeBefore = document.documentElement.getAttribute('theme');
     let { theme } = themeOp.dataset;
     document.documentElement.setAttribute('theme', theme);
-    
+
     let resChangeTheme = await query.post.json.cookie('/api/usuarios/config/changeTheme', { theme });
     let { err, theme: themeAfter } = await resChangeTheme.json();
 
@@ -43,8 +44,10 @@ document.addEventListener('DOMContentLoaded', () => {
     ==================================================
   */
 
-  socket.on('/usuarios/perfil/logout', _ => window.location.href = '/auth/login');
-  socket.on('/usuarios/perfil/theme', theme => document.documentElement.setAttribute('theme', theme));
+  socket.on('/session/usuario/logout', _ => window.location.href = '/auth/login');
+  socket.on('/session/usuario/reload', _ => window.location.reload());
+  socket.on('/session/usuario/theme', theme => document.documentElement.setAttribute('theme', theme));
+  socket.on('/session/usuario/avatar', data => profileImg.src = data.src_small);
 
 })
 

@@ -1,6 +1,6 @@
 const generateUniqueId = require('generate-unique-id');
 const { Table } = require('../utils/UtilsModel');
-const EmitSet = require('../utils/emitSet');
+const SocketRouter = require('../utils/SocketRouter');
 
 const name = 'tb_productos';
 const columns = {
@@ -40,7 +40,7 @@ class Tb_productos extends Table {
     this.columns = columns;
     this.app = app;
 
-    this.io = new EmitSet([
+    this.io = new SocketRouter([
       '/control/productos',
       '/control/movimientos/ventas',
       '/control/mantenimiento/inventario',

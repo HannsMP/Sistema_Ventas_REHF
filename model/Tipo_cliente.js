@@ -1,5 +1,5 @@
 const { Table } = require('../utils/UtilsModel');
-const EmitSet = require('../utils/emitSet');
+const SocketRouter = require('../utils/SocketRouter');
 
 const name = 'tipo_cliente';
 const columns = {
@@ -22,7 +22,7 @@ class Tipo_cliente extends Table {
     this.columns = columns;
     this.app = app;
 
-    this.io = new EmitSet([
+    this.io = new SocketRouter([
       '/control/mantenimiento/clientes',
       '/control/movimientos/ventas',
       '/control/reportes/ventas',

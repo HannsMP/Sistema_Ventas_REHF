@@ -1,4 +1,4 @@
-const EmitSet = require('../utils/emitSet');
+const SocketRouter = require('../utils/SocketRouter');
 const { Table } = require('../utils/UtilsModel');
 
 const name = 'tb_fotos'
@@ -25,7 +25,7 @@ class Tb_asistencias extends Table {
     this.columns = columns;
     this.app = app;
 
-    this.io = new EmitSet([
+    this.io = new SocketRouter([
       '/control/reportes/asistencia'
     ], app)
   }
@@ -266,7 +266,7 @@ class Tb_asistencias extends Table {
 
         this.io.emit(
           '/asistencias/data/lastDisconnection',
-          _ => readTodayUser(usuario_id)
+          _ => this.readTodayUser(usuario_id)
         )
 
         res(result);

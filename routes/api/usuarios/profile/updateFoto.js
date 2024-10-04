@@ -94,16 +94,10 @@ module.exports = {
 
           if (dataFotos.affectedRows)
             data.id = dataFotos.insertId;
-
-          let { id } = apiData.usuario;
-          OkPacket = await this.model.tb_usuarios.updateIdFotoId(Number(id), data.id);
-
-          apiData.usuario.foto_id = data.id;
-          apiData.usuario.foto_src = data.src;
-          apiData.usuario.foto_src_small = data.src_small;
-
-          this.cache.apiKey.update(apiKey, apiData);
         }
+        
+        let { id } = apiData.usuario;
+        OkPacket = await this.model.tb_usuarios.updateIdFotoId(Number(id), data.id, data);
 
         res.status(200).json({ OkPacket, data })
       } catch (e) {

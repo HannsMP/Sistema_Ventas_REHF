@@ -21,11 +21,11 @@ $('.content-body').ready(async () => {
 
       input.value = `#${rHex}${gHex}${bHex}`;
 
-      output.textContent = `${input.value}`
+      output.textContent = `${input.id}: ${input.value}`
 
       input.addEventListener('input', ev => {
         let hex = input.value;
-        output.textContent = `${hex}`
+        output.textContent = `${input.id}: ${hex}`
 
         let hexR = parseInt(hex.slice(1, 3), 16);
         let hexG = parseInt(hex.slice(3, 5), 16);

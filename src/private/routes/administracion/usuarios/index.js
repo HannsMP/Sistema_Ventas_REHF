@@ -324,8 +324,6 @@ $('.content-body').ready(async () => {
       let select = nuevoSelectorUnic.selected[0];
       if (!select) return formError(`Selecciona un Rol`, inputNuevoSelector.parentNode);
       jsonData.rol_id = Number(select.id);
-      let rol_nombre = select.name;
-
       jsonData.estado = inputNuevoCheckbox.checked ? 1 : 0;
 
       let resUsuarios = await query.post.json.cookie("/api/usuarios/table/insert", jsonData);
@@ -335,30 +333,6 @@ $('.content-body').ready(async () => {
 
       if (err)
         return alarm.warn('No se pudo agregar')
-
-      let { insertId: id } = OkPacket;
-
-      let i = document.createElement('input');
-      i.classList.add('check-switch');
-      i.setAttribute('type', 'checkbox');
-      i.addEventListener('change', updateIdState.bind(i, { usuario: jsonData['usuario'], id }));
-      i.checked = jsonData['estado'];
-
-      $table.add({
-        id: id,
-        estado: i,
-        nombres: jsonData.nombres,
-        apellidos: jsonData.apellidos,
-        usuario: jsonData.usuario,
-        email: jsonData.email,
-        telefono: jsonData.telefono,
-        rol_nombre: rol_nombre,
-        creacion: formatTime('YYYY-MM-DD hh:mm:ss')
-      });
-
-      uniqueUsuario.add(jsonData.usuario?.toLowerCase());
-      uniqueEmail.add(jsonData.email?.toLowerCase());
-      uniqueTelefono.add(jsonData.telefono);
 
       alarm.success(`Fila Agregada`);
     })
@@ -468,7 +442,6 @@ $('.content-body').ready(async () => {
       let select = editarSelectorUnic.selected[0];
       if (!select) return formError(`Selecciona un Rol`, inputEditarSelector.parentNode);
       jsonData.rol_id = Number(select.id);
-      jsonData.rol_nombre = select.name;
 
       let resUsuarios = await query.post.json.cookie("/api/usuarios/table/updateId", jsonData);
 
@@ -477,28 +450,6 @@ $('.content-body').ready(async () => {
 
       if (err)
         return alarm.warn('No se pudo Editar');
-
-      $table.update('#' + id, {
-        nombres: jsonData.nombres,
-        apellidos: jsonData.apellidos,
-        usuario: jsonData.usuario,
-        email: jsonData.email,
-        telefono: jsonData.telefono,
-        rol_nombre: jsonData.rol_nombre
-      });
-
-      if (beforeJsonData.usuario?.toLowerCase() != jsonData.usuario?.toLowerCase()) {
-        uniqueUsuario.delete(beforeJsonData.usuario?.toLowerCase());
-        uniqueUsuario.add(jsonData.usuario?.toLowerCase());
-      }
-      if (beforeJsonData.email?.toLowerCase() != jsonData.email?.toLowerCase()) {
-        uniqueEmail.delete(beforeJsonData.email?.toLowerCase());
-        uniqueEmail.add(jsonData.email?.toLowerCase());
-      }
-      if (beforeJsonData.telefono?.toLowerCase() != jsonData.telefono?.toLowerCase()) {
-        uniqueTelefono.delete(beforeJsonData.telefono);
-        uniqueTelefono.add(jsonData.telefono);
-      }
 
       alarm.success(`Fila actualizada`);
     })
@@ -560,6 +511,73 @@ $('.content-body').ready(async () => {
       ===================== SOCKET =====================
       ==================================================
     */
+
+    socket.on('/usuarios/data/insert', data => {
+      let row = $table.get('#' + data.id);
+      if (row) return;
+
+      $table.add({
+        id: data.id,
+        estado: data.estado,
+        nombres: data.nombres,
+        apellidos: data.apellidos,
+        usuario: data.usuario,
+        email: data.email,
+        telefono: data.telefono,
+        rol_nombre: data.rol_nombre,
+        creacion: formatTime('YYYY-MM-DD hh:mm:ss')
+      });
+
+      uniqueUsuario.add(data.usuario?.toLowerCase());
+      uniqueEmail.add(data.email?.toLowerCase());
+      uniqueTelefono.add(data.telefono);
+    })
+
+    socket.on('/usuarios/data/updateId', data => {
+      let row = $table.get('#' + data.id);
+      if (!row) return;
+
+      $table.update('#' + data.id, {
+        nombres: data.nombres,
+        apellidos: data.apellidos,
+        usuario: data.usuario,
+        email: data.email,
+        telefono: data.telefono,
+        rol_nombre: data.rol_nombre
+      });
+
+      if (row.usuario?.toLowerCase() != data.usuario?.toLowerCase()) {
+        uniqueUsuario.delete(row.usuario?.toLowerCase());
+        uniqueUsuario.add(data.usuario?.toLowerCase());
+      }
+      if (row.email?.toLowerCase() != data.email?.toLowerCase()) {
+        uniqueEmail.delete(row.email?.toLowerCase());
+        uniqueEmail.add(data.email?.toLowerCase());
+      }
+      if (row.telefono?.toLowerCase() != data.telefono?.toLowerCase()) {
+        uniqueTelefono.delete(row.telefono);
+        uniqueTelefono.add(data.telefono);
+      }
+
+      let menuEditarid = $table.selected();
+      if (menuEditarid && menuEditarid == data.id)
+        tblEditar?.[0]?.click();
+    })
+
+    socket.on('/usuarios/data/state', data => {
+      let row = $table.get('#' + data.id);
+      if (!row) return;
+
+      $table.update('#' + data.id, {
+        estado: data.estado,
+      });
+    })
+
+    socket.on('/productos/data/deleteId', data => {
+      let row = $table.get('#' + data.id);
+      if (!row) return;
+      $table.remove('#' + data.id);
+    })
 
   } catch ({ message, stack }) {
     socket.emit('/err/client', { message, stack, url: window.location.href })

@@ -29,7 +29,7 @@ module.exports = {
           telefono,
           email,
           rol_id: Number(rol_id)
-        });
+        }, session.usuario.rol_id);
 
         res.status(200).json({ OkPacket })
       } catch (e) {

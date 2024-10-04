@@ -5,7 +5,7 @@ const { resolve, join } = require('path');
 const { readdirSync } = require('fs');
 
 const deletePath = require('../utils/function/deletePath');
-const EmitSet = require('../utils/emitSet');
+const SocketRouter = require('../utils/SocketRouter');
 
 /** @typedef {import('../app')} App  */
 /** @typedef {(this: App, phone: string, msg: import('whatsapp-web.js').Message, arg: string[], complete: (err: Error?)=>void)=>void} Run */
@@ -23,7 +23,7 @@ class Bot {
   constructor(app) {
     this.app = app;
 
-    this.io = new EmitSet([
+    this.io = new SocketRouter([
       '/control/administracion/bot'
     ], app)
 

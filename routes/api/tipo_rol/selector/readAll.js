@@ -12,7 +12,7 @@ module.exports = {
 
         if (!permiso) return res.status(403).json({ err: 'Tu usuario no tiene Permisos para esta peticion.' });
 
-        let list = await this.model.tipo_rol.selectorReadAll();
+        let list = await this.model.tipo_rol.selectorReadAll(session.usuario.rol_id);
 
         res.status(200).json({ list })
       } catch (e) {

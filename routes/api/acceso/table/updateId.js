@@ -12,6 +12,31 @@ module.exports = {
 
         if (!permiso) return res.status(403).json({ err: 'Tu usuario no tiene Permisos para esta peticion.' });
 
+        /**
+         * @type {{
+         *   accesoData: {
+         *     id: number,
+         *     rol_id: number,
+         *     rol_nombre: string,
+         *     menu_id: number,
+         *     menu_principal: string,
+         *     menu_ruta: string,
+         *     disabled_id: number,
+         *     permiso_id: number,
+         *     permiso_ver: number,
+         *     permiso_agregar: number,
+         *     permiso_editar: number,
+         *     permiso_eliminar: number,
+         *     permiso_ocultar: number,
+         *     permiso_exportar: number
+         *   }[],
+         *   menuData: {
+         *     id: number,
+         *     principal: string,
+         *     ruta: string
+         *   }
+         * }}
+         */
         let {
           accesoData,
           menuData
@@ -19,14 +44,12 @@ module.exports = {
 
         if (accesoData.constructor.name != 'Array') return
 
-        for (let index in accesoData) {
-          let { id, menu_id, rol_id, permiso_id, disabled_id } = accesoData[index];
-
-          await this.model.tb_acceso.updateId(Number(id), {
-            menu_id: Number(menu_id),
-            rol_id: Number(rol_id),
-            permiso_id: Number(permiso_id),
-            disabled_id: Number(disabled_id)
+        for (let data of accesoData) {
+          await this.model.tb_acceso.updateId(Number(data.id), {
+            menu_id: Number(data.menu_id),
+            rol_id: Number(data.rol_id),
+            permiso_id: Number(data.permiso_id),
+            disabled_id: Number(data.disabled_id)
           });
         }
 

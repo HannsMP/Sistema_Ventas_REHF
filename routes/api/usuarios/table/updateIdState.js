@@ -14,7 +14,7 @@ module.exports = {
 
         let { id, estado } = req.body;
 
-        let OkPacket = await this.model.tb_usuarios.updateIdState(id, estado ? 1 : 0);
+        let OkPacket = await this.model.tb_usuarios.updateIdState(id, estado ? 1 : 0, session.usuario.rol_id);
 
         res.status(200).json({ OkPacket })
       } catch (e) {

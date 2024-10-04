@@ -59,21 +59,18 @@ $('.content-body').ready(async () => {
 
     /** @type {(this:HTMLInputElement, data:{id:number})=>void} */
     async function updatePermisoId({ id, permiso_ver, permiso_agregar, permiso_editar, permiso_eliminar, permiso_ocultar, permiso_exportar }) {
-      let value = 0;
 
-      [
+      this.disabled = true;
+
+      let resAcceso = await query.post.json.cookie("/api/acceso/table/updatePermisoId", {
+        id,
         permiso_ver,
         permiso_agregar,
         permiso_editar,
         permiso_eliminar,
         permiso_ocultar,
         permiso_exportar
-      ]
-        .forEach((c, i) => { if (c != -1 && c) value += (2 ** i) })
-
-      this.disabled = true;
-
-      let resAcceso = await query.post.json.cookie("/api/acceso/table/updatePermisoId", { id, value });
+      });
 
       /** @type {{err: string, OkPacket: import('mysql').OkPacket, list:{[column:string]: string|number}[]}} */
       let { err } = await resAcceso.json();
@@ -454,8 +451,6 @@ $('.content-body').ready(async () => {
       if (err)
         return alarm.warn('No se pudo agregar')
 
-      modifiedData.forEach(constructorCheckBox);
-
       $table.add(...modifiedData);
 
       uniqueMenuRuta.add(ruta?.toLowerCase());
@@ -602,14 +597,12 @@ $('.content-body').ready(async () => {
       let resAccesoUpdate = await query.post.json.cookie("/api/acceso/table/updateId", jsonData);
 
       /** @type {{err: string, OkPacket: import('mysql').OkPacket, list:{[column:string]: string|number}[]}} */
-      let { err, OkPacket } = await resAccesoUpdate.json();
+      let { err } = await resAccesoUpdate.json();
 
       if (err)
         return alarm.warn('No se pudo agregar')
 
       jsonData.accesoData.forEach(data => {
-        constructorCheckBox(data);
-
         $table.update('#' + data.id, data)
       });
 
@@ -678,6 +671,21 @@ $('.content-body').ready(async () => {
       ===================== SOCKET =====================
       ==================================================
     */
+
+    socket.on('/accesos/permisos/state', data => {
+      let row = $table.get('#' + data.id);
+      if (!row) return;
+
+      $table.update('#' + data.id, {
+        permiso_id: data.permisos_id,
+        permiso_ver: data.permiso.ver,
+        permiso_agregar: data.permiso.agregar,
+        permiso_editar: data.permiso.editar,
+        permiso_eliminar: data.permiso.eliminar,
+        permiso_ocultar: data.permiso.ocultar,
+        permiso_exportar: data.permiso.exportar
+      });
+    })
 
   } catch ({ message, stack }) {
     socket.emit('/err/client', { message, stack, url: window.location.href })

@@ -65,6 +65,7 @@ class App {
 
   constructor() {
     /* SERVER SETTINGS */
+    this.app.set('case sensitive routing', true);
     this.app.set('view engine', 'ejs');
     this.app.set('layout', resolve('layout', 'control'));
 

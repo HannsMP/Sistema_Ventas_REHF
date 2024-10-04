@@ -2,7 +2,7 @@ const { colors, optionColors } = require('../utils/function/color');
 const TimeClass = require('../utils/Time');
 const File = require('../utils/File');
 const mergeObjects = require('../utils/function/merge');
-const EmitSet = require('./emitSet');
+const SocketRouter = require('./SocketRouter');
 
 /**
  * @type {{
@@ -45,7 +45,7 @@ class Logger extends File {
 
     this.Time = Time;
 
-    this.io = new EmitSet([
+    this.io = new SocketRouter([
       '/control/reportes/registros'
     ], app)
   }

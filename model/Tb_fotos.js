@@ -97,6 +97,34 @@ class Tb_fotos extends Table {
       }
     })
   }
+  /** 
+   * @param {number} id
+   * @returns {Promise<COLUMNS>}
+   */
+  readId(id) {
+    return new Promise(async (res, rej) => {
+      try {
+        this.constraint('id', id);
+
+        let [result] = await this.app.model.poolValues(`
+          SELECT
+            *
+          FROM
+            tb_fotos
+          WHERE
+            id = ?
+        `, [
+          id
+        ])
+
+        let data = result[0];
+
+        res(data);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
   /**
    * @param {string} hash 
    * @returns {Promise<COLUMNS>}

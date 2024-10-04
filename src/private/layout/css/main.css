@@ -280,6 +280,7 @@ html[theme=green] .theme-green,
 
   .side-content {
     background-color: rgb(var(--color-2));
+    /* background: linear-gradient(180deg, rgb(var(--color-4)), rgb(var(--color-2))); */
     width: calc(100% - 4rem);
     height: 100%;
     right: 0;

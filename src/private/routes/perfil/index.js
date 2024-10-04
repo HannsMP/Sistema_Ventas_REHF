@@ -12,8 +12,6 @@ $('.content-body').ready(() => {
 
   let editarImagenUnic = new ImagenUnic(inputFoto);
 
-  let profileImg = document.querySelector('.nav-link.profile img');
-
   btnFoto.addEventListener('click', async () => {
     let formData = new FormData();
 
@@ -25,12 +23,10 @@ $('.content-body').ready(() => {
     let resUsuarios = await query.post.form.cookie("/api/usuarios/profile/updateFoto", formData);
 
     /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-    let { err, data } = await resUsuarios.json();
+    let { err } = await resUsuarios.json();
 
     if (err)
       return alarm.warn('No se pudo Editar');
-
-    profileImg.src = data.src_small;
 
     alarm.success(`Avatar actualizado`);
 
@@ -82,7 +78,7 @@ $('.content-body').ready(() => {
     let resChangePasword = await query.post.json.cookie("/api/usuarios/profile/updatePassword", jsonData);
 
     /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-    let { err, OkPacket } = await resChangePasword.json();
+    let { err } = await resChangePasword.json();
 
     if (err)
       return alarm.warn('No se pudo agregar');

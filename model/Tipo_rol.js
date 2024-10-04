@@ -16,7 +16,7 @@ const columns = {
 */
 
 class Tb_roles extends Table {
-  /** @param {import('../../app')} app */
+  /** @param {import('../app')} app */
   constructor(app) {
     super(name);
     this.columns = columns;
@@ -30,17 +30,26 @@ class Tb_roles extends Table {
   /** 
    * @returns {Promise<Array.<{code: string, name: string}>>}
    */
-  selectorReadAll() {
+  selectorReadAll(rol_id) {
     return new Promise(async (res, rej) => {
       try {
-        let [result] = await this.app.model.pool(`
-          SELECT 
-            id,
-            nombre AS name
-          FROM
-            tipo_rol
-        `)
-
+        let [result] = rol_id == 1
+          ? await this.app.model.poolValues(`
+              SELECT 
+                id,
+                nombre AS name
+              FROM
+                tipo_rol
+            `)
+          : await this.app.model.poolValues(`
+              SELECT 
+                id,
+                nombre AS name
+              FROM
+                tipo_rol
+              WHERE ? < id
+            `, [rol_id])
+            
         res(result);
       } catch (e) {
         rej(e);

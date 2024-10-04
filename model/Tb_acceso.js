@@ -1,4 +1,5 @@
 const { Table } = require('../utils/UtilsModel');
+const SocketRouter = require('../utils/SocketRouter');
 
 const name = 'tb_acceso';
 const columns = {
@@ -20,11 +21,15 @@ const columns = {
 */
 
 class Tb_acceso extends Table {
-  /** @param {import('../../app')} app */
+  /** @param {import('../app')} app */
   constructor(app) {
     super(name);
     this.columns = columns;
     this.app = app;
+
+    this.io = new SocketRouter([
+      '/control/administracion/acceso'
+    ], app)
   }
   /* 
     ====================================================================================================
@@ -70,6 +75,11 @@ class Tb_acceso extends Table {
           permiso_id,
           disabled_id
         ]);
+
+        this.io.emit(
+          '/productos/data/insert',
+          _ => this.app.readIdJoin(result.insertId)
+        )
 
         res(result);
       } catch (e) {
@@ -151,40 +161,39 @@ class Tb_acceso extends Table {
    * @param {{
    *   menu_id: number,
    *   rol_id: number,
+   *   disabled_id: number,
    *   permiso_id: number,
-   *   disabled_id: number
+   *   permiso_ver: number,
+   *   permiso_agregar: number,
+   *   permiso_editar: number,
+   *   permiso_eliminar: number,
+   *   permiso_ocultar: number,
+   *   permiso_exportar: number
    * }} data 
    * @returns {Promise<import('mysql').OkPacket>}
    */
   updateId(id, data) {
     return new Promise(async (res, rej) => {
       try {
+        let { menu_id, rol_id, permiso_id, disabled_id } = data
 
         this.constraint('id', id);
-
-        let {
-          menu_id,
-          rol_id,
-          permiso_id,
-          disabled_id
-        } = data;
-
         this.constraint('menu_id', menu_id);
         this.constraint('rol_id', rol_id);
         this.constraint('permiso_id', permiso_id);
         this.constraint('disabled_id', disabled_id);
 
-        let [result] = await this.app.model.poolValues(`
-           UPDATE 
-             tb_acceso
-           SET
-             menu_id = ?,
-             rol_id = ?,
-             permiso_id = ?,
-             disabled_id = ?
-           WHERE 
-             id = ?;
-         `, [
+        let result = await this.app.model.poolValues(`
+          UPDATE 
+            tb_acceso
+          SET
+            menu_id = ?,
+            rol_id = ?,
+            permiso_id = ?,
+            disabled_id = ?
+          WHERE 
+            id = ?;
+        `, [
           menu_id,
           rol_id,
           permiso_id,
@@ -200,32 +209,70 @@ class Tb_acceso extends Table {
   }
   /**
    * @param {number} id 
-   * @param {number} permisoId 
+   * @param {{
+   *   ver: number,
+   *   agregar: number,
+   *   editar: number,
+   *   eliminar: number,
+   *   ocultar: number,
+   *   exportar: number
+   * }} permiso 
    * @returns {Promise<import('mysql').OkPacket>}
    */
-  updateIdState(id, permisoId) {
+  updateIdState(id, permiso) {
     return new Promise(async (res, rej) => {
       try {
         this.constraint('id', id);
-        this.constraint('permiso_id', permisoId);
+        let permiso_id = this.computedPermisosToId(permiso)
 
         let [result] = await this.app.model.poolValues(`
-            UPDATE 
-              tb_acceso
-            SET
-              permiso_id = ?
-            WHERE 
-              id = ?;
-          `, [
-          permisoId,
+          UPDATE 
+            tb_acceso
+          SET
+            permiso_id = ?
+          WHERE 
+            id = ?;
+        `, [
+          permiso_id,
           id
         ]);
+
+        this.io.emit(
+          '/accesos/permisos/state',
+          { id, permiso_id, permiso }
+        )
 
         res(result)
       } catch (e) {
         rej(e)
       }
     })
+  }
+  /**
+   * @param {{
+   *   ver: number,
+   *   agregar: number,
+   *   editar: number,
+   *   eliminar: number,
+   *   ocultar: number,
+   *   exportar: number
+   * }} permisos 
+   * @returns {number}
+   */
+  computedPermisosToId(permisos) {
+    let value = 0;
+
+    [
+      permisos.ver,
+      permisos.agregar,
+      permisos.editar,
+      permisos.eliminar,
+      permisos.ocultar,
+      permisos.exportar
+    ]
+      .forEach((c, i) => { if (c != -1 && c) value += (2 ** i) });
+
+    return value;
   }
   /** 
    * @returns {Promise<COLUMNS[]>}

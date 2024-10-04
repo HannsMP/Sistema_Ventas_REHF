@@ -12,9 +12,9 @@ module.exports = {
   get: [
     async function (req, res, next) {
       let recovery = this.bot.state() == 'CONNECTED';
+      let theme = 'purple';
 
       try {
-        let theme = 'purple';
 
         if (!req.cookies['config-theme'])
           res.cookie('config-theme', theme, {
@@ -67,6 +67,7 @@ module.exports = {
     async function (req, res, next) {
       let recovery = this.bot.state() == 'CONNECTED';
       let theme = req.cookies['config-theme'];
+      
       try {
         if (req.session.intent == 3) {
 
