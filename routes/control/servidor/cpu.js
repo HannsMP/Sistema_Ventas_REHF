@@ -1,7 +1,7 @@
 const { resolve } = require('path');
 
 /** @typedef {Array.<(this: import('../../../app'), req: import('express').Request, res: import('express').Response, next: import('express').NextFunction)=>void>} routeArr */
-/** @type {{load:boolean, route:string, viewRenderPath:string, viewErrorPath:string, use: routeArr, get: routeArr, post: routeArr}} */
+/** @type {{load:boolean, route:string, viewRenderPath:string, viewErrorPath:string, use: routeArr, get: routeArr, post: routeArr, nodeRoute: (this: import('../../../app'), node: import('../../../utils/SocketNode'))=>void}} */
 module.exports = {
   load: true,
   route: "/control/servidor/cpu",
@@ -36,5 +36,27 @@ module.exports = {
 
       res.render(module.exports.viewRenderPath, { layout: false, session, userLayout });
     },
-  ]
+  ],
+  nodeRoute: function (node) {
+    let internalId = setInterval(() => {
+      let CurrentLoadData = this.system.currentLoad();
+      let FsSizeData = this.system.fsSize();
+      let MemData = this.system.mem();
+
+      node.sockets.forEach(async s => {
+        s.emit(
+          '/cpu/data/emit',
+          {
+            cpu: await CurrentLoadData,
+            disk: await FsSizeData,
+            mem: await MemData
+          }
+        )
+      })
+    }, 1000);
+
+    node.ev.on('destroy', () => {
+      clearInterval(internalId);
+    })
+  }
 }

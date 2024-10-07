@@ -138,6 +138,9 @@ html[theme=green] .theme-green,
   }
 }
 
+.nav-item.active {
+  background-color: rgba(var(--color-0), .2) !important; 
+}
 .nav-item.show .nav-tittle {
   display: none !important;
 }

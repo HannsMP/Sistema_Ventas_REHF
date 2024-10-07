@@ -163,5 +163,6 @@ class Tables {
   }
   toggleSelect(state, defaultStyle = this.config?.select?.style || 'single') {
     this.datatable.select.style(state ? defaultStyle : 'api');
+    if (!state) this.datatable.rows().deselect()
   }
 }

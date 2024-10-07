@@ -573,6 +573,30 @@ $('.content-body').ready(async () => {
         $table.remove(...data.data.map(d => '#' + d.id));
     })
 
+    socket.on('/session/acceso/state', data => {
+      if (permiso?.agregar != data.permiso_agregar) {
+        tblNuevo.forEach(t => t.style.display = data.permiso_agregar ? '' : 'none')
+        permiso.agregar = data.permiso_agregar;
+      }
+      if (permiso?.editar != data.permiso_editar) {
+        tblEditar.forEach(t => t.style.display = data.permiso_editar ? '' : 'none')
+        permiso.editar = data.permiso_editar;
+      }
+      if (permiso?.eliminar != data.permiso_eliminar) {
+        tblEliminar.forEach(t => t.style.display = data.permiso_eliminar ? '' : 'none')
+        permiso.eliminar = data.permiso_eliminar;
+      }
+      if (permiso?.ocultar != data.permiso_ocultar) {
+        $table.toggleColumn(0, data.permiso_ocultar);
+        permiso.ocultar = data.permiso_ocultar;
+      }
+      if (permiso?.exportar != data.permiso_exportar) {
+        if (data.permiso_exportar) $table.buttons();
+        else cardMainDownload.innerHTML = '';
+        permiso.exportar = data.permiso_exportar;
+      }
+    })
+
   } catch ({ message, stack }) {
     socket.emit('/err/client', { message, stack, url: window.location.href })
   }

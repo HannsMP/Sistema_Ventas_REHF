@@ -44,22 +44,52 @@ module.exports = {
 
         if (accesoData.constructor.name != 'Array') return
 
-        for (let data of accesoData) {
-          await this.model.tb_acceso.updateId(Number(data.id), {
-            menu_id: Number(data.menu_id),
-            rol_id: Number(data.rol_id),
-            permiso_id: Number(data.permiso_id),
-            disabled_id: Number(data.disabled_id)
-          });
-        }
-
-        let { id, principal, ruta } = menuData;
-
-        let OkPacket = await this.model.tb_menus.updateId(Number(id), {
-          principal,
-          ruta
+        let OkPacket = await this.model.tb_menus.updateId(Number(menuData.id), {
+          principal: menuData.principal,
+          ruta: menuData.ruta
         });
 
+        for (let data of accesoData) {
+          await this.model.tb_acceso.updateId(Number(data.id), {
+            disabled_id: Number(data.disabled_id),
+            permiso_ver: Number(data.permiso_ver),
+            permiso_agregar: Number(data.permiso_agregar),
+            permiso_editar: Number(data.permiso_editar),
+            permiso_eliminar: Number(data.permiso_eliminar),
+            permiso_ocultar: Number(data.permiso_ocultar),
+            permiso_exportar: Number(data.permiso_exportar)
+          });
+
+          if (data.rol_id) {
+            this.socket.rootControl.emitRol(
+              data.rol_id,
+              '/session/acceso/updateId',
+              {
+                menu_ruta: data.menu_ruta,
+                permiso_ver: Number(data.permiso_ver),
+                permiso_agregar: Number(data.permiso_agregar),
+                permiso_editar: Number(data.permiso_editar),
+                permiso_eliminar: Number(data.permiso_eliminar),
+                permiso_ocultar: Number(data.permiso_ocultar),
+                permiso_exportar: Number(data.permiso_exportar)
+              }
+            )
+
+            this.socket.emitRouteByRol(
+              data.menu_ruta,
+              data.rol_id,
+              '/session/acceso/state',
+              {
+                permiso_ver: Number(data.permiso_ver),
+                permiso_agregar: Number(data.permiso_agregar),
+                permiso_editar: Number(data.permiso_editar),
+                permiso_eliminar: Number(data.permiso_eliminar),
+                permiso_ocultar: Number(data.permiso_ocultar),
+                permiso_exportar: Number(data.permiso_exportar)
+              }
+            )
+          }
+        }
         res.status(200).json({ OkPacket })
       } catch (e) {
         this.responseErrorApi(req, res, next, e)

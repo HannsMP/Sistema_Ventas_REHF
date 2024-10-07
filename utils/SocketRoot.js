@@ -1,24 +1,24 @@
 /** @typedef {import('socket.io').Socket<ListenEvents, EmitEvents, ServerSideEvents, SocketData>} SocketClient */
 
-/** @template T */
 class SocketRoot {
-  /** @param {string} routes @param {import('../app')} app  */
-  constructor(routes, app) {
-    this.routes = routes;
+  /** @param {string} rootRoute @param {import('../app')} app  */
+  constructor(rootRoute, app) {
+    this.rootRoute = rootRoute;
     this.app = app;
   }
 
   /** 
+   * @template T
    * @param {(socketClient:SocketClient)=>boolean} callback 
    * @param {string} eventName 
-   * @param {T|Promise<T>|()=>Promise<T>} data 
+   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data 
    * @param {(socketClient:SocketClient, dataSend: T)=>void} [each] 
-   * @returns {Promise<SocketClient[]>} 
+   * @returns {Promise<T>} 
    */
   async #filterEmit(callback, eventName, data, each) {
-    let socketsRoot = this.app.socket.node.selectorAll(this.routes);
+    let socketsRoot = this.app.socket.node.selectorAll(this.rootRoute);
 
-    if (!socketsRoot.length) return false;
+    if (!socketsRoot.size) return null;
 
     let dataEmit = typeof data == 'function' ? await data() : data;
 
@@ -28,23 +28,27 @@ class SocketRoot {
         each && each(socketClient, dataEmit);
       }
     })
-    return true;
+    return dataEmit;
   }
 
   /** 
+   * @template T
    * @param {string} eventName 
-   * @param {T|Promise<T>|()=>Promise<T>} data 
+   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data 
    * @param {(socketClient:SocketClient, dataSend: T)=>void} [each] 
+   * @returns {Promise<T>} 
    */
   emit(eventName, data, each) {
     return this.#filterEmit(null, eventName, data, each);
   }
 
   /** 
-   * @param {string} id 
+   * @template T
+   * @param {number} usuario_id 
    * @param {string} eventName 
-   * @param {T|Promise<T>|()=>Promise<T>} data 
+   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data 
    * @param {(socketClient:SocketClient, dataSend: T)=>void} [each] 
+   * @returns {Promise<T>} 
    */
   emitUser(usuario_id, eventName, data, each) {
     return this.#filterEmit(
@@ -54,10 +58,12 @@ class SocketRoot {
   }
 
   /** 
-   * @param {string} rol_id 
+   * @template T
+   * @param {number} rol_id 
    * @param {string} eventName 
-   * @param {T|Promise<T>|()=>Promise<T>} data 
+   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data 
    * @param {(socketClient:SocketClient, dataSend: T)=>void} [each] 
+   * @returns {Promise<T>} 
    */
   emitRol(rol_id, eventName, data, each) {
     return this.#filterEmit(
@@ -67,10 +73,12 @@ class SocketRoot {
   }
 
   /** 
+   * @template T
    * @param {string} apiKey 
    * @param {string} eventName 
-   * @param {T|Promise<T>|()=>Promise<T>} data 
+   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data 
    * @param {(socketClient:SocketClient, dataSend: T)=>void} [each] 
+   * @returns {Promise<T>} 
    */
   emitApikey(apiKey, eventName, data, each) {
     return this.#filterEmit(
@@ -80,10 +88,12 @@ class SocketRoot {
   }
 
   /** 
+   * @template T
    * @param {number} rol_id 
    * @param {string} eventName 
-   * @param {T|Promise<T>|()=>Promise<T>} data 
+   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data 
    * @param {(socketClient:SocketClient, dataSend: T)=>void} [each] 
+   * @returns {Promise<T>} 
    */
   emitRolToJunior(rol_id, eventName, data, each) {
     return this.#filterEmit(socketClient => {
@@ -94,15 +104,17 @@ class SocketRoot {
   }
 
   /** 
+   * @template T
    * @param {number} rol_id 
    * @param {string} eventName 
-   * @param {T|Promise<T>|()=>Promise<T>} data 
+   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data 
    * @param {(socketClient:SocketClient, dataSend: T)=>void} [each] 
+   * @returns {Promise<T>} 
    */
   emitRolToSenior(rol_id, eventName, data, each) {
     return this.#filterEmit(socketClient => {
       if (socketClient.rooms.has(`rol:1`)) return true;
-      for (let rol_init = rol_id; 1 <= rol_init; rol_init--)
+      for (let rol_init = rol_id; rol_init >= 1; rol_init--)
         if (socketClient.rooms.has(`rol:${rol_init}`)) return true;
     }, eventName, data, each);
   }

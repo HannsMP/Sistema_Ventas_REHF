@@ -24,7 +24,6 @@ const Logger = require('./utils/Logger');
 const System = require('./utils/System');
 const Time = require('./utils/Time');
 
-/** @typedef {(this: App, req: import('express').Request, res: import('express').Response, next: import('express').NextFunction)=>void} callbackRoute */
 
 class App {
   estado = 0;
@@ -80,11 +79,12 @@ class App {
     this._LoadRoutes();
   }
 
-  /** @param {{load:boolean, route:string, use:callbackRoute[], get:callbackRoute[], post:callbackRoute[]}} data*/
+  /** @typedef {(this: App, req: import('express').Request, res: import('express').Response, next: import('express').NextFunction)=>void} callbackRoute */
+  /** @param {{load:boolean, route:string, use:callbackRoute[], get:callbackRoute[], post:callbackRoute[], nodeRoute: (node: import('./utils/SocketNode'))=>void}} data*/
   _Route(data) {
     if (data.constructor.name != 'Object') return;
 
-    let { load, route, use, get, post } = data;
+    let { load, route, use, get, post, nodeRoute } = data;
 
     if (!load) return;
 
@@ -104,6 +104,10 @@ class App {
       this.app.post(route, post.map(r => r.bind(this)));
       this.logSuccess.changeColor('brightBlue');
       this.logSuccess.writeStart(`[POST] Routes: http://${this.config.SERVER.ip}:${this.config.SERVER.port}${data.route} (${data.post.length})`);
+    }
+
+    if (nodeRoute) {
+      this.socket.node.ev.on('nodeCreate', node => node.path == route && nodeRoute.call(this, node))
     }
   }
 

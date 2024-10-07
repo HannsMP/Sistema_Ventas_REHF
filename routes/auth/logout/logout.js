@@ -11,8 +11,8 @@ module.exports = {
         res.clearCookie('apiKey');
         res.clearCookie('remember');
         console.log('acabo de cerrar sesion');
-        
-        this.socket.emitApikey(apiKey, '/session/usuario/logout');
+
+        this.socket.rootControl.emitApikey(apiKey, '/session/usuario/logout');
       }
       res.status(200).redirect('/auth/login');
     },

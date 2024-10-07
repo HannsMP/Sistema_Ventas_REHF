@@ -84,6 +84,10 @@
       z-index: 100;
     }
 
+
+    input:-webkit-autofill,
+    input:focus,
+    input:active,
     textarea,
     input[type=text],
     input[type=email],

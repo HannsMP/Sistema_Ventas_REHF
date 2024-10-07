@@ -3,6 +3,8 @@ const cookie = require('cookie');
 const SocketNode = require('../utils/SocketNode');
 const SocketRouter = require('../utils/SocketRoot');
 
+/** @typedef {import('socket.io').Socket<ListenEvents, EmitEvents, ServerSideEvents, SocketData>} SocketClient */
+
 class Socket {
 
   /** @param {import('./../app')} app  */
@@ -61,52 +63,134 @@ class Socket {
     })
   }
 
-  emit(eventName, data) {
-    this.io.emit(eventName, data);
-  }
-
-  emitUser(id, eventName, data) {
-    this.io.to(`usr:${id}`).emit(eventName, data);
-  }
-
-  emitApikey(apiKey, eventName, data) {
-    this.io.to(`api:${apiKey}`).emit(eventName, data);
-  }
-
-
   /** 
-   * @param {number} rol_id 
+   * @template T
+   * @param {string} route 
+   * @param {(socketClient:SocketClient)=>boolean} callback 
    * @param {string} eventName 
-   * @param {T|Promise<T>|()=>Promise<T>} data 
+   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data 
    * @param {(socketClient:SocketClient, dataSend: T)=>void} [each] 
+   * @returns {Promise<T>} 
    */
-  emitRolToJunior(rol_id, eventName, data) {
-    this.io.sockets.sockets.forEach(socketClient => {
-      if (socketClient.rooms.has(`rol:1`))
-        return socketClient.emit(eventName, data);
+  async #filterEmit(route, callback, eventName, data, each) {
+    let socketsRoot = this.node.selector(route);
 
-      for (let rol_init = rol_id; rol_init <= 5; rol_init++)
-        if (socketClient.rooms.has(`rol:${rol_init}`))
-          return socketClient.emit(eventName, data);
+    if (!socketsRoot.size) return null;
+
+    let dataEmit = typeof data == 'function' ? await data() : data;
+
+    socketsRoot.forEach(socketClient => {
+      if (!callback || callback(socketClient)) {
+        socketClient.emit(eventName, dataEmit);
+        each && each(socketClient, dataEmit);
+      }
     })
-
+    return dataEmit;
   }
 
   /** 
+   * @template T
+   * @param {string} route 
+   * @param {string} eventName 
+   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data 
+   * @param {(socketClient:SocketClient, dataSend: T)=>void} [each] 
+   * @returns {Promise<T>} 
+   */
+  emitRoute(route, eventName, data, each) {
+    return this.#filterEmit(route, null, eventName, data, each);
+  }
+
+  /** 
+   * @template T
+   * @param {string} route 
+   * @param {number} usuario_id 
+   * @param {string} eventName 
+   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data 
+   * @param {(socketClient:SocketClient, dataSend: T)=>void} [each] 
+   * @returns {Promise<T>} 
+   */
+  emitRouteByUser(route, usuario_id, eventName, data, each) {
+    return this.#filterEmit(
+      route,
+      socketClient => socketClient.rooms.has(`usr:${usuario_id}`),
+      eventName, data, each
+    );
+  }
+
+  /** 
+   * @template T
+   * @param {string} route 
+   * @param {string} rol_id 
+   * @param {string} eventName 
+   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data 
+   * @param {(socketClient:SocketClient, dataSend: T)=>void} [each] 
+   * @returns {Promise<T>} 
+   */
+  emitRouteByRol(route, rol_id, eventName, data, each) {
+    return this.#filterEmit(
+      route,
+      socketClient => socketClient.rooms.has(`rol:${rol_id}`),
+      eventName, data, each
+    );
+  }
+
+  /** 
+   * @template T
+   * @param {string} route 
+   * @param {string} apiKey 
+   * @param {string} eventName 
+   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data 
+   * @param {(socketClient:SocketClient, dataSend: T)=>void} [each] 
+   * @returns {Promise<T>} 
+   */
+  emitRouteByApikey(route, apiKey, eventName, data, each) {
+    return this.#filterEmit(
+      route,
+      socketClient => socketClient.rooms.has(`api:${apiKey}`),
+      eventName, data, each
+    );
+  }
+
+  /** 
+   * @template T
+   * @param {string} route 
    * @param {number} rol_id 
    * @param {string} eventName 
-   * @param {T|Promise<T>|()=>Promise<T>} data 
+   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data 
    * @param {(socketClient:SocketClient, dataSend: T)=>void} [each] 
+   * @returns {Promise<T>} 
    */
-  emitRolToSenior(rol_id, eventName, data) {
-    this.io.sockets.sockets.forEach(socketClient => {
-      if (socketClient.rooms.has(`rol:1`))
-        return socketClient.emit(eventName, data);
+  emitRouteByRolToJunior(route, rol_id, eventName, data, each) {
+    return this.#filterEmit(
+      route,
+      socketClient => {
+        if (socketClient.rooms.has(`rol:1`)) return true;
+        for (let rol_init = rol_id; rol_init <= 5; rol_init++)
+          if (socketClient.rooms.has(`rol:${rol_init}`)) return true;
+      },
+      eventName, data, each
+    );
+  }
 
-      for (let rol_init = rol_id; rol_init >= 1; rol_init--)
-        if (socketClient.rooms.has(`rol:${rol_init}`));
-      return socketClient.emit(eventName, data);
-    })
+  /** 
+   * @template T
+   * @param {string} route 
+   * @param {number} rol_id 
+   * @param {string} eventName 
+   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data 
+   * @param {(socketClient:SocketClient, dataSend: T)=>void} [each] 
+   * @returns {Promise<T>} 
+   */
+  emitRouteByRolToSenior(route, rol_id, eventName, data, each) {
+    return this.#filterEmit(
+      route,
+      socketClient => {
+        if (socketClient.rooms.has(`rol:1`)) return true;
+        for (let rol_init = rol_id; rol_init >= 1; rol_init--)
+          if (socketClient.rooms.has(`rol:${rol_init}`)) return true;
+      },
+      eventName, data, each
+    );
   }
 }
 

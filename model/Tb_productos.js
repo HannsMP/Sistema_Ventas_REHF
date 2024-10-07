@@ -121,120 +121,6 @@ class Tb_productos extends Table {
       }
     })
   }
-  /**
-   * @returns {Promise<COLUMNS[]>}
-   */
-  readAllJoin() {
-    return new Promise(async (res, rej) => {
-      try {
-        let [result] = await this.app.model.pool(`
-          SELECT 
-            p.id,
-            p.codigo,
-            p.producto,
-            p.descripcion,
-            p.compra,
-            p.venta,
-            p.cantidad,
-            p.categoria_id,
-            c.nombre AS categoria_nombre,
-            p.foto_id,
-            f.src AS foto_src,
-            p.creacion,
-            p.estado
-          FROM
-            tb_productos AS p
-          LEFT 
-            JOIN 
-              tb_categorias AS c
-            ON 
-              c.id = p.categoria_id
-          LEFT 
-            JOIN 
-              tb_fotos AS f
-            ON 
-              f.id = p.foto_id
-          WHERE
-            p.estado = 1
-            OR p.estado = 0
-        `);
-
-        res(result);
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
-  /** 
-   * @param {number} id 
-   * @returns {Promise<{
-   *   id:number,
-   *   codigo:string,
-   *   producto:string,
-   *   descripcion:string,
-   *   compra:number,
-   *   venta:number,
-   *   cantidad:number,
-   *   categoria_id:number,
-   *   categoria_nombre:string,
-   *   foto_id:number,
-   *   foto_src:string,
-   *   creacion:string,
-   *   estado:number
-   * }>}
-   */
-  readIdJoin(id) {
-    return new Promise(async (res, rej) => {
-      try {
-
-        this.constraint('id', id);
-
-        let [result] = await this.app.model.poolValues(`
-          SELECT 
-            p.id,
-            p.codigo,
-            p.producto,
-            p.descripcion,
-            p.compra,
-            p.venta,
-            p.cantidad,
-            p.categoria_id,
-            c.nombre AS categoria_nombre,
-            p.foto_id,
-            f.src AS foto_src,
-            f.src_small AS foto_src_small,
-            p.creacion,
-            p.estado
-          FROM
-            tb_productos AS p
-          LEFT 
-            JOIN 
-              tb_categorias AS c
-            ON 
-              c.id = p.categoria_id
-          LEFT 
-            JOIN 
-              tb_fotos AS f
-            ON 
-              f.id = p.foto_id
-          WHERE
-            p.id = ?
-            AND (
-              p.estado = 1
-              OR p.estado = 0
-            )
-        `, [
-          id
-        ]);
-
-        let data = result[0];
-
-        res(data);
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
   /** 
    * @param {number} id 
    * @param {COLUMNS} data 
@@ -375,11 +261,215 @@ class Tb_productos extends Table {
       }
     })
   }
+  /**
+   * @returns {Promise<COLUMNS[]>}
+   */
+  readAllJoin() {
+    return new Promise(async (res, rej) => {
+      try {
+        let [result] = await this.app.model.pool(`
+          SELECT 
+            p.id,
+            p.codigo,
+            p.producto,
+            p.descripcion,
+            p.compra,
+            p.venta,
+            p.cantidad,
+            p.categoria_id,
+            c.nombre AS categoria_nombre,
+            p.foto_id,
+            f.src AS foto_src,
+            p.creacion,
+            p.estado
+          FROM
+            tb_productos AS p
+          LEFT 
+            JOIN 
+              tb_categorias AS c
+            ON 
+              c.id = p.categoria_id
+          LEFT 
+            JOIN 
+              tb_fotos AS f
+            ON 
+              f.id = p.foto_id
+          WHERE
+            p.estado = 1
+            OR p.estado = 0
+        `);
+
+        res(result);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
+  /** 
+   * @param {number} id 
+   * @returns {Promise<{
+   *   id:number,
+   *   codigo:string,
+   *   producto:string,
+   *   descripcion:string,
+   *   compra:number,
+   *   venta:number,
+   *   cantidad:number,
+   *   categoria_id:number,
+   *   categoria_nombre:string,
+   *   foto_id:number,
+   *   foto_src:string,
+   *   creacion:string,
+   *   estado:number
+   * }>}
+   */
+  readIdJoin(id) {
+    return new Promise(async (res, rej) => {
+      try {
+
+        this.constraint('id', id);
+
+        let [result] = await this.app.model.poolValues(`
+          SELECT 
+            p.id,
+            p.codigo,
+            p.producto,
+            p.descripcion,
+            p.compra,
+            p.venta,
+            p.cantidad,
+            p.categoria_id,
+            c.nombre AS categoria_nombre,
+            p.foto_id,
+            f.src AS foto_src,
+            f.src_small AS foto_src_small,
+            p.creacion,
+            p.estado
+          FROM
+            tb_productos AS p
+          LEFT 
+            JOIN 
+              tb_categorias AS c
+            ON 
+              c.id = p.categoria_id
+          LEFT 
+            JOIN 
+              tb_fotos AS f
+            ON 
+              f.id = p.foto_id
+          WHERE
+            p.id = ?
+            AND (
+              p.estado = 1
+              OR p.estado = 0
+            )
+        `, [
+          id
+        ]);
+
+        let data = result[0];
+
+        res(data);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
   /* 
     ====================================================================================================
     ============================================= Categoria =============================================
     ====================================================================================================
   */
+  /**
+   * @param {number} categoria_id 
+   * @returns {Promise<{
+   * id: number,
+   * codigo: string,
+   * producto: string,
+   * descripcion: string,
+   * compra: number,
+   * venta: number,
+   * cantidad: number,
+   * categoria_id: number,
+   * categoria_nombre: string,
+   * foto_id: number,
+   * foto_src: string,
+   * creacion: string,
+   * estado: number
+   * }[]>}
+   */
+  readCategoriaIdJoin(categoria_id) {
+    return new Promise(async (res, rej) => {
+      try {
+
+        this.app.model.tb_categorias.constraint('id', categoria_id);
+
+        let [result] = await this.app.model.poolValues(`
+          SELECT 
+            p.id,
+            p.codigo,
+            p.producto,
+            p.descripcion,
+            p.compra,
+            p.venta,
+            p.cantidad,
+            p.categoria_id,
+            c.nombre AS categoria_nombre,
+            p.foto_id,
+            f.src AS foto_src,
+            p.creacion,
+            p.estado
+          FROM
+            tb_productos AS p
+          LEFT 
+            JOIN 
+              tb_categorias AS c
+            ON 
+              c.id = p.categoria_id
+          LEFT 
+            JOIN 
+              tb_fotos AS f
+            ON 
+              f.id = p.foto_id
+          WHERE
+            p.categoria_id = ?
+        `, [
+          categoria_id
+        ]);
+
+        res(result);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
+  /**
+   * @param {number} categoria_id 
+   * @returns {Promise<{id:number}[]>}
+   */
+  readCategoriaId(categoria_id) {
+    return new Promise(async (res, rej) => {
+      try {
+
+        this.app.model.tb_categorias.constraint('id', categoria_id);
+
+        let [result] = await this.app.model.poolValues(`
+          SELECT 
+            p.id
+          FROM
+            tb_productos AS p
+          WHERE
+            p.categoria_id = ?
+        `, [
+          categoria_id
+        ]);
+
+        res(result);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
   /** 
    * @param {number} categoria_id 
    * @param {number} estado 
@@ -436,53 +526,15 @@ class Tb_productos extends Table {
             categoria_id
           ]);
 
-        let [data] = estado
-          ? await this.app.model.poolValues(`
-              SELECT 
-                p.id,
-                p.codigo,
-                p.producto,
-                p.descripcion,
-                p.compra,
-                p.venta,
-                p.cantidad,
-                p.categoria_id,
-                c.nombre AS categoria_nombre,
-                p.foto_id,
-                f.src AS foto_src,
-                p.creacion,
-                p.estado
-              FROM
-                tb_productos AS p
-              LEFT 
-                JOIN 
-                  tb_categorias AS c
-                ON 
-                  c.id = p.categoria_id
-              LEFT 
-                JOIN 
-                  tb_fotos AS f
-                ON 
-                  f.id = p.foto_id
-              WHERE
-                p.categoria_id = ?
-            `, [
-            categoria_id
-          ])
-          : await this.app.model.poolValues(`
-              SELECT 
-                p.id
-              FROM
-                tb_productos AS p
-              WHERE
-                p.categoria_id = ?
-            `, [
-            categoria_id
-          ])
-
         this.io.emit(
           '/productos/categorias/state',
-          { estado, data }
+          async () => {
+            let data = estado
+              ? await this.readCategoriaIdJoin(categoria_id)
+              : await this.readCategoriaId(categoria_id);
+
+            return { estado, data };
+          }
         )
 
         res(result)

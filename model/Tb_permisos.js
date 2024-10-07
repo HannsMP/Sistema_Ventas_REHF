@@ -2,13 +2,13 @@ const { Table } = require('../utils/UtilsModel');
 
 const name = 'tb_permisos';
 const columns = {
-  id: { name: 'id', null: false, type: 'Integer', limit: 11 },
-  ver: { name: 'ver', null: false, type: 'Integer', limit: 1 },
-  agregar: { name: 'agregar', null: false, type: 'Integer', limit: 1 },
-  editar: { name: 'editar', null: false, type: 'Integer', limit: 1 },
-  eliminar: { name: 'eliminar', null: false, type: 'Integer', limit: 1 },
-  ocultar: { name: 'ocultar', null: false, type: 'Integer', limit: 1 },
-  exportar: { name: 'exportar', null: false, type: 'Integer', limit: 1 }
+  id: { name: 'id', null: false, type: 'Integer', limit: 11, min: 0, max: 63 },
+  ver: { name: 'ver', null: false, type: 'Integer', limit: 1, min: -1, max: 1 },
+  agregar: { name: 'agregar', null: false, type: 'Integer', limit: 1, min: -1, max: 1 },
+  editar: { name: 'editar', null: false, type: 'Integer', limit: 1, min: -1, max: 1 },
+  eliminar: { name: 'eliminar', null: false, type: 'Integer', limit: 1, min: -1, max: 1 },
+  ocultar: { name: 'ocultar', null: false, type: 'Integer', limit: 1, min: -1, max: 1 },
+  exportar: { name: 'exportar', null: false, type: 'Integer', limit: 1, min: -1, max: 1 }
 }
 
 /** 
@@ -19,7 +19,7 @@ const columns = {
  *   editar: number,
  *   eliminar: number,
  *   ocultar: number,
- *   exportar: number
+ *   exportar: number 
  * }} COLUMNS
  */
 
@@ -686,6 +686,54 @@ class Tb_permisos extends Table {
         rej(e);
       }
     })
+  }
+  /* 
+    ====================================================================================================
+    ============================================= COMPUTED =============================================
+    ====================================================================================================
+  */
+  /**
+   * @param {{
+   *   ver: number,
+   *   agregar: number,
+   *   editar: number,
+   *   eliminar: number,
+   *   ocultar: number,
+   *   exportar: number
+   * }} permisos 
+   * @returns {number}
+   */
+  computedPermisoId(permisos) {
+
+    let {
+      ver,
+      agregar,
+      editar,
+      eliminar,
+      ocultar,
+      exportar
+    } = permisos;
+
+    this.constraint('ver', ver);
+    this.constraint('agregar', agregar);
+    this.constraint('editar', editar);
+    this.constraint('eliminar', eliminar);
+    this.constraint('ocultar', ocultar);
+    this.constraint('exportar', exportar);
+
+    let value = 0;
+
+    [
+      ver,
+      agregar,
+      editar,
+      eliminar,
+      ocultar,
+      exportar
+    ]
+      .forEach((c, i) => { if (c == 1) value += (2 ** i) });
+
+    return value;
   }
 }
 

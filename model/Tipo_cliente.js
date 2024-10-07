@@ -21,12 +21,6 @@ class Tipo_cliente extends Table {
     super(name);
     this.columns = columns;
     this.app = app;
-
-    this.io = new SocketRouter([
-      '/control/mantenimiento/clientes',
-      '/control/movimientos/ventas',
-      '/control/reportes/ventas',
-    ], app)
   }
   /* 
     ====================================================================================================

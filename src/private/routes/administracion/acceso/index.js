@@ -58,19 +58,10 @@ $('.content-body').ready(async () => {
     */
 
     /** @type {(this:HTMLInputElement, data:{id:number})=>void} */
-    async function updatePermisoId({ id, permiso_ver, permiso_agregar, permiso_editar, permiso_eliminar, permiso_ocultar, permiso_exportar }) {
-
+    async function updatePermisoId(dataRow) {
       this.disabled = true;
 
-      let resAcceso = await query.post.json.cookie("/api/acceso/table/updatePermisoId", {
-        id,
-        permiso_ver,
-        permiso_agregar,
-        permiso_editar,
-        permiso_eliminar,
-        permiso_ocultar,
-        permiso_exportar
-      });
+      let resAcceso = await query.post.json.cookie("/api/acceso/table/updatePermisoId", dataRow);
 
       /** @type {{err: string, OkPacket: import('mysql').OkPacket, list:{[column:string]: string|number}[]}} */
       let { err } = await resAcceso.json();
@@ -232,7 +223,7 @@ $('.content-body').ready(async () => {
         {
           className: 'dtr-tag',
           targets: 8,
-          render: data => '<div>' + data + '</div>'
+          render: (data, _, row) => `<div>${row.rol_id} ${data}</div>`
         }
       ],
       columns: [
@@ -244,7 +235,7 @@ $('.content-body').ready(async () => {
         { data: 'permiso_exportar' },
         { data: 'menu_ruta' },
         { data: 'menu_principal' },
-        { data: 'rol_nombre' },
+        { data: 'rol_nombre' }
       ],
     })
     $table.buttons();
@@ -445,15 +436,11 @@ $('.content-body').ready(async () => {
 
       let resAccesoInsert = await query.post.json.cookie("/api/acceso/table/insert", jsonData);
 
-      /** @type {{err: string, OkPacket: import('mysql').OkPacket, modifiedData:{[column:string]: string|number}[]}} */
-      let { err, modifiedData } = await resAccesoInsert.json();
+      /** @type {{err: string, OkPacket: import('mysql').OkPacket}} */
+      let { err } = await resAccesoInsert.json();
 
       if (err)
         return alarm.warn('No se pudo agregar')
-
-      $table.add(...modifiedData);
-
-      uniqueMenuRuta.add(ruta?.toLowerCase());
 
       alarm.success(`Filas Agregadas`);
     })
@@ -600,16 +587,7 @@ $('.content-body').ready(async () => {
       let { err } = await resAccesoUpdate.json();
 
       if (err)
-        return alarm.warn('No se pudo agregar')
-
-      jsonData.accesoData.forEach(data => {
-        $table.update('#' + data.id, data)
-      });
-
-      if (inputEditarRuta.beforeValue?.toLowerCase() != ruta?.toLowerCase()) {
-        uniqueMenuRuta.delete(inputEditarRuta.beforeValue?.toLowerCase());
-        uniqueMenuRuta.add(ruta?.toLowerCase());
-      }
+        return alarm.warn('No se pudo agregar');
 
       alarm.success(`Filas actualizadas`);
       toggleMenu.close();
@@ -651,16 +629,11 @@ $('.content-body').ready(async () => {
             let resUsuarios = await query.post.json.cookie("/api/acceso/table/deleteId", { id });
 
             /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-            let { err, list } = await resUsuarios.json();
+            let { err } = await resUsuarios.json();
 
             if (err)
               return alarm.error(`Filas no Eliminada`);
 
-            let dataBefore = $table.get('#' + id)
-
-            uniqueMenuRuta.delete(dataBefore.menu_ruta?.toLowerCase());
-
-            $table.remove(...list.map(({ id }) => '#' + id));
             alarm.success(`Fila eliminada`);
           }
         });
@@ -672,19 +645,94 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
+    socket.on('/accesos/permisos/insert', data => {
+      let row = $table.get('#' + data.id);
+      if (row) return;
+
+      $table.add({
+        id: data.id,
+        permiso_id: data.permiso_id,
+        menu_ruta: data.menu_ruta,
+        menu_principal: data.menu_principal,
+        rol_id: data.rol_id,
+        rol_nombre: data.rol_nombre,
+        permiso_id: data.permiso_id,
+        permiso_ver: data.permiso_ver,
+        permiso_agregar: data.permiso_agregar,
+        permiso_editar: data.permiso_editar,
+        permiso_eliminar: data.permiso_eliminar,
+        permiso_ocultar: data.permiso_ocultar,
+        permiso_exportar: data.permiso_exportar
+      });
+
+      uniqueMenuRuta.add(data.menu_ruta?.toLowerCase());
+    })
+
+    socket.on('/accesos/permisos/updateId', data => {
+      let row = $table.get('#' + data.id);
+      if (!row) return;
+
+      $table.update('#' + data.id, {
+        menu_ruta: data.menu_ruta,
+        menu_principal: data.menu_principal,
+        permiso_id: data.permiso_id,
+        permiso_ver: data.permiso_ver,
+        permiso_agregar: data.permiso_agregar,
+        permiso_editar: data.permiso_editar,
+        permiso_eliminar: data.permiso_eliminar,
+        permiso_ocultar: data.permiso_ocultar,
+        permiso_exportar: data.permiso_exportar
+      });
+
+      if (row.menu_ruta?.toLowerCase() != data.menu_ruta?.toLowerCase()) {
+        uniqueMenuRuta.delete(row.menu_ruta?.toLowerCase());
+        uniqueMenuRuta.add(data.menu_ruta?.toLowerCase());
+      }
+    })
+
+    socket.on('/accesos/permisos/deleteId', data => {
+      $table.remove(...data.map(({ id }) => '#' + id));
+
+      uniqueMenuRuta.delete(data.menu_ruta?.toLowerCase());
+    })
+
     socket.on('/accesos/permisos/state', data => {
       let row = $table.get('#' + data.id);
       if (!row) return;
 
       $table.update('#' + data.id, {
-        permiso_id: data.permisos_id,
-        permiso_ver: data.permiso.ver,
-        permiso_agregar: data.permiso.agregar,
-        permiso_editar: data.permiso.editar,
-        permiso_eliminar: data.permiso.eliminar,
-        permiso_ocultar: data.permiso.ocultar,
-        permiso_exportar: data.permiso.exportar
+        permiso_id: data.permiso_id,
+        permiso_ver: data.permiso_ver,
+        permiso_agregar: data.permiso_agregar,
+        permiso_editar: data.permiso_editar,
+        permiso_eliminar: data.permiso_eliminar,
+        permiso_ocultar: data.permiso_ocultar,
+        permiso_exportar: data.permiso_exportar
       });
+    })
+
+    socket.on('/session/acceso/state', data => {
+      if (permiso?.agregar != data.permiso_agregar) {
+        tblNuevo.forEach(t => t.style.display = data.permiso_agregar ? '' : 'none')
+        permiso.agregar = data.permiso_agregar;
+      }
+      if (permiso?.editar != data.permiso_editar) {
+        tblEditar.forEach(t => t.style.display = data.permiso_editar ? '' : 'none')
+        permiso.editar = data.permiso_editar;
+      }
+      if (permiso?.eliminar != data.permiso_eliminar) {
+        tblEliminar.forEach(t => t.style.display = data.permiso_eliminar ? '' : 'none')
+        permiso.eliminar = data.permiso_eliminar;
+      }
+      if (permiso?.ocultar != data.permiso_ocultar) {
+        $table.toggleColumn(0, data.permiso_ocultar);
+        permiso.ocultar = data.permiso_ocultar;
+      }
+      if (permiso?.exportar != data.permiso_exportar) {
+        if (data.permiso_exportar) $table.buttons();
+        else cardMainDownload.innerHTML = '';
+        permiso.exportar = data.permiso_exportar;
+      }
     })
 
   } catch ({ message, stack }) {

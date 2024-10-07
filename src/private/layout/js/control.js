@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
+
+
   let profileImg = document.querySelector('.sidebar #profile img');
 
   document.body.classList.remove("load-spinner");
@@ -40,6 +42,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* 
     ==================================================
+    ==================== NAV ITEMS ====================
+    ==================================================
+  */
+
+  /** @type {Map<string, HTMLDivElement>} */
+  let navItemMap = new Map;
+
+  document.querySelectorAll('.nav-item').forEach(d => {
+    let href = d.href ? d.getAttribute('href') : d.querySelector('.nav-link')?.getAttribute('href');
+    if (href) navItemMap.set(href, d);
+  })
+
+  let navItemCurrent = new URL(window.location.href).pathname;
+
+  navItemMap.get(navItemCurrent)?.classList?.add('active');
+
+  /* 
+    ==================================================
     ===================== SOCKET =====================
     ==================================================
   */
@@ -48,6 +68,18 @@ document.addEventListener('DOMContentLoaded', () => {
   socket.on('/session/usuario/reload', _ => window.location.reload());
   socket.on('/session/usuario/theme', theme => document.documentElement.setAttribute('theme', theme));
   socket.on('/session/usuario/avatar', data => profileImg.src = data.src_small);
+  socket.on('/session/acceso/updateId', data => {
+    let navItem = navItemMap.get(data.menu_ruta);
+
+    if (!data.permiso_ver)
+      navItem.style.display = 'none';
+    else
+      navItem.style.display = '';
+  })
+
+  socket.on('/session/acceso/state', data => {
+    if (permiso?.ver != data.permiso_ver) return window.location.reload();
+  })
 
 })
 

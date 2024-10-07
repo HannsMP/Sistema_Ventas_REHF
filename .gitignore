@@ -1,5 +1,7 @@
 .cache
 .temp
+.vs
+.vscode
 log
 node_modules
 trash

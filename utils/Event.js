@@ -1,20 +1,32 @@
+/** @template E */
 class Event {
-  /** @type {{[event: string]: {once:boolean, persistence:boolean, callback:(...data)=>void}[]}} */
+  /** @type {{[event: string]: {once:boolean, persistence:boolean, callback:(...data:any[])=>void}[]}} */
   #data = {};
-  /** @param {string} name  */
-  emit(name, ...data) {
+
+  /** 
+   * @template O
+   * @param {O & keyof E} name
+   * @param {E[O]} data 
+   */
+  emit(name, data) {
     if (typeof name != 'string')
       throw new TypeError('El nombre de emit debe ser un "string"');
     let eventList = this.#data[name];
-    if (eventList?.length)
-      this.#data[name] = eventList
-        .filter(event => {
-          event.callback(...data);
-          return event.persistence || !event.once;
-        });;
+    if (eventList?.length) {
+      this.#data[name] = eventList.filter(event => {
+        event.callback(data); // Asegúrate de que los datos estén correctamente formateados aquí
+        return event.persistence || !event.once;
+      });
+    }
   }
-  /** @param {string} name @param {(...data)=>void} callback @param {{once:boolean, persistence:boolean}} option  */
-  on(name, callback, option) {
+
+  /** 
+   * @template O
+   * @param {O & keyof E} name
+   * @param {(data: E[O]) => void} callback 
+   * @param {{once: boolean, persistence: boolean}} [option]  
+   */
+  on(name, callback, option = { once: false, persistence: false }) {
     if (typeof name != 'string')
       throw new TypeError('El nombre del evento debe ser un "string"');
     if (typeof callback != 'function')
@@ -23,9 +35,14 @@ class Event {
     if (!this.#data[name])
       this.#data[name] = [];
 
-    this.#data[name].push({ callback, once: option?.once, persistence: option?.persistence });
+    this.#data[name].push({ callback, once: option.once, persistence: option.persistence });
   }
-  /** @param {string} name @param {(...data)=>void} callback  */
+
+  /** 
+   * @template O
+   * @param {O & keyof E} name
+   * @param {(data: E[O]) => void} eventFun 
+   */
   off(name, eventFun) {
     if (typeof name != 'string')
       throw new TypeError('El nombre del evento debe ser un "string"');
@@ -33,10 +50,14 @@ class Event {
       throw new TypeError('El eventFun del evento debe ser una "funcion"');
 
     let event = this.#data[name];
-    if (event?.length)
-      event = event.filter(e => e != eventFun);
+    if (event?.length) {
+      this.#data[name] = event.filter(e => e.callback !== eventFun);
+    }
   }
-  /** @param {string} name  */
+
+  /** 
+   * @param {keyof E} name  
+   */
   empty(name) {
     if (typeof name != 'string')
       throw new TypeError('El nombre de remove debe ser un "string"');

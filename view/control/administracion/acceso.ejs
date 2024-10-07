@@ -38,14 +38,14 @@
         <h3 class="card-tittle">Tabla de Accesos</h3>
         <div class="f-row">
           <% if(session.permiso.eliminar){ %>
-            <a class="btn btn-danger tbl-eliminar"><i class='bx bx-trash'></i></a>
-            <% } %>
-              <% if(session.permiso.editar){ %>
-                <a class="btn btn-warning tbl-editar"><i class='bx bx-pencil'></i></a>
-                <% } %>
-                  <% if(session.permiso.agregar){ %>
-                    <a class="btn btn-info tbl-nuevo"><i class='bx bx-plus'></i></a>
-                    <% } %>
+          <a class="btn btn-danger tbl-eliminar"><i class='bx bx-trash'></i></a>
+          <% } %>
+          <% if(session.permiso.editar){ %>
+          <a class="btn btn-warning tbl-editar"><i class='bx bx-pencil'></i></a>
+          <% } %>
+          <% if(session.permiso.agregar){ %>
+          <a class="btn btn-info tbl-nuevo"><i class='bx bx-plus'></i></a>
+          <% } %>
         </div>
       </div>
       <div class="card-body">
@@ -71,14 +71,14 @@
               <div class="download"></div>
               <div class="f-row option ">
                 <% if(session.permiso.eliminar){ %>
-                  <a class="btn btn-danger tbl-eliminar"><i class='bx bx-trash'></i></a>
-                  <% } %>
-                    <% if(session.permiso.editar){ %>
-                      <a class="btn btn-warning tbl-editar"><i class='bx bx-pencil'></i></a>
-                      <% } %>
-                        <% if(session.permiso.agregar){ %>
-                          <a class="btn btn-info tbl-nuevo"><i class='bx bx-plus'></i></a>
-                          <% } %>
+                <a class="btn btn-danger tbl-eliminar"><i class='bx bx-trash'></i></a>
+                <% } %>
+                <% if(session.permiso.editar){ %>
+                <a class="btn btn-warning tbl-editar"><i class='bx bx-pencil'></i></a>
+                <% } %>
+                <% if(session.permiso.agregar){ %>
+                <a class="btn btn-info tbl-nuevo"><i class='bx bx-plus'></i></a>
+                <% } %>
               </div>
             </div>
           </div>

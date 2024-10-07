@@ -43,14 +43,14 @@
       <div class="card-head">
         <h3 class="card-tittle">Tabla de Usuarios</h3>
         <div class="f-row">
-          <a class="btn btn-danger tbl-eliminar" <% if(!session.permiso.eliminar){ %> style="display: none" <% } %> >
-              <i class='bx bx-trash'></i>
+          <a class="btn btn-danger tbl-eliminar" <% if(!session.permiso.eliminar){ %> style="display: none" <% } %>>
+            <i class='bx bx-trash'></i>
           </a>
-          <a class="btn btn-warning tbl-editar" <% if(!session.permiso.editar){ %> style="display: none" <% } %> >
-              <i class='bx bx-pencil'></i>
+          <a class="btn btn-warning tbl-editar" <% if(!session.permiso.editar){ %> style="display: none" <% } %>>
+            <i class='bx bx-pencil'></i>
           </a>
-          <a class="btn btn-info tbl-nuevo" <% if(!session.permiso.agregar){ %> style="display: none" <% } %> >
-              <i class='bx bx-plus'></i>
+          <a class="btn btn-info tbl-nuevo" <% if(!session.permiso.agregar){ %> style="display: none" <% } %>>
+            <i class='bx bx-plus'></i>
           </a>
         </div>
       </div>
@@ -60,33 +60,33 @@
             <thead>
               <tr>
                 <% if(session.permiso.ocultar){ %>
-                  <th>Estado</th>
-                  <% } %>
-                    <th>Nombres</th>
-                    <th>Apellidos</th>
-                    <th>Usuarios</th>
-                    <th>Email</th>
-                    <th>Telefono</th>
-                    <th>Rol</th>
-                    <th>Creacion</th>
+                <th>Estado</th>
+                <% } %>
+                <th>Nombres</th>
+                <th>Apellidos</th>
+                <th>Usuarios</th>
+                <th>Email</th>
+                <th>Telefono</th>
+                <th>Rol</th>
+                <th>Creacion</th>
               </tr>
             </thead>
             <tbody></tbody>
           </table>
           <div class="cards">
             <div class="tables-utils">
-              <div class="download" <% if(!session.permiso.exportar){ %> style="display: none" <% } %> ></div>
+              <div class="download" <% if(!session.permiso.exportar){ %> style="display: none" <% } %>></div>
 
               <div class="f-row option ">
                 <a class="btn btn-danger tbl-eliminar" <% if(!session.permiso.eliminar){ %> style="display: none" <% }
                     %>>
-                    <i class='bx bx-trash'></i>
+                  <i class='bx bx-trash'></i>
                 </a>
-                <a class="btn btn-warning tbl-editar" <% if(!session.permiso.editar){ %> style="display: none" <% } %> >
-                    <i class='bx bx-pencil'></i>
+                <a class="btn btn-warning tbl-editar" <% if(!session.permiso.editar){ %> style="display: none" <% } %>>
+                  <i class='bx bx-pencil'></i>
                 </a>
-                <a class="btn btn-info tbl-nuevo" <% if(!session.permiso.agregar){ %> style="display: none" <% } %> >
-                    <i class='bx bx-plus'></i>
+                <a class="btn btn-info tbl-nuevo" <% if(!session.permiso.agregar){ %> style="display: none" <% } %>>
+                  <i class='bx bx-plus'></i>
                 </a>
               </div>
             </div>

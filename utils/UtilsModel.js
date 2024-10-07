@@ -127,6 +127,8 @@ let errorMessages = {
   COLUMN_UNEXPECTED_VALUE: 'Se esperaba un valor para la columna',
   COLUMN_TYPE_FIELD: 'Tipo incorrecto en el campo columna',
   COLUMN_LIMIT_FIELD: 'El campo columna es demasiado largo',
+  COLUMN_MIN_LIMIT_FIELD: 'El campo columna esta bajo el minimo',
+  COLUMN_MAX_LIMIT_FIELD: 'El campo columna esta sobre el maximo',
   COLUMN_INTEGER_LIMIT_FIELD: 'El campo columna numerico entera es demasiado largo',
   VALUE_NOT_UNIC: 'Ya existe un valor identico en otro registro',
 
@@ -158,23 +160,27 @@ class ModelError extends Error {
   }
 }
 
-/** @typedef {'String' | 'Number' | 'Integer' | 'Float' | 'Date'} TypeColumn */
-/** @typedef {{ name: string, null: boolean, unic: boolean, type: TypeColumn, limit: number }} DataColumn */
-/** @typedef {{ [column: string]: DataColumn }} Columns */
+/** @typedef {'String' | 'Number' | 'Integer' | 'Float'} TypeColumn */
+/** @typedef {{name:string, null:boolean, type:TypeColumn, unic?:boolean, limit?:number, min?:number, max?:number}} DataColumn */
+/** @typedef {{[column: string]: DataColumn }} Columns */
 
+/** @template T */
 class Table {
   /** @type {import('../app')} */
-  app
-  /** @type {Columns} */
-  columns;
-  /** @param {string} name */
+  app;
+  /** @type {T & Columns} */
+  columns
+  /** 
+   * @param {string} name 
+   */
   constructor(name) {
     this.name = name;
   }
-
-  /** @param {string} column  */
-  /** @param {any} data  */
-  /** @param {{unic: boolean}} compute  */
+  /** 
+   * @param {keyof T} column 
+   * @param {number|string} [data] 
+   * @param {{unic: boolean}} compute  
+   */
   constraint(column, data, compute) {
     const columnInfo = this.columns[column];
 
@@ -207,6 +213,7 @@ class Table {
         );
   }
 
+  /** @type {{[type:string]:((value:string|number,colum:DataColumn)=>boolean)}} */
   optionType = {
     string: (value, column) => {
       if (column.type !== 'String') return false;
@@ -219,6 +226,18 @@ class Table {
     },
     number: (value, column) => {
       if (Number.isNaN(value) && column.type === 'NaN') return true;
+
+      if (column.min !== undefined && column.min > value)
+        throw this.error(
+          'COLUMN_MIN_LIMIT_FIELD',
+          `El valor de la columna ${column.name} es menor que el mínimo permitido de ${column.min}.`
+        );
+
+      if (column.max !== undefined && column.max < value)
+        throw this.error(
+          'COLUMN_MAX_LIMIT_FIELD',
+          `El valor de la columna ${column.name} excede el máximo permitido de ${column.max}.`
+        );
 
       if (column.type === 'Number') {
         let [integer] = value.toString().split('.');

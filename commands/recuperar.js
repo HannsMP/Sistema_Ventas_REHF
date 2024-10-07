@@ -20,7 +20,7 @@ module.exports = {
 
     let msgCurrent = await msg.reply(`Tu codigo de recuperacion es: '${code}'`);
 
-    this.cache.codeRecovery.on('expire', c => {
+    this.cache.codeRecovery.ev.on('expire', c => {
       if (c != code) return;
       msgCurrent.edit(`El codigo Caduco`);
     }, { once: true });

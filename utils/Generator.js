@@ -43,14 +43,18 @@ const defaultPathOption = {
 
 /** @template T */
 class Generator extends FileJSON {
-  #ev = new Event();
+  /** 
+   * @type {Event<{
+   *   expire: string
+   * }>} 
+   */
+  ev = new Event();
   /**
    * @param {string} format 
    * @param {defaultOption} option 
    * @param {defaultPathOption} pathOption 
-   * @param {T} template
    */
-  constructor(format, option, pathOption, template) {
+  constructor(format, option, pathOption) {
     defaultPathOption.exist = Boolean(pathOption);
     pathOption = mergeObjects(defaultPathOption, pathOption);
     super(pathOption.pathFile, pathOption.autoSave);
@@ -89,20 +93,8 @@ class Generator extends FileJSON {
   #expire(key, time = this.pathOption.expire) {
     setTimeout(_ => {
       this.delete(key);
-      this.#ev.emit('expire', key)
+      this.ev.emit('expire', key)
     }, time)
-  }
-  /** @param {string} name @param {(...data)=>void} callback @param {{once:boolean, persistence:boolean}} option  */
-  on(name, callback, option) {
-    this.#ev.on(name, callback, option);
-  }
-  /** @param {string} name @param {(key)=>void} callback  */
-  off(name, callback) {
-    this.#ev.off(name, callback);
-  }
-  /** @param {string} name  */
-  empty(name) {
-    this.#ev.empty(name);
   }
   /** @returns {boolean} */
   exist(key) {

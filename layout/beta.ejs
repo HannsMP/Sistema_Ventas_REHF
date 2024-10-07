@@ -1,0 +1,62 @@
+<% if(userLayout['/control/mensajes']?.ver){ %>
+<div class="nav-item drop bottom">
+  <div class="nav-icon toggle bx">
+    <i class='bx bx-envelope'></i>
+    <a class="nav-link" href="/control/mensajes">
+      <span class="nav-tittle">Mensajes</span>
+    </a>
+  </div>
+  <div class="menu">
+    <div>
+      <a class="nav-item">
+        <div class="rounded-circle">
+          <img src="/src/img/users/_1087161e-a115-4d9c-a783-2d3af917d1f3.jpg">
+        </div>
+        <div class="data">
+          <span>Jhon Doe</span>
+          <span>15 minutes ago</span>
+        </div>
+      </a>
+      <a class="nav-item">
+        <div class="rounded-circle">
+          <img src="/src/img/users/_cc53803c-0a62-427f-884d-8aa67ea5152f.jpg">
+        </div>
+        <div class="data">
+          <span>Jhon Doe</span>
+          <span>15 minutes ago</span>
+        </div>
+      </a>
+    </div>
+    <a onclick="chargePage('/control/mensajes')" class="show-more">Ver todos los mensajes</a>
+  </div>
+</div>
+<% } %>
+
+<% if(userLayout['/control/notificaciones']?.ver){ %>
+<div class="nav-item drop bottom">
+  <div class="nav-icon toggle bx">
+    <i class='bx bx-bell'></i>
+    <a class="nav-link" href="/control/notificaciones">
+      <span class="nav-tittle">Notificaiones</span>
+    </a>
+  </div>
+  <div class="menu">
+    <div>
+      <div class="nav-item">
+        <a class="data">
+          <span>Profile updated</span>
+          <span>15 minutes ago</span>
+        </a>
+      </div>
+      <div class="nav-item">
+        <a class="data">
+          <span>New user added</span>
+          <span>15 minutes ago</span>
+        </a>
+      </div>
+    </div>
+    <a onclick="chargePage('/control/notificaciones')" class="show-more">Ver todas las
+      notificaciones</a>
+  </div>
+</div>
+<% } %>

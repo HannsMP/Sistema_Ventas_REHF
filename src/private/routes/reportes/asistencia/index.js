@@ -119,6 +119,14 @@ $('.content-body').ready(async () => {
       });
     })
 
+    socket.on('/session/acceso/state', data => {
+      if (permiso?.exportar != data.permiso_exportar) {
+        if (data.permiso_exportar) $table.buttons();
+        else cardMainDownload.innerHTML = '';
+        permiso.exportar = data.permiso_exportar;
+      }
+    })
+
   } catch ({ message, stack }) {
     socket.emit('/err/client', { message, stack, url: window.location.href })
   }

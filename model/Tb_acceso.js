@@ -12,18 +12,18 @@ const columns = {
 
 /** 
  * @typedef {{
-*   id: number,
-*   menu_id: number,
-*   rol_id: number,
-*   permiso_id: number,
-*   disabled_id: number
-* }} COLUMNS
-*/
+ *   id: number,
+ *   menu_id: number,
+ *   rol_id: number,
+ *   permiso_id: number,
+ *   disabled_id: number
+ * }} COLUMNS
+ */
 
 class Tb_acceso extends Table {
   /** @param {import('../app')} app */
   constructor(app) {
-    super(name);
+    super(name,);
     this.columns = columns;
     this.app = app;
 
@@ -37,7 +37,17 @@ class Tb_acceso extends Table {
     ====================================================================================================
   */
   /** 
-   * @param {COLUMNS} data 
+   * @param {{
+   *   menu_id: number,
+   *   rol_id: number,
+   *   disabled_id: number,
+   *   permiso_ver: number,
+   *   permiso_agregar: number,
+   *   permiso_editar: number,
+   *   permiso_eliminar: number,
+   *   permiso_ocultar: number,
+   *   permiso_exportar: number
+   * }} data 
    * @returns {Promise<import('mysql').OkPacket>}
    */
   insert(data) {
@@ -46,14 +56,27 @@ class Tb_acceso extends Table {
         let {
           menu_id,
           rol_id,
-          permiso_id,
-          disabled_id
+          disabled_id,
+          permiso_ver,
+          permiso_agregar,
+          permiso_editar,
+          permiso_eliminar,
+          permiso_ocultar,
+          permiso_exportar,
         } = data;
 
         this.constraint('menu_id', menu_id);
         this.constraint('rol_id', rol_id);
-        this.constraint('permiso_id', permiso_id);
         this.constraint('disabled_id', disabled_id);
+
+        let permiso_id = this.app.model.tb_permisos.computedPermisoId({
+          ver: permiso_ver,
+          agregar: permiso_agregar,
+          editar: permiso_editar,
+          eliminar: permiso_eliminar,
+          ocultar: permiso_ocultar,
+          exportar: permiso_exportar,
+        });
 
         let [result] = await this.app.model.poolValues(`
           INSERT INTO
@@ -77,8 +100,8 @@ class Tb_acceso extends Table {
         ]);
 
         this.io.emit(
-          '/productos/data/insert',
-          _ => this.app.readIdJoin(result.insertId)
+          '/accesos/permisos/insert',
+          _ => this.readIdJoin(result.insertId)
         )
 
         res(result);
@@ -87,8 +110,265 @@ class Tb_acceso extends Table {
       }
     })
   }
+  /**
+   * @param {number} id 
+   * @param {{
+   *   disabled_id: number,
+   *   permiso_ver: number,
+   *   permiso_agregar: number,
+   *   permiso_editar: number,
+   *   permiso_eliminar: number,
+   *   permiso_ocultar: number,
+   *   permiso_exportar: number
+   * }} data 
+   * @returns {Promise<import('mysql').OkPacket>}
+   */
+  updateId(id, data) {
+    return new Promise(async (res, rej) => {
+      try {
+        let {
+          disabled_id,
+          permiso_ver,
+          permiso_agregar,
+          permiso_editar,
+          permiso_eliminar,
+          permiso_ocultar,
+          permiso_exportar,
+        } = data
+
+        this.constraint('id', id);
+        this.constraint('disabled_id', disabled_id);
+
+        let permiso_id = this.app.model.tb_permisos.computedPermisoId({
+          ver: permiso_ver,
+          agregar: permiso_agregar,
+          editar: permiso_editar,
+          eliminar: permiso_eliminar,
+          ocultar: permiso_ocultar,
+          exportar: permiso_exportar,
+        });
+
+        let result = await this.app.model.poolValues(`
+          UPDATE 
+            tb_acceso
+          SET
+            permiso_id = ?,
+            disabled_id = ?
+          WHERE 
+            id = ?;
+        `, [
+          permiso_id,
+          disabled_id,
+          id
+        ]);
+
+        this.io.emit(
+          '/accesos/permisos/updateId',
+          _ => this.readIdJoin(id)
+        )
+
+        res(result);
+      } catch (e) {
+        rej(e)
+      }
+    })
+  }
+  /**
+   * @param {number} id 
+   * @param {{
+   *   permiso_ver: number,
+   *   permiso_agregar: number,
+   *   permiso_editar: number,
+   *   permiso_eliminar: number,
+   *   permiso_ocultar: number,
+   *   permiso_exportar: number
+   * }} data 
+   * @returns {Promise<import('mysql').OkPacket>}
+   */
+  updateIdState(id, data) {
+    return new Promise(async (res, rej) => {
+      try {
+        this.constraint('id', id);
+
+        let permiso_id = this.app.model.tb_permisos.computedPermisoId({
+          ver: data.permiso_ver,
+          agregar: data.permiso_agregar,
+          editar: data.permiso_editar,
+          eliminar: data.permiso_eliminar,
+          ocultar: data.permiso_ocultar,
+          exportar: data.permiso_exportar
+        });
+
+        let [result] = await this.app.model.poolValues(`
+          UPDATE 
+            tb_acceso
+          SET
+            permiso_id = ?
+          WHERE 
+            id = ?;
+        `, [
+          permiso_id,
+          id
+        ]);
+
+        this.io.emit(
+          '/accesos/permisos/state',
+          {
+            id,
+            permiso_id,
+            permiso_ver: data.permiso_ver,
+            permiso_agregar: data.permiso_agregar,
+            permiso_editar: data.permiso_editar,
+            permiso_eliminar: data.permiso_eliminar,
+            permiso_ocultar: data.permiso_ocultar,
+            permiso_exportar: data.permiso_exportar
+          }
+        )
+
+        res(result)
+      } catch (e) {
+        rej(e)
+      }
+    })
+  }
+  /**
+   * @param {number} id 
+   * @returns {Promise<import('mysql').OkPacket>}
+   */
+  deleteMenusById(id) {
+    return new Promise(async (res, rej) => {
+      try {
+        this.constraint('id', id);
+
+        let [result] = await this.app.model.poolValues(`
+          DELETE FROM 
+            tb_acceso
+          WHERE 
+            menu_id = (
+              SELECT 
+                menu_id 
+              FROM 
+                tb_acceso 
+              WHERE 
+                id = ?
+            )
+        `, [
+          id
+        ]);
+
+        res(result)
+      } catch (e) {
+        rej(e)
+      }
+    })
+  }
   /** 
-   * @returns {Promise<COLUMNS[]>}
+   * @param {number} id 
+   * @returns {Promise<{
+   *   id: number,
+   *   menu_id: number,
+   *   menu_ruta: string,
+   *   menu_principal: string,
+   *   rol_id: number,
+   *   rol_nombre: string,
+   *   permiso_id: number,
+   *   permiso_ver: number,
+   *   permiso_agregar: number,
+   *   permiso_editar: number,
+   *   permiso_eliminar: number,
+   *   permiso_ocultar: number,
+   *   permiso_exportar: number,
+   * }>}
+   */
+  readIdJoin(id) {
+    return new Promise(async (res, rej) => {
+      try {
+
+        this.constraint('id', id);
+
+        let [result] = await this.app.model.poolValues(`
+            SELECT
+              a.id,
+              a.menu_id,
+              m.ruta AS menu_ruta,
+              m.principal AS menu_principal,
+              a.rol_id,
+              r.nombre AS rol_nombre,
+              a.permiso_id,
+              CASE
+                WHEN d.ver = 1 THEN -1
+                ELSE p.ver
+              END AS permiso_ver,
+              CASE 
+                WHEN d.agregar = 1 THEN -1 
+                ELSE p.agregar 
+              END AS permiso_agregar,
+              CASE 
+                WHEN d.editar = 1 THEN -1 
+                ELSE p.editar 
+              END AS permiso_editar,
+              CASE 
+                WHEN d.eliminar = 1 THEN -1 
+                ELSE p.eliminar 
+              END AS permiso_eliminar,
+              CASE 
+                WHEN d.ocultar = 1 THEN -1 
+                ELSE p.ocultar 
+              END AS permiso_ocultar,
+              CASE 
+                WHEN d.exportar = 1 THEN -1 
+                ELSE p.exportar 
+              END AS permiso_exportar
+            FROM
+              tb_acceso AS a
+            INNER 
+              JOIN 
+                tb_menus AS m
+              ON 
+                m.id = a.menu_id
+            INNER 
+              JOIN 
+                tipo_rol AS r
+              ON 
+                r.id = a.rol_id
+            INNER 
+              JOIN 
+                tb_permisos AS p
+              ON 
+                p.id = a.permiso_id
+            INNER 
+              JOIN 
+                tb_permisos AS d
+              ON 
+                d.id = a.disabled_id
+            WHERE
+              a.id = ?
+          `, [
+          id
+        ])
+
+        res(result[0]);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
+  /** 
+   * @returns {Promise<{
+   *   id: number,
+   *   menu_id: number,
+   *   menu_ruta: string,
+   *   menu_principal: string,
+   *   rol_id: number,
+   *   rol_nombre: string,
+   *   permiso_id: number,
+   *   permiso_ver: number,
+   *   permiso_agregar: number,
+   *   permiso_editar: number,
+   *   permiso_eliminar: number,
+   *   permiso_ocultar: number,
+   *   permiso_exportar: number,
+   * }[]>}
    */
   readAllJoin() {
     return new Promise(async (res, rej) => {
@@ -100,7 +380,7 @@ class Tb_acceso extends Table {
               m.ruta AS menu_ruta,
               m.principal AS menu_principal,
               a.rol_id,
-              CONCAT(r.id, ' ', r.nombre) AS rol_nombre,
+              r.nombre AS rol_nombre,
               a.permiso_id,
               CASE
                 WHEN d.ver = 1 THEN -1
@@ -155,124 +435,6 @@ class Tb_acceso extends Table {
         rej(e);
       }
     })
-  }
-  /**
-   * @param {number} id 
-   * @param {{
-   *   menu_id: number,
-   *   rol_id: number,
-   *   disabled_id: number,
-   *   permiso_id: number,
-   *   permiso_ver: number,
-   *   permiso_agregar: number,
-   *   permiso_editar: number,
-   *   permiso_eliminar: number,
-   *   permiso_ocultar: number,
-   *   permiso_exportar: number
-   * }} data 
-   * @returns {Promise<import('mysql').OkPacket>}
-   */
-  updateId(id, data) {
-    return new Promise(async (res, rej) => {
-      try {
-        let { menu_id, rol_id, permiso_id, disabled_id } = data
-
-        this.constraint('id', id);
-        this.constraint('menu_id', menu_id);
-        this.constraint('rol_id', rol_id);
-        this.constraint('permiso_id', permiso_id);
-        this.constraint('disabled_id', disabled_id);
-
-        let result = await this.app.model.poolValues(`
-          UPDATE 
-            tb_acceso
-          SET
-            menu_id = ?,
-            rol_id = ?,
-            permiso_id = ?,
-            disabled_id = ?
-          WHERE 
-            id = ?;
-        `, [
-          menu_id,
-          rol_id,
-          permiso_id,
-          disabled_id,
-          id
-        ]);
-
-        res(result);
-      } catch (e) {
-        rej(e)
-      }
-    })
-  }
-  /**
-   * @param {number} id 
-   * @param {{
-   *   ver: number,
-   *   agregar: number,
-   *   editar: number,
-   *   eliminar: number,
-   *   ocultar: number,
-   *   exportar: number
-   * }} permiso 
-   * @returns {Promise<import('mysql').OkPacket>}
-   */
-  updateIdState(id, permiso) {
-    return new Promise(async (res, rej) => {
-      try {
-        this.constraint('id', id);
-        let permiso_id = this.computedPermisosToId(permiso)
-
-        let [result] = await this.app.model.poolValues(`
-          UPDATE 
-            tb_acceso
-          SET
-            permiso_id = ?
-          WHERE 
-            id = ?;
-        `, [
-          permiso_id,
-          id
-        ]);
-
-        this.io.emit(
-          '/accesos/permisos/state',
-          { id, permiso_id, permiso }
-        )
-
-        res(result)
-      } catch (e) {
-        rej(e)
-      }
-    })
-  }
-  /**
-   * @param {{
-   *   ver: number,
-   *   agregar: number,
-   *   editar: number,
-   *   eliminar: number,
-   *   ocultar: number,
-   *   exportar: number
-   * }} permisos 
-   * @returns {number}
-   */
-  computedPermisosToId(permisos) {
-    let value = 0;
-
-    [
-      permisos.ver,
-      permisos.agregar,
-      permisos.editar,
-      permisos.eliminar,
-      permisos.ocultar,
-      permisos.exportar
-    ]
-      .forEach((c, i) => { if (c != -1 && c) value += (2 ** i) });
-
-    return value;
   }
   /** 
    * @returns {Promise<COLUMNS[]>}
@@ -372,37 +534,6 @@ class Tb_acceso extends Table {
               SELECT menu_id 
               FROM tb_acceso 
               WHERE id = ?
-            )
-        `, [
-          id
-        ]);
-
-        res(result)
-      } catch (e) {
-        rej(e)
-      }
-    })
-  }
-  /**
-   * @param {number} id 
-   * @returns {Promise<import('mysql').OkPacket>}
-   */
-  deleteMenusById(id) {
-    return new Promise(async (res, rej) => {
-      try {
-        this.constraint('id', id);
-
-        let [result] = await this.app.model.poolValues(`
-          DELETE FROM 
-            tb_acceso
-          WHERE 
-            menu_id = (
-              SELECT 
-                menu_id 
-              FROM 
-                tb_acceso 
-              WHERE 
-                id = ?
             )
         `, [
           id

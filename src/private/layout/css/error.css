@@ -17,6 +17,13 @@
   }
 
   .icon {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .icon::before {
     font-size: 18.8rem !important;
   }
 

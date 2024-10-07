@@ -21,13 +21,14 @@ $('.content-body').ready(async () => {
     let sideContent = document.querySelector('.side-content');
 
     let tableTableMain = document.querySelector('#card-table-main');
+    let tblNuevoMain = tableTableMain.querySelectorAll('.tbl-nuevo');
     let tblEliminarMain = tableTableMain.querySelectorAll('.tbl-eliminar');
     let cardMainDownload = tableTableMain.querySelector('.download');
 
     let $tableTableVentas = $('#card-table-ventas');
     let tableTableVentas = $tableTableVentas[0];
-    let tblNuevoVentas = tableTableVentas.querySelectorAll('.tbl-nuevo');
     let cardVentasTittle = tableTableVentas.querySelector('.card-tittle');
+    let tblNuevoVentas = tableTableVentas.querySelectorAll('.tbl-nuevo');
     let tblEliminarVentas = tableTableVentas.querySelectorAll('.tbl-eliminar');
     let cardVentasDownload = tableTableVentas.querySelector('.download-other');
 
@@ -603,6 +604,41 @@ $('.content-body').ready(async () => {
       let id = $tableVentas.selected();
       if (data.id != id) return;
       toggleCardEditar(false);
+    })
+
+    socket.on('/session/acceso/state', data => {
+      if (permiso?.eliminar != data.permiso_eliminar) {
+        tblEliminarMain.forEach(t => t.style.display = data.permiso_eliminar ? '' : 'none')
+        permiso.eliminar = data.permiso_eliminar;
+      }
+      if (permiso?.editar != data.permiso_editar) {
+        $tableMain.toggleSelect(data.permiso_editar)
+        permiso.editar = data.permiso_editar;
+      }
+      if (permiso?.eliminar != data.permiso_eliminar) {
+        tblEliminarMain.forEach(t => t.style.display = data.permiso_eliminar ? '' : 'none')
+        permiso.eliminar = data.permiso_eliminar;
+      }
+      if (permiso?.exportar != data.permiso_exportar) {
+        if (data.permiso_exportar) $tableMain.buttons();
+        else cardMainDownload.innerHTML = '';
+        permiso.exportar = data.permiso_exportar;
+      }
+    })
+
+    socket.on('/session/acceso/updateId', data => {
+      if (data.menu_ruta != '/control/movimientos/ventas') return
+
+      tblNuevoMain.forEach(t => t.style.display = data.permiso_ver ? '' : 'none')
+
+      tblNuevoVentas.forEach(t => t.style.display = data.permiso_agregar ? '' : 'none')
+
+      $tableVentas.toggleSelect(data.permiso_editar)
+
+      tblEliminarVentas.forEach(t => t.style.display = data.permiso_eliminar ? '' : 'none')
+
+      if (data.permiso_exportar) $tableVentas.buttons('.download-other');
+      else cardVentasDownload.innerHTML = '';
     })
 
   } catch ({ message, stack }) {

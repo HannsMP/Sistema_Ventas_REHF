@@ -1,19 +1,19 @@
 <div class="content-header">
-<!---------------------- CSS ---------------------->
+  <!---------------------- CSS ---------------------->
 
-<!-- lib control -->
+  <!-- lib control -->
 
-<!-- layout -->
-<link href="/src/private/layout/css/btn.css" rel="stylesheet">
+  <!-- layout -->
+  <link href="/src/private/layout/css/btn.css" rel="stylesheet">
 
-<!---------------------- JS ---------------------->
+  <!---------------------- JS ---------------------->
 
-<!-- lib control -->
-<script src="/src/private/lib/chart/chart.umd.min.js"></script>
+  <!-- lib control -->
+  <script src="/src/private/lib/chart/chart.umd.min.js"></script>
 
-<!-- layout -->
+  <!-- layout -->
 
-<!---------------------- BODY ---------------------->
+  <!---------------------- BODY ---------------------->
 
   <div class="content-tittle">Cpu</div>
   <div class="content-path">
@@ -28,11 +28,11 @@
         <h3 class="card-tittle">Procesador:</h3>
         <div class="f-row">
           <% if(session.permiso.eliminar){ %>
-            <a class="btn btn-danger" id="btn-power-off">Apagar</a>
-            <% } %>
-              <% if(session.permiso.editar){ %>
-                <a class="btn btn-warning" id="btn-power-reset">Reinicar</a>
-                <% } %>
+          <a class="btn btn-danger" id="btn-power-off">Apagar</a>
+          <% } %>
+          <% if(session.permiso.editar){ %>
+          <a class="btn btn-warning" id="btn-power-reset">Reinicar</a>
+          <% } %>
         </div>
       </div>
       <div class="card-body">

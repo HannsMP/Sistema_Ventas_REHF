@@ -15,11 +15,18 @@ module.exports = {
         let { id } = req.body;
 
         let list = await this.model.tb_acceso.readMenusById(Number(id));
+
         let menu_id = list[0].menu_id;
-        let OkPacket = await this.model.tb_acceso.deleteMenusById(Number(id));
+
+        let OkPacket = await this.model.tb_acceso.deleteMenusById(Number(id), list);
         await this.model.tb_menus.deleteId(menu_id);
 
-        return res.status(200).json({ list, OkPacket })
+        this.io.emit(
+          '/accesos/permisos/deleteId',
+          _ => list
+        )
+
+        return res.status(200).json({ OkPacket })
       } catch (e) {
         this.responseErrorApi(req, res, next, e)
       }

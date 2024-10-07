@@ -25,109 +25,109 @@
   <div class="menu-body">
     <div class="cards">
       <% if(userLayout['/control/mantenimiento/categorias']?.ver){ %>
-        <div class="f-col">
-          <a class="card" href="/control/mantenimiento/categorias">
-            <div class="card-head">
-              <h3 class="card-tittle">Categorias</h3>
+      <div class="f-col">
+        <a class="card" href="/control/mantenimiento/categorias">
+          <div class="card-head">
+            <h3 class="card-tittle">Categorias</h3>
+          </div>
+          <div class="card-data">
+            <div class="card-icon">
+              <i class="bx bx-hive"></i>
             </div>
-            <div class="card-data">
-              <div class="card-icon">
-                <i class="bx bx-hive"></i>
+            <div class="card-col">
+              <div class="data-box" id="categorias-cantidad">
+                <span class="data-tittle">Cantidad:</span>
+                <small class="data"></small>
               </div>
-              <div class="card-col">
-                <div class="data-box" id="categorias-cantidad">
-                  <span class="data-tittle">Cantidad:</span>
-                  <small class="data"></small>
-                </div>
-                <div class="data-box" id="categorias-fecha">
-                  <span class="data-tittle">Ultima Insersion:</span>
-                  <small class="data"></small>
-                  <small class="data"></small>
-                </div>
+              <div class="data-box" id="categorias-fecha">
+                <span class="data-tittle">Ultima Insersion:</span>
+                <small class="data"></small>
+                <small class="data"></small>
               </div>
-            </div>
-          </a>
-          <div class="card">
-            <div class="card-head">
-              <h3 class="card-tittle">Grafico Cantidad Categorias</h3>
-            </div>
-            <div class="card-data">
-              <canvas id="chart-categorias"></canvas>
             </div>
           </div>
+        </a>
+        <div class="card">
+          <div class="card-head">
+            <h3 class="card-tittle">Grafico Cantidad Categorias</h3>
+          </div>
+          <div class="card-data">
+            <canvas id="chart-categorias"></canvas>
+          </div>
         </div>
-        <script src="/src/private/routes/mantenimiento/dash/categoria.js"></script>
-        <% } %>
+      </div>
+      <script src="/src/private/routes/mantenimiento/dash/categoria.js"></script>
+      <% } %>
 
-          <% if(userLayout['/control/mantenimiento/clientes']?.ver){ %>
-            <div class="f-col">
-              <a class="card" href="/control/mantenimiento/clientes">
-                <div class="card-head">
-                  <h3 class="card-tittle">Clientes</h3>
-                </div>
-                <div class="card-data">
-                  <div class="card-icon">
-                    <i class="bx bx-group"></i>
-                  </div>
-                  <div class="card-col">
-                    <div class="data-box" id="clientes-cantidad">
-                      <span class="data-tittle">Cantidad:</span>
-                      <small class="data"></small>
-                    </div>
-                    <div class="data-box" id="clientes-fecha">
-                      <span class="data-tittle">Ultima Insersion:</span>
-                      <small class="data"></small>
-                      <small class="data"></small>
-                    </div>
-                  </div>
-                </div>
-              </a>
-              <div class="card">
-                <div class="card-head">
-                  <h3 class="card-tittle">Grafico Usuarios vs Roles</h3>
-                </div>
-                <div class="card-data">
-                  <canvas id="chart-clientes"></canvas>
-                </div>
+      <% if(userLayout['/control/mantenimiento/clientes']?.ver){ %>
+      <div class="f-col">
+        <a class="card" href="/control/mantenimiento/clientes">
+          <div class="card-head">
+            <h3 class="card-tittle">Clientes</h3>
+          </div>
+          <div class="card-data">
+            <div class="card-icon">
+              <i class="bx bx-group"></i>
+            </div>
+            <div class="card-col">
+              <div class="data-box" id="clientes-cantidad">
+                <span class="data-tittle">Cantidad:</span>
+                <small class="data"></small>
+              </div>
+              <div class="data-box" id="clientes-fecha">
+                <span class="data-tittle">Ultima Insersion:</span>
+                <small class="data"></small>
+                <small class="data"></small>
               </div>
             </div>
-            <script src="/src/private/routes/mantenimiento/dash/cliente.js"></script>
-            <% } %>
+          </div>
+        </a>
+        <div class="card">
+          <div class="card-head">
+            <h3 class="card-tittle">Grafico Usuarios vs Roles</h3>
+          </div>
+          <div class="card-data">
+            <canvas id="chart-clientes"></canvas>
+          </div>
+        </div>
+      </div>
+      <script src="/src/private/routes/mantenimiento/dash/cliente.js"></script>
+      <% } %>
 
-              <% if(userLayout['/control/mantenimiento/inventario']?.ver){ %>
-                <div class="f-col">
-                  <a class="card" href="/control/mantenimiento/inventario">
-                    <div class="card-head">
-                      <h3 class="card-tittle">Inventario</h3>
-                    </div>
-                    <div class="card-data">
-                      <div class="card-icon">
-                        <i class="bx bx-store"></i>
-                      </div>
-                      <div class="card-col">
-                        <div class="data-box" id="inventario-cantidad">
-                          <span class="data-tittle">Cantidad:</span>
-                          <small class="data"></small>
-                        </div>
-                        <div class="data-box" id="inventario-fecha">
-                          <span class="data-tittle">Ultima Insersion:</span>
-                          <small class="data"></small>
-                          <small class="data"></small>
-                        </div>
-                      </div>
-                    </div>
-                  </a>
-                  <div class="card">
-                    <div class="card-head">
-                      <h3 class="card-tittle">Grafico Precio Por Categoria</h3>
-                    </div>
-                    <div class="card-data">
-                      <canvas id="chart-inventario"></canvas>
-                    </div>
-                  </div>
-                </div>
-                <script src="/src/private/routes/mantenimiento/dash/inventario.js"></script>
-                <% } %>
+      <% if(userLayout['/control/mantenimiento/inventario']?.ver){ %>
+      <div class="f-col">
+        <a class="card" href="/control/mantenimiento/inventario">
+          <div class="card-head">
+            <h3 class="card-tittle">Inventario</h3>
+          </div>
+          <div class="card-data">
+            <div class="card-icon">
+              <i class="bx bx-store"></i>
+            </div>
+            <div class="card-col">
+              <div class="data-box" id="inventario-cantidad">
+                <span class="data-tittle">Cantidad:</span>
+                <small class="data"></small>
+              </div>
+              <div class="data-box" id="inventario-fecha">
+                <span class="data-tittle">Ultima Insersion:</span>
+                <small class="data"></small>
+                <small class="data"></small>
+              </div>
+            </div>
+          </div>
+        </a>
+        <div class="card">
+          <div class="card-head">
+            <h3 class="card-tittle">Grafico Precio Por Categoria</h3>
+          </div>
+          <div class="card-data">
+            <canvas id="chart-inventario"></canvas>
+          </div>
+        </div>
+      </div>
+      <script src="/src/private/routes/mantenimiento/dash/inventario.js"></script>
+      <% } %>
     </div>
   </div>
 </div>

@@ -1,6 +1,5 @@
 /** @typedef {import('socket.io').Socket<ListenEvents, EmitEvents, ServerSideEvents, SocketData>} SocketClient */
 
-/** @template T */
 class SocketRouter {
   /** @param {string[]} routes @param {import('../app')} app  */
   constructor(routes, app) {
@@ -9,11 +8,12 @@ class SocketRouter {
   }
 
   /** 
+   * @template T
    * @param {(socketClient:SocketClient)=>boolean} callback 
    * @param {string} eventName 
-   * @param {T|Promise<T>|()=>Promise<T>} data 
+   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data 
    * @param {(socketClient:SocketClient, dataSend: T)=>void} [each] 
-   * @returns {Promise<SocketClient[]>} 
+   * @returns {Promise<T>} 
    */
   async #filterEmit(callback, eventName, data, each) {
     let socketsRoute = this.routes
@@ -23,30 +23,35 @@ class SocketRouter {
     let sockets = [];
     socketsRoute.forEach(s => s.forEach(socketClient => (!callback || callback(socketClient)) && sockets.push(socketClient)))
 
-    if (!sockets.length) return false;
+    if (!sockets.length) return null;
 
     let dataEmit = typeof data == 'function' ? await data() : data;
+
     sockets.forEach(socketClient => {
       socketClient.emit(eventName, dataEmit);
       each && each(socketClient, dataEmit);
     })
-    return true;
+    return dataEmit;
   }
 
   /** 
+   * @template T
    * @param {string} eventName 
-   * @param {T|Promise<T>|()=>Promise<T>} data 
+   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data 
    * @param {(socketClient:SocketClient, dataSend: T)=>void} [each] 
+   * @returns {Promise<T>} 
    */
   emit(eventName, data, each) {
     return this.#filterEmit(null, eventName, data, each);
   }
 
   /** 
-   * @param {string} id 
+   * @template T
+   * @param {number} usuario_id 
    * @param {string} eventName 
-   * @param {T|Promise<T>|()=>Promise<T>} data 
+   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data 
    * @param {(socketClient:SocketClient, dataSend: T)=>void} [each] 
+   * @returns {Promise<T>} 
    */
   emitUser(usuario_id, eventName, data, each) {
     return this.#filterEmit(
@@ -56,10 +61,12 @@ class SocketRouter {
   }
 
   /** 
-   * @param {string} rol_id 
+   * @template T
+   * @param {number} rol_id 
    * @param {string} eventName 
-   * @param {T|Promise<T>|()=>Promise<T>} data 
+   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data 
    * @param {(socketClient:SocketClient, dataSend: T)=>void} [each] 
+   * @returns {Promise<T>} 
    */
   emitRol(rol_id, eventName, data, each) {
     return this.#filterEmit(
@@ -69,10 +76,12 @@ class SocketRouter {
   }
 
   /** 
+   * @template T
    * @param {string} apiKey 
    * @param {string} eventName 
-   * @param {T|Promise<T>|()=>Promise<T>} data 
+   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data 
    * @param {(socketClient:SocketClient, dataSend: T)=>void} [each] 
+   * @returns {Promise<T>} 
    */
   emitApikey(apiKey, eventName, data, each) {
     return this.#filterEmit(
@@ -82,10 +91,12 @@ class SocketRouter {
   }
 
   /** 
+   * @template T
    * @param {number} rol_id 
    * @param {string} eventName 
-   * @param {T|Promise<T>|()=>Promise<T>} data 
+   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data 
    * @param {(socketClient:SocketClient, dataSend: T)=>void} [each] 
+   * @returns {Promise<T>} 
    */
   emitRolToJunior(rol_id, eventName, data, each) {
     return this.#filterEmit(socketClient => {
@@ -96,10 +107,12 @@ class SocketRouter {
   }
 
   /** 
+   * @template T
    * @param {number} rol_id 
    * @param {string} eventName 
-   * @param {T|Promise<T>|()=>Promise<T>} data 
+   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data 
    * @param {(socketClient:SocketClient, dataSend: T)=>void} [each] 
+   * @returns {Promise<T>} 
    */
   emitRolToSenior(rol_id, eventName, data, each) {
     return this.#filterEmit(socketClient => {

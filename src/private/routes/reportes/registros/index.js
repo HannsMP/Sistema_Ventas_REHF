@@ -139,28 +139,3 @@ $('.content-body').ready(async () => {
     socket.emit('/err/client', { message, stack, url: window.location.href })
   }
 })
-
-/* 
-["/logger/success/writeStart", {log: "[2024/09/22 06:41:33 pm] [Bot] listo",…}]
-0: "/logger/success/writeStart"
-1: {
-  log  :   "[2024/09/22 06:41:33 pm] [Bot] listo"
-  stat  :   {
-    dev: 2455857858, 
-    mode: 33206, 
-    nlink: 1, 
-    uid: 0, 
-    gid: 0, 
-    rdev: 0, 
-    blksize: 4096, 
-    ino: 1407374884202720,…
-    mode: 33206
-    mtime: "2024-08-13T23:32:50.332Z"
-    mtimeMs: 1723591970332.3145
-    nlink: 1
-    rdev: 0
-    size: 12061
-    uid: 0
-  }
-}
-*/

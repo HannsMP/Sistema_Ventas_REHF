@@ -348,7 +348,7 @@ class Tb_usuarios extends Table {
 
         this.app.socket.rootControl.emitUser(
           id,
-          '/session/usuario/theme', 
+          '/session/usuario/theme',
           tema
         );
 
@@ -658,7 +658,9 @@ class Tb_usuarios extends Table {
 
         this.io.emit(
           '/usuarios/data/deleteId',
-          dataEmit || this.app.model.tb_fotos.readId(foto_id)
+          dataEmit
+            ? dataEmit
+            : _ => this.app.model.tb_fotos.readId(foto_id)
         )
 
         res(result)

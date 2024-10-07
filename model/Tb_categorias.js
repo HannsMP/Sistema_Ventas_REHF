@@ -268,7 +268,7 @@ class Tb_categorias extends Table {
   updateIdState(id, estado) {
     return new Promise(async (res, rej) => {
       try {
-        
+
         this.constraint('id', id);
         this.constraint('estado', estado);
 
@@ -352,7 +352,7 @@ class Tb_categorias extends Table {
           id
         ]);
 
-        this.app.socket.routes.productos.emit(
+        this.app.model.tb_productos.io.emit(
           '/productos/categorias/deleteId',
           { id }
         )
