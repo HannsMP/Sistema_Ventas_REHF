@@ -1,0 +1,214 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  user-select: none;
+}
+
+body {
+  font-family: 'montserrat', sans-serif;
+  background-color: rgb(var(--color-2));
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  position: relative;
+  margin: 0;
+}
+
+#bubbleCanvas {
+  top: 0;
+  left: 0;
+  position: absolute;
+  z-index: 1;
+}
+
+.container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.dash-box {
+  background-color: rgb(255, 255, 255, .03);
+  backdrop-filter: blur(10px);
+  width: 400px;
+  min-height: fit-content;
+  border: 2px solid rgb(var(--color-6));
+  border-radius: 20px;
+  padding: 30px 10px;
+  transition: box-shadow .3s ease;
+
+  * {
+    color: rgb(var(--primary));
+  }
+
+  .form-box {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+
+    .form-head {
+      font-size: 35px;
+      font-weight: bold;
+      margin-top: 15px;
+    }
+
+    .form-body {
+      width: 80%;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+
+      form {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+
+        .input-box {
+          width: 100%;
+          height: fit-content;
+          position: relative;
+          display: flex;
+          justify-content: end;
+          padding-top: 30px;
+          padding-bottom: 10px;
+          border-bottom: 2px solid rgb(var(--color-6));
+
+          input {
+            width: 270px !important;
+            background-color: transparent;
+            outline: none;
+            width: 100%;
+            position: inherit;
+            border: 0;
+            z-index: 200;
+          }
+
+          label {
+            position: absolute;
+            top: 30px;
+            left: 25px;
+            transition: .3s;
+            z-index: 100;
+          }
+
+          input:focus~label,
+          input:valid~label {
+            color: rgb(var(--color-8));
+            top: 5px;
+          }
+
+          input:focus~i,
+          input:valid~i {
+            color: rgb(var(--color-8));
+          }
+
+          i {
+            height: 15px;
+            aspect-ratio: 1 / 1;
+            position: absolute;
+            top: 32px;
+            left: 0;
+            transition: box-shadow .3s ease;
+          }
+
+          .bx-show:hover,
+          .bx-hide:hover {
+            color: rgb(var(--color-7)) !important;
+            box-shadow: 0 0 10px rgb(var(--color-6));
+          }
+        }
+
+        .option-box {
+          display: flex;
+          justify-content: space-between;
+
+          >div {
+            input:checked~label {
+              color: rgb(var(--color-8));
+            }
+
+            label {
+              margin-left: 10px;
+            }
+          }
+        }
+      }
+
+      .btn {
+        background-color: rgb(var(--color-6));
+        width: 100%;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        padding: 0;
+        border: 0;
+        margin: 0;
+        cursor: pointer;
+      }
+    }
+
+    .form-foot {
+      width: 80%;
+      height: fit-content;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 100px;
+      margin-top: 30px;
+    }
+
+    a {
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    a:hover {
+      color: rgb(var(--color-8));
+    }
+  }
+}
+
+.login-box:hover,
+.login-box:focus {
+  box-shadow: 0 0 60px rgb(var(--color-6));
+}
+
+input.check-checked[type=checkbox] {
+  background-image: url("/src/public/svg/check-checked.svg");
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-color: rgb(var(--color-2));
+  vertical-align: top;
+  width: 16px;
+  height: 16px;
+  border: 1px solid rgb(255, 255, 255);
+  border-radius: 4px;
+  margin: 0;
+  appearance: none;
+  transition: background-position .15s ease-in-out;
+}
+
+input.check-checked[type=checkbox]:checked {
+  background-position: right center;
+  background-color: rgb(var(--color-6));
+  border-color: rgb(var(--color-6));
+}
+
+input.check-checked[type=checkbox]:hover {
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, .3);
+}
+
+input.check-checked[type=checkbox]:checked:hover {
+  box-shadow: 0 0 0 4px rgba(var(--color-6), .3);
+}

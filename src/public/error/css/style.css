@@ -8,7 +8,7 @@
   justify-content: space-between;
 
   * {
-    color: rgb(var(--text-3))
+    color: rgb(var(--secundary))
   }
 
   .code {

@@ -88,11 +88,11 @@ $('.content-body').ready(async () => {
 
     $table.init({
       data: dataAcceso,
-      pageLength: 100,
+      pageLength: 25,
       select: {
         style: 'single'
       },
-      order: [[6, 'asc']],
+      order: [[8, 'asc'], [6, 'asc']],
       columnDefs: [
         {
           className: 'dtr-control',
@@ -102,15 +102,20 @@ $('.content-body').ready(async () => {
             let i = document.createElement('input');
             i.classList.add('check-checked');
             i.setAttribute('type', 'checkbox');
-            i.increment = 1;
-            if (data == -1)
-              i.disabled = true;
+            if (permiso.ocultar) {
+              if (data == -1)
+                i.disabled = true;
+              else {
+                i.addEventListener('change', _ => {
+                  row.permiso_ver = i.checked ? 1 : 0;
+                  updatePermisoId.call(i, row);
+                });
+                i.checked = data;
+              }
+            }
             else {
-              i.addEventListener('change', _ => {
-                row.permiso_ver = i.checked ? 1 : 0;
-                updatePermisoId.call(i, row);
-              });
-              i.checked = data;
+              i.checked = data == 1;
+              i.disabled = true;
             }
             return i;
           }
@@ -123,15 +128,20 @@ $('.content-body').ready(async () => {
             let i = document.createElement('input');
             i.classList.add('check-checked');
             i.setAttribute('type', 'checkbox');
-            i.increment = 2;
-            if (data == -1)
-              i.disabled = true;
+            if (permiso.ocultar) {
+              if (data == -1)
+                i.disabled = true;
+              else {
+                i.addEventListener('change', _ => {
+                  row.permiso_agregar = i.checked ? 1 : 0;
+                  updatePermisoId.call(i, row);
+                });
+                i.checked = data;
+              }
+            }
             else {
-              i.addEventListener('change', _ => {
-                row.permiso_agregar = i.checked ? 1 : 0;
-                updatePermisoId.call(i, row);
-              });
-              i.checked = data;
+              i.checked = data == 1;
+              i.disabled = true;
             }
             return i;
           }
@@ -144,15 +154,20 @@ $('.content-body').ready(async () => {
             let i = document.createElement('input');
             i.classList.add('check-checked');
             i.setAttribute('type', 'checkbox');
-            i.increment = 4;
-            if (data == -1)
-              i.disabled = true;
+            if (permiso.ocultar) {
+              if (data == -1)
+                i.disabled = true;
+              else {
+                i.addEventListener('change', _ => {
+                  row.permiso_editar = i.checked ? 1 : 0;
+                  updatePermisoId.call(i, row);
+                });
+                i.checked = data;
+              }
+            }
             else {
-              i.addEventListener('change', _ => {
-                row.permiso_editar = i.checked ? 1 : 0;
-                updatePermisoId.call(i, row);
-              });
-              i.checked = data;
+              i.checked = data == 1;
+              i.disabled = true;
             }
             return i;
           }
@@ -165,15 +180,20 @@ $('.content-body').ready(async () => {
             let i = document.createElement('input');
             i.classList.add('check-checked');
             i.setAttribute('type', 'checkbox');
-            i.increment = 8;
-            if (data == -1)
-              i.disabled = true;
+            if (permiso.ocultar) {
+              if (data == -1)
+                i.disabled = true;
+              else {
+                i.addEventListener('change', _ => {
+                  row.permiso_eliminar = i.checked ? 1 : 0;
+                  updatePermisoId.call(i, row);
+                });
+                i.checked = data;
+              }
+            }
             else {
-              i.addEventListener('change', _ => {
-                row.permiso_eliminar = i.checked ? 1 : 0;
-                updatePermisoId.call(i, row);
-              });
-              i.checked = data;
+              i.checked = data == 1;
+              i.disabled = true;
             }
             return i;
           }
@@ -186,15 +206,20 @@ $('.content-body').ready(async () => {
             let i = document.createElement('input');
             i.classList.add('check-checked');
             i.setAttribute('type', 'checkbox');
-            i.increment = 16;
-            if (data == -1)
-              i.disabled = true;
+            if (permiso.ocultar) {
+              if (data == -1)
+                i.disabled = true;
+              else {
+                i.addEventListener('change', _ => {
+                  row.permiso_ocultar = i.checked ? 1 : 0;
+                  updatePermisoId.call(i, row);
+                });
+                i.checked = data;
+              }
+            }
             else {
-              i.addEventListener('change', _ => {
-                row.permiso_ocultar = i.checked ? 1 : 0;
-                updatePermisoId.call(i, row);
-              });
-              i.checked = data;
+              i.checked = data == 1;
+              i.disabled = true;
             }
             return i;
           }
@@ -207,15 +232,20 @@ $('.content-body').ready(async () => {
             let i = document.createElement('input');
             i.classList.add('check-checked');
             i.setAttribute('type', 'checkbox');
-            i.increment = 32;
-            if (data == -1)
-              i.disabled = true;
+            if (permiso.ocultar) {
+              if (data == -1)
+                i.disabled = true;
+              else {
+                i.addEventListener('change', _ => {
+                  row.permiso_exportar = i.checked ? 1 : 0;
+                  updatePermisoId.call(i, row);
+                });
+                i.checked = data;
+              }
+            }
             else {
-              i.addEventListener('change', _ => {
-                row.permiso_exportar = i.checked ? 1 : 0;
-                updatePermisoId.call(i, row);
-              });
-              i.checked = data;
+              i.checked = data == 1;
+              i.disabled = true;
             }
             return i;
           }
@@ -238,7 +268,8 @@ $('.content-body').ready(async () => {
         { data: 'rol_nombre' }
       ],
     })
-    $table.buttons();
+    if (permiso.exportar) $table.buttons();
+    else cardMainDownload.innerHTML = '';
 
     /* 
       ==================================================
@@ -725,8 +756,8 @@ $('.content-body').ready(async () => {
         permiso.eliminar = data.permiso_eliminar;
       }
       if (permiso?.ocultar != data.permiso_ocultar) {
-        $table.toggleColumn(0, data.permiso_ocultar);
         permiso.ocultar = data.permiso_ocultar;
+        $table.datatable.rows().invalidate().draw();
       }
       if (permiso?.exportar != data.permiso_exportar) {
         if (data.permiso_exportar) $table.buttons();

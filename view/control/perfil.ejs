@@ -88,20 +88,20 @@
               <div class="form-body">
                 <div class="form-col">
                   <div class="input-box">
-                    <input class="imagen-unic" type="file" accept=".jpg, .png" value="<%=session.usuario.foto_src %>">
+                    <input class="imagen-unic" type="file" accept=".jpg, .png" value="<%=session.usuario.foto_src %>" <% if(!session.permiso.agregar){ %> disabled <% } %>>
                     <label for="fotos">Avatar:</label>
                   </div>
                 </div>
               </div>
             </form>
             <div class="form-foot">
-              <a class="btn btn-success">guardar</a>
+              <a class="btn btn-success" <% if(!session.permiso.agregar){ %> style="display: none" <% } %>>guardar</a>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="card" id="cambio-contraseña">
+    <div class="card" id="cambio-contraseña" <% if(!session.permiso.editar){ %> style="display: none" <% } %>>
       <style>
         #cambio-contraseña .input-box {
           position: relative;
@@ -140,8 +140,7 @@
         }
       </style>
       <div class="card-head">
-        <h3 class="card-tittle">Cambio de contraseña <%=session.usuario.usuario %>
-        </h3>
+        <h3 class="card-tittle">Cambio de contraseña <%=session.usuario.usuario %> </h3>
       </div>
       <div class="card-body">
         <div class="card-form">

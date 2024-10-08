@@ -62,6 +62,7 @@ class App {
   system = new System;
   shortUrl = new ShortUrl(this.config.SHORTAPI);
 
+  routesMap = new Map;
   constructor() {
     /* SERVER SETTINGS */
     this.app.set('case sensitive routing', true);
@@ -85,6 +86,7 @@ class App {
     if (data.constructor.name != 'Object') return;
 
     let { load, route, use, get, post, nodeRoute } = data;
+    this.routesMap.set(route, data);
 
     if (!load) return;
 

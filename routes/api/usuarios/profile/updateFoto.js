@@ -40,7 +40,7 @@ module.exports = {
       try {
         let session = this.cache.apiKey.read(req.cookies.apiKey);
 
-        let permiso = await this.model.tb_permisos.userPathUpdate(session.usuario.id, module.exports.route);
+        let permiso = await this.model.tb_permisos.userPathAdd(session.usuario.id, module.exports.route);
 
         if (!permiso) return res.status(403).json({ err: 'Tu usuario no tiene Permisos para esta peticion.' });
 

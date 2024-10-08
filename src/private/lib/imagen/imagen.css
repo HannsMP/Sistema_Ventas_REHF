@@ -33,7 +33,7 @@ form .input-box {
       }
 
       img:hover {
-        box-shadow: 0 0 0 10px rgba(var(--color-7), .3);
+        box-shadow: 0 0 10px rgba(var(--color-7), .5);
       }
 
       @media (orientation: portrait) {
