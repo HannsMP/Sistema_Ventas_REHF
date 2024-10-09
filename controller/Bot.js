@@ -23,15 +23,22 @@ class Bot {
   constructor(app) {
     this.app = app;
 
+    this.platform = app.system.platform();
+
     this.io = new SocketRouter([
       '/control/administracion/bot'
     ], app)
 
-    this.client = new Client({
+    /** @type {import('whatsapp-web.js').ClientOptions} */
+    let clientOption = {
       authStrategy: new LocalAuth({ dataPath: resolve('.cache') }),
       webVersionCache: { path: resolve('.cache', 'wwebjs'), type: 'local', strict: false },
-      // puppeteer: { executablePath: '/usr/bin/chromium-browser' }
-    });
+    }
+
+    if (this.platform == 'linux')
+      clientOption.puppeteer = { executablePath: '/usr/bin/chromium-browser' }
+
+    this.client = new Client(clientOption);
 
     this._SetupEventHandlers();
   }

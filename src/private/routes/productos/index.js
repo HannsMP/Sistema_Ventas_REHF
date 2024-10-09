@@ -47,22 +47,21 @@ $('.content-body').ready(async () => {
 
     let catalogoBox = document.getElementById('catalogo');
     let catalogo = new Catalogue(catalogoBox, (data) => {
-      return `
-      <div class="product">
-        <div class="product-imagen">
-          <img src="${data.src}" class="imagen">
-          <span class="product-counter">${data.cantidad}</span>
-        </div>
-        <div class="product-details">
-          <span class="detail-name">${data.producto}</span>
-          <span class="detail-category">${data.categoria_nombre}</span>
-          <p class="detail-description scroll-y">${data.descripcion}</p>
-          <div class="details-data">
-            <span class="detail-code">${data.codigo}</span>
-            <span class="detail-price">s/ ${data.venta?.toFixed(2)}</span>
-          </div>
-        </div>
-      </div>`
+      return `<div class="product">
+  <div class="product-imagen">
+    <img src="${data.src}" class="imagen">
+    <span class="product-counter">${data.cantidad}</span>
+  </div>
+  <div class="product-details">
+    <span class="detail-name">${data.producto}</span>
+    <span class="detail-category">${data.categoria_nombre}</span>
+    <p class="detail-description scroll-y">${data.descripcion}</p>
+    <div class="details-data">
+      <span class="detail-code">${data.codigo}</span>
+      <span class="detail-price">s/ ${data.venta?.toFixed(2)}</span>
+    </div>
+  </div>
+</div>`
     }, dataProductos, 20);
 
     /* 
@@ -171,7 +170,7 @@ $('.content-body').ready(async () => {
     /* ===================== SOCKET ===================== */
 
     socket.on('/productos/data/insert', data => {
-      catalogo.set({
+      catalogo.set(data.id, {
         id: data.id,
         codigo: data.codigo,
         producto: data.producto,
@@ -196,11 +195,12 @@ $('.content-body').ready(async () => {
         categoria_nombre: data.categoria_nombre,
         src: data.foto_src
       });
+      search(false);
     })
 
     socket.on('/productos/data/state', data => {
       if (data.estado) {
-        catalogo.set({
+        catalogo.set(data.id, {
           id: data.id,
           codigo: data.codigo,
           producto: data.producto,
@@ -211,19 +211,20 @@ $('.content-body').ready(async () => {
           categoria_nombre: data.categoria_nombre,
           src: data.foto_src
         });
-        search(false);
       }
       else
         catalogo.delete(data.id);
+      search(false);
     })
 
     socket.on('/productos/data/deleteId', data => {
       catalogo.delete(data.id);
+      search(false);
     })
 
     socket.on('/productos/categorias/state', data => {
-      if (data.estado) {
-        data.data.forEach(d => catalogo.set({
+      if (data.estado)
+        data.data.forEach(d => catalogo.set(d.id, {
           id: d.id,
           codigo: d.codigo,
           producto: d.producto,
@@ -234,10 +235,9 @@ $('.content-body').ready(async () => {
           categoria_nombre: d.categoria_nombre,
           src: d.foto_src
         }))
-        search(false);
-      }
       else
         data.data.forEach(d => catalogo.delete(d.id))
+      search(false);
     })
 
     socket.on('/categorias/data/insert', data => {

@@ -24,9 +24,21 @@ const Logger = require('./utils/Logger');
 const System = require('./utils/System');
 const Time = require('./utils/Time');
 
+/** @typedef {(this: App, req: import('express').Request, res: import('express').Response, next: import('express').NextFunction)=>void} callbackRoute */
+/** @typedef {{load:boolean, route:string, use:callbackRoute[], get:callbackRoute[], post:callbackRoute[], nodeRoute: (node: import('./utils/SocketNode'))=>void}} dataRoute */
 
 class App {
   estado = 0;
+  config = require('./config');
+
+  /* Imports */
+  system = new System;
+  shortUrl = new ShortUrl(this.config.SHORTAPI);
+
+  /** @type {Map<string, dataRoute>} */
+  routesMap = new Map;
+  cache = new Cache;
+
   /* Utils */
   time = new Time(0, "[YYYY/MM/DD hh:mm:ss tt]");
   logSuccess = new Logger(
@@ -45,11 +57,6 @@ class App {
     this
   );
 
-  cache = new Cache;
-
-  /* Imports */
-  config = require('./config');
-
   /* Server */
   app = express();
   server = createServer(this.app);
@@ -59,11 +66,11 @@ class App {
 
   bot = new Bot(this);
 
-  system = new System;
-  shortUrl = new ShortUrl(this.config.SHORTAPI);
-
-  routesMap = new Map;
   constructor() {
+    let net = this.system.networkInterfaces();
+    this.conecction = net["Ethernet"] || net["Ethernet 3"] || net["Wi-Fi"] || net['Ethernet 5'] || net['wlan0'];
+    this.ip = (this.conecction?.[1] || this.conecction?.[0])?.address;
+
     /* SERVER SETTINGS */
     this.app.set('case sensitive routing', true);
     this.app.set('view engine', 'ejs');
@@ -80,8 +87,7 @@ class App {
     this._LoadRoutes();
   }
 
-  /** @typedef {(this: App, req: import('express').Request, res: import('express').Response, next: import('express').NextFunction)=>void} callbackRoute */
-  /** @param {{load:boolean, route:string, use:callbackRoute[], get:callbackRoute[], post:callbackRoute[], nodeRoute: (node: import('./utils/SocketNode'))=>void}} data*/
+  /** @param {dataRoute} data */
   _Route(data) {
     if (data.constructor.name != 'Object') return;
 
@@ -93,19 +99,19 @@ class App {
     if (use?.constructor?.name == 'Array') {
       this.app.use(route, use.map(r => r.bind(this)));
       this.logSuccess.changeColor('brightWhite');
-      this.logSuccess.writeStart(`[USE] Middle: http://${this.config.SERVER.ip}:${this.config.SERVER.port}${data.route} (${data.use.length})`);
+      this.logSuccess.writeStart(`[USE] Middle: http://${this.ip}:${this.config.SERVER.port}${data.route} (${data.use.length})`);
     }
 
     if (get?.constructor?.name == 'Array') {
       this.app.get(route, get.map(r => r.bind(this)));
       this.logSuccess.changeColor('brightGreen');
-      this.logSuccess.writeStart(`[GET] Routes: http://${this.config.SERVER.ip}:${this.config.SERVER.port}${data.route} (${data.get.length})`);
+      this.logSuccess.writeStart(`[GET] Routes: http://${this.ip}:${this.config.SERVER.port}${data.route} (${data.get.length})`);
     }
 
     if (post?.constructor?.name == 'Array') {
       this.app.post(route, post.map(r => r.bind(this)));
       this.logSuccess.changeColor('brightBlue');
-      this.logSuccess.writeStart(`[POST] Routes: http://${this.config.SERVER.ip}:${this.config.SERVER.port}${data.route} (${data.post.length})`);
+      this.logSuccess.writeStart(`[POST] Routes: http://${this.ip}:${this.config.SERVER.port}${data.route} (${data.post.length})`);
     }
 
     if (nodeRoute) {
@@ -158,7 +164,7 @@ class App {
       if (this.estado) return res();
       this.listener = this.server.listen(this.config.SERVER.port, e => {
         if (e) return rej(e);
-        this.logSuccess.writeStart(`[App] http://${this.config.SERVER.ip}:${this.config.SERVER.port}`);
+        this.logSuccess.writeStart(`[App] http://${this.ip}:${this.config.SERVER.port}`);
         this.estado = 1;
         res();
       })

@@ -442,16 +442,16 @@ $('.content-body').ready(async () => {
     */
 
     socket.on('/transacciones_ventas/data/insert', data => {
-      let row = $table.get('#' + data.id);
+      let row = $tableHistory.get('#' + data.id);
       if (row) return;
 
       $tableHistory.add({
         id: data.id,
         codigo: data.codigo,
-        descuento: data,
+        descuento: data.descuento,
         cliente_nombres: data.cliente_nombres,
         metodo_pago_nombre: data.metodo_pago_nombre,
-        importe_total: data,
+        importe_total: data.importe_total,
         hora: formatTime('hh:mm:ss TT')
       });
     })

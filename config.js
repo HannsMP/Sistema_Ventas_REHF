@@ -1,7 +1,3 @@
-let { networkInterfaces } = require('os');
-let net = networkInterfaces();
-
-let conecction = net["Ethernet"] || net["Ethernet 3"] || net["Wi-Fi"] || net['Ethernet 5'] || net['wlan0'];
 module.exports = {
   /** @type {import('mysql').PoolConfig} */
   MYSQL: {
@@ -21,7 +17,6 @@ module.exports = {
     }
   },
   SERVER: {
-    ip: (conecction?.[1] || conecction?.[0])?.address,
     port: 3000,
   },
   APIKEY: {

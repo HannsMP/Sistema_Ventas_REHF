@@ -51,7 +51,7 @@ module.exports = {
     else
       sendMsg.push(
         '*Informacion del Servidor*',
-        `Usuarios: ${this.socket.io.sockets.sockets.size}`
+        `Sockets: ${this.socket.io.sockets.sockets.size}`
       )
 
     msg.reply(sendMsg.join('\n'));

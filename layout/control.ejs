@@ -92,20 +92,20 @@
             </a>
           </div>
           <div class="menu">
-            <div class="nav-item" <% if(!userLayout['/control/movimientos/ventas']?.ver){ %> style="display: none" <% } %>>
-              <div class="nav-icon">
-                <i class="bx bx-cart-download"></i>
-                <a class="nav-link" href="/control/movimientos/ventas">
-                  <span> Ventas </span>
-                </a>
-              </div>
-            </div>
-
             <div class="nav-item" <% if(!userLayout['/control/movimientos/compras']?.ver){ %> style="display: none" <% } %>>
               <div class="nav-icon">
                 <i class='bx bx-cart-add'></i>
                 <a class="nav-link" href="/control/movimientos/compras">
                   <span> Compras </span>
+                </a>
+              </div>
+            </div>
+
+            <div class="nav-item" <% if(!userLayout['/control/movimientos/ventas']?.ver){ %> style="display: none" <% } %>>
+              <div class="nav-icon">
+                <i class="bx bx-cart-download"></i>
+                <a class="nav-link" href="/control/movimientos/ventas">
+                  <span> Ventas </span>
                 </a>
               </div>
             </div>
@@ -148,7 +148,6 @@
             </div>
           </div>
         </div>
-
 
         <div class="nav-item drop top" <% if(!userLayout['/control/reportes']?.ver){ %> style="display: none" <% } %>>
           <div class="nav-icon toggle bx">
@@ -260,7 +259,6 @@
             </div>
           </div>
         </div>
-
       </div>
 
       <div class="navbar">

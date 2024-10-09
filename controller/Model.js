@@ -1,4 +1,5 @@
 const mysql = require('mysql');
+const { resolve } = require('path');
 const { exec } = require('child_process');
 
 const { QueryError, DatabaseError } = require('../utils/UtilsModel');
@@ -107,20 +108,42 @@ class Model {
   format(query, values) {
     return mysql.format(query, values);
   }
-  /** @returns {string} */
+  /**
+   * @returns {Promise<string>}
+   */
   backup() {
     return new Promise((res, rej) => {
       let { user, password, database } = this.#app.config.MYSQL;
+      let fileBackup = resolve('.backup', 'sql', Date.now() + '.sql');
+
       exec(
-        `mysqldump -u ${user} -p${password} ${database} > ${database}-${Date.now()}.sql`,
+        `mysqldump -u ${user} -p${password} ${database} > ${fileBackup}`,
         (err, stdout, stderr) => {
           if (err) return rej(`Error al ejecutar el comando: ${err.message}`);
           if (stderr) return rej(`Error en la salida estándar: ${stderr}`);
-          res(stdout);
+          res(fileBackup);
         }
       )
     });
   }
+  /**
+   * @param {string} filePath
+   * @returns {Promise<string>}
+   */
+  restore(filePath) {
+    return new Promise((resolve, reject) => {
+      let { user, password, database } = this.#app.config.MYSQL;
+
+      exec(
+        `mysql -u ${user} -p${password} ${database} < ${filePath}`,
+        (err, stdout, stderr) => {
+          if (err) return reject(`Error al ejecutar el comando: ${err.message}`);
+          if (stderr) return reject(`Error en la salida estándar: ${stderr}`);
+          resolve('Restauración completada.');
+        });
+    });
+  }
+
 }
 
 module.exports = Model;
