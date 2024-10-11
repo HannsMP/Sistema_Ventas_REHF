@@ -11,7 +11,7 @@ const { resolve, join } = require('path');
 const { readdirSync } = require('fs');
 
 /* Controllers */
-const Socket = require('./controller/Socket')
+const Socket = require('./controller/Socket');
 const Model = require('./controller/Model');
 const Cache = require('./controller/Cache');
 const Bot = require('./controller/Bot');
@@ -29,15 +29,14 @@ const Time = require('./utils/Time');
 
 class App {
   estado = 0;
-  config = require('./config');
+  cache = new Cache;
 
   /* Imports */
   system = new System;
-  shortUrl = new ShortUrl(this.config.SHORTAPI);
+  shortUrl = new ShortUrl(this.cache.config.readJSON().SHORTAPI);
 
   /** @type {Map<string, dataRoute>} */
   routesMap = new Map;
-  cache = new Cache;
 
   /* Utils */
   time = new Time(0, "[YYYY/MM/DD hh:mm:ss tt]");
@@ -81,7 +80,7 @@ class App {
     this.app.use(express.json());
     this.app.use(expressLayouts);
     this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-    this.app.use(session(this.config.SESSION));
+    this.app.use(session(this.cache.config.readJSON().SESSION));
 
     // loads
     this._LoadRoutes();
@@ -99,19 +98,19 @@ class App {
     if (use?.constructor?.name == 'Array') {
       this.app.use(route, use.map(r => r.bind(this)));
       this.logSuccess.changeColor('brightWhite');
-      this.logSuccess.writeStart(`[USE] Middle: http://${this.ip}:${this.config.SERVER.port}${data.route} (${data.use.length})`);
+      this.logSuccess.writeStart(`[USE] Middle: http://${this.ip}:${this.cache.config.readJSON().SERVER.port}${data.route} (${data.use.length})`);
     }
 
     if (get?.constructor?.name == 'Array') {
       this.app.get(route, get.map(r => r.bind(this)));
       this.logSuccess.changeColor('brightGreen');
-      this.logSuccess.writeStart(`[GET] Routes: http://${this.ip}:${this.config.SERVER.port}${data.route} (${data.get.length})`);
+      this.logSuccess.writeStart(`[GET] Routes: http://${this.ip}:${this.cache.config.readJSON().SERVER.port}${data.route} (${data.get.length})`);
     }
 
     if (post?.constructor?.name == 'Array') {
       this.app.post(route, post.map(r => r.bind(this)));
       this.logSuccess.changeColor('brightBlue');
-      this.logSuccess.writeStart(`[POST] Routes: http://${this.ip}:${this.config.SERVER.port}${data.route} (${data.post.length})`);
+      this.logSuccess.writeStart(`[POST] Routes: http://${this.ip}:${this.cache.config.readJSON().SERVER.port}${data.route} (${data.post.length})`);
     }
 
     if (nodeRoute) {
@@ -145,7 +144,7 @@ class App {
     await this.listen();
 
     // ready bot
-    if (this.config.BOT.autoRun)
+    if (this.cache.config.readJSON().BOT.autoRun)
       this.bot.on()
   }
 
@@ -162,9 +161,9 @@ class App {
   listen() {
     return new Promise((res, rej) => {
       if (this.estado) return res();
-      this.listener = this.server.listen(this.config.SERVER.port, e => {
+      this.listener = this.server.listen(this.cache.config.readJSON().SERVER.port, e => {
         if (e) return rej(e);
-        this.logSuccess.writeStart(`[App] http://${this.ip}:${this.config.SERVER.port}`);
+        this.logSuccess.writeStart(`[App] http://${this.ip}:${this.cache.config.readJSON().SERVER.port}`);
         this.estado = 1;
         res();
       })

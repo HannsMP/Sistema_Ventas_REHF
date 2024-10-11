@@ -15,7 +15,7 @@ module.exports = {
 
     if (!permiso) return
 
-    let originalUrl = `http://${this.ip}:${this.config.SERVER.port}`;
+    let originalUrl = `http://${this.ip}:${this.cache.config.readJSON().SERVER.port}`;
 
     let msgCurrent = await msg.reply(originalUrl);
 

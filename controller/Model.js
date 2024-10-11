@@ -28,12 +28,9 @@ const Tipo_metodo_pago = require('../model/Tipo_metodo_pago');
 /** @typedef {columns[]} result */
 
 class Model {
-  #app;
-  #pool;
-
   /** @param {import('../app')} app */
   constructor(app) {
-    this.#app = app;
+    this.app = app;
     this.tb_usuarios = new Tb_usuarios(app);
     this.tb_fotos = new Tb_fotos(app);
     this.tb_permisos = new Tb_permisos(app);
@@ -51,7 +48,7 @@ class Model {
     this.tipo_documento = new Tipo_documento(app);
     this.tipo_metodo_pago = new Tipo_metodo_pago(app);
 
-    this.#pool = mysql.createPool(this.#app.config.MYSQL);
+    this.poolQuery = mysql.createPool(this.app.cache.config.readJSON().MYSQL);
   }
   /** 
    * @param {string} query 
@@ -60,7 +57,7 @@ class Model {
   pool(query) {
     return new Promise((res, rej) => {
       try {
-        this.#pool.query(query, (err, result, field) => {
+        this.poolQuery.query(query, (err, result, field) => {
           if (err) {
             if (err.code) return rej(new QueryError(err));
             return rej(new DatabaseError(err));
@@ -80,7 +77,7 @@ class Model {
   poolValues(query, values) {
     return new Promise((res, rej) => {
       try {
-        this.#pool.query(query, values, (err, result, field) => {
+        this.poolQuery.query(query, values, (err, result, field) => {
           if (err) {
             if (err.code) return rej(new QueryError(err));
             return rej(new DatabaseError(err));
@@ -95,7 +92,7 @@ class Model {
 
   closePool() {
     return new Promise((res, rej) => {
-      this.#pool.end(err => {
+      this.poolQuery.end(err => {
         if (err) {
           if (err.code) return rej(new QueryError(err));
           return rej(new DatabaseError(err));
@@ -113,7 +110,7 @@ class Model {
    */
   backup() {
     return new Promise((res, rej) => {
-      let { user, password, database } = this.#app.config.MYSQL;
+      let { user, password, database } = this.app.cache.config.readJSON().MYSQL;
       let fileBackup = resolve('.backup', 'sql', Date.now() + '.sql');
 
       exec(
@@ -132,7 +129,7 @@ class Model {
    */
   restore(filePath) {
     return new Promise((resolve, reject) => {
-      let { user, password, database } = this.#app.config.MYSQL;
+      let { user, password, database } = this.app.cache.config.readJSON().MYSQL;
 
       exec(
         `mysql -u ${user} -p${password} ${database} < ${filePath}`,

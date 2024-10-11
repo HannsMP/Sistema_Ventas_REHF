@@ -80,10 +80,10 @@ module.exports = {
             let baseFile = basename(path);
             let ext = extname(path).toLowerCase();
 
-            let normalSizePath = join(destSrc, 'normal', baseFile + ext);
+            let normalSizePath = join(destSrc, 'normal', baseFile);
             await sharp(path).resize(500).toFile(normalSizePath);
-
-            let smallSizePath = join(destSrc, 'small', baseFile + ext);
+  
+            let smallSizePath = join(destSrc, 'small', baseFile);
             await sharp(path).resize(50).toFile(smallSizePath);
 
             src = '/' + relative(dirwork, normalSizePath).replaceAll('\\', '/');

@@ -3,6 +3,34 @@ const SI = require('systeminformation');
 const { exec } = require('child_process');
 
 class System {
+  /** @param {'start'|'restart'|'stop'|'status'} action  */
+  apache(action) {
+    return new Promise((res, rej) => {
+      let command;
+
+      if (action == 'start')
+        command = 'sudo service apache2 start | sudo /etc/init.d/apache2 start';
+      else if (action == 'restart')
+        command = 'sudo service apache2 restart | sudo /etc/init.d/apache2 restart';
+      else if (action == 'stop')
+        command = 'sudo service apache2 stop | sudo /etc/init.d/apache2 stop';
+      else if (action == 'status')
+        command = 'sudo service apache2 status | sudo /etc/init.d/apache2 status';
+      else
+        return rej('[Apache] orden incorrecta')
+
+      if (command)
+        exec(command, (error, stdout, stderr) => {
+          if (error) {
+            return rej(`Error: ${error.message}`);
+          }
+          if (stderr) {
+            return rej(`Stderr: ${stderr}`);
+          }
+          res(`Stdout: ${stdout}`);
+        });
+    });
+  }
   platform() {
     return os.platform();
   }

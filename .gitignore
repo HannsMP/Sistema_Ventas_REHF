@@ -2,6 +2,7 @@
 .temp
 .vs
 .vscode
+jsconfig.json
 log
 node_modules
 trash

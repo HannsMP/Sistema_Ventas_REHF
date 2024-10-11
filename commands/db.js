@@ -11,9 +11,9 @@ module.exports = {
   cooldown: 5 * 1000,
   onColldown: {},
   description: `Permite controlar el estado de la base de datos. 
-  Uso: */db [opciones]*
-  opciones:
-    *ping*: calcula el tiempo de respuesta.
+  Uso: */db [accion]*
+  si no se especifica accion: calcula el tiempo de respuesta.
+  accion:
     *backup*: retorna un archivo [.mysql].
     *restore*: requiere un archivo [.mysql], si no se especifica, se utilizará la última creada.`,
   async run(phone, msg, arg, complete) {
@@ -66,7 +66,7 @@ module.exports = {
           sendMsg.push('⚠ No se encontró un archivo de backup para restaurar.');
         }
       }
-    } else if (opciones == 'ping') {
+    } else {
       let timeBefore = process.hrtime();
       await this.model.pool('SELECT "1"');
       let timeAfter = process.hrtime(timeBefore);
