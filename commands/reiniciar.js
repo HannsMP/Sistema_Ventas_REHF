@@ -18,10 +18,10 @@ module.exports = {
     let msgCurrent = await msg.reply('Iniciando Reinicar...');
     complete();
 
-    this.system.powerOff();
+    this.system.reboot();
 
     setTimeout(() => {
-      msgCurrent.edit('El proceso fallo. ⚠.');
+      msgCurrent.edit('⚠ El proceso fallo.');
     }, 5000);
   }
 }

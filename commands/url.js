@@ -21,8 +21,8 @@ module.exports = {
 
     complete();
 
-    let shortUrl = await this.shortUrl.insert(originalUrl);
+    // let shortUrl = await this.shortUrl.insert(originalUrl);
 
-    msgCurrent.edit(this.shortUrl.join(shortUrl));
+    // msgCurrent.edit(this.shortUrl.join(shortUrl));
   }
 }

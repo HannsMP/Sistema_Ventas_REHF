@@ -21,7 +21,7 @@ module.exports = {
     this.system.powerOff();
 
     setTimeout(() => {
-      msgCurrent.edit('El proceso fallo ⚠.');
+      msgCurrent.edit('⚠ El proceso fallo.');
     }, 5000);
   }
 }
