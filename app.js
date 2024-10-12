@@ -67,8 +67,10 @@ class App {
 
   constructor() {
     let net = this.system.networkInterfaces();
-    this.conecction = net["Ethernet"] || net["Ethernet 3"] || net["Wi-Fi"] || net['Ethernet 5'] || net['wlan0'];
-    this.ip = (this.conecction?.[1] || this.conecction?.[0])?.address;
+    this.ip = (
+      (this.conecction = net["Ethernet"] || net["Ethernet 3"] || net["Wi-Fi"] || net['Ethernet 5'])?.[1]
+      || (this.conecction = net['wlan0'])?.[0]
+    )?.address;
 
     /* SERVER SETTINGS */
     this.app.set('case sensitive routing', true);
