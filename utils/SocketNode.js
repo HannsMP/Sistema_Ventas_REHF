@@ -1,16 +1,18 @@
 /** @typedef {import('socket.io').Socket<ListenEvents, EmitEvents, ServerSideEvents, SocketData>} SocketClient */
 
-const Event = require('./Event');
+let Event = require('./Event');
 
 class SocketNode {
+  /** @type {SocketNode} */
+  parentNode = null;
   name = 'main';
   path = '/';
 
   /** 
    * @type {Event<{
    *   nodeCreate: SocketNode,
-   *   nodeEmpty: string,
-   *   nodeDestroy: string,
+   *   add: SocketClient,
+   *   remove: SocketClient,
    *   destroy: string,
    * }>} 
    */
@@ -27,7 +29,69 @@ class SocketNode {
    * @param {string} path 
    */
   #decomposePath(path) {
-    return path.split('/').filter(part => part.length > 0);
+    return path.split('/').filter(route => route.length > 0);
+  }
+
+  /**
+   * @param {string} path 
+   * @param {SocketClient} [socket] 
+   * @returns {SocketNode}
+   */
+  #nodeCreate(path, socket) {
+    let routes = this.#decomposePath(path);
+    let currentNode = this;
+    let pathRecursive = [''];
+
+    for (let route of routes) {
+      pathRecursive.push(route);
+      if (!currentNode.children.has(route)) {
+        let newNode = new SocketNode();
+        newNode.name = route;
+        newNode.path = pathRecursive.join('/');
+        newNode.parentNode = currentNode;
+
+        currentNode.children.set(route, newNode);
+        this.ev.emit('nodeCreate', newNode);
+      }
+
+      currentNode = currentNode.children.get(route);
+
+      if (socket)
+        currentNode.subrouteSockets.set(socket.id, socket);
+    }
+
+    return currentNode;
+  }
+
+  /**
+   * @param {string} path 
+   * @returns {SocketNode}
+   */
+  createNode(path) {
+    return this.#nodeCreate(path);
+  }
+
+  /**
+   * @param {string} path 
+   * @returns {Map<string, SocketClient>}
+   */
+  deleteNode(path) {
+    let routes = this.#decomposePath(path);
+    let currentNode = this;
+
+    for (let route of routes) {
+      if (!currentNode.children.has(route)) return false;
+      currentNode = currentNode.children.get(route);
+    }
+    let successDelete = false;
+
+    let partToRemove = routes.at(-1);
+    if (currentNode.parentNode && partToRemove) {
+      successDelete = currentNode.parentNode.children.delete(partToRemove);
+      currentNode.ev.emit('destroy', path);
+    }
+
+    return successDelete;
   }
 
   /**
@@ -35,25 +99,9 @@ class SocketNode {
    * @param {SocketClient} socket 
    */
   add(path, socket) {
-    const parts = this.#decomposePath(path);
-    let current = this;
-    let pathRecursive = [''];
-
-    for (const part of parts) {
-      pathRecursive.push(part);
-      if (!current.children.has(part)) {
-        const newNode = new SocketNode();
-        newNode.name = part;
-        newNode.path = pathRecursive.join('/');
-
-        current.children.set(part, newNode);
-        this.ev.emit('nodeCreate', newNode);
-      }
-      current = current.children.get(part);
-      current.subrouteSockets.set(socket.id, socket);
-    }
-
-    current.sockets.set(socket.id, socket);
+    let node = this.#nodeCreate(path, socket);
+    node.sockets.set(socket.id, socket);
+    node.ev.emit('add', socket);
     socket.on('disconnect', () => this.remove(path, socket.id));
   }
 
@@ -62,31 +110,18 @@ class SocketNode {
    * @param {string} socketId 
    */
   remove(path, socketId) {
-    const parts = this.#decomposePath(path);
-    let current = this;
-    let parent = null;
-    let partToRemove = null;
+    let routes = this.#decomposePath(path);
+    let currentNode = this;
 
-    for (const part of parts) {
-      if (!current.children.has(part)) return;
-      parent = current;
-      partToRemove = part;
-      current = current.children.get(part);
-      current.subrouteSockets.delete(socketId);
+    for (let route of routes) {
+      if (!currentNode.children.has(route)) return false;
+      currentNode = currentNode.children.get(route);
+      currentNode.subrouteSockets.delete(socketId);
     }
 
-    current.sockets.delete(socketId);
-
-    if (current.sockets.size == 0 && current.subrouteSockets.size == 0) {
-      this.ev.emit('nodeEmpty', path);
-
-      if (parent && partToRemove) {
-        parent.children.delete(partToRemove);
-        current.ev.emit('destroy', path);
-
-        this.ev.emit('nodeDestroy', path);
-      }
-    }
+    let successDelete = currentNode.sockets.delete(socketId);
+    currentNode.ev.emit('remove', currentNode.sockets.get(socketId));
+    return successDelete
   }
 
   /**
@@ -94,13 +129,13 @@ class SocketNode {
    * @returns {Map<string, SocketClient>}
    */
   selector(path) {
-    const parts = this.#decomposePath(path);
-    let current = this;
-    for (const part of parts) {
-      if (!current.children.has(part)) return new Map();
-      current = current.children.get(part);
+    let routes = this.#decomposePath(path);
+    let currentNode = this;
+    for (let route of routes) {
+      if (!currentNode.children.has(route)) return new Map();
+      currentNode = currentNode.children.get(route);
     }
-    return current.sockets;
+    return currentNode.sockets;
   }
 
   /**
@@ -108,13 +143,13 @@ class SocketNode {
    * @returns {Map<string, SocketClient>}
    */
   selectorAll(path) {
-    const parts = this.#decomposePath(path);
-    let current = this;
-    for (const part of parts) {
-      if (!current.children.has(part)) return new Map();
-      current = current.children.get(part);
+    let routes = this.#decomposePath(path);
+    let currentNode = this;
+    for (let route of routes) {
+      if (!currentNode.children.has(route)) return new Map();
+      currentNode = currentNode.children.get(route);
     }
-    return current.subrouteSockets;
+    return currentNode.subrouteSockets;
   }
 }
 

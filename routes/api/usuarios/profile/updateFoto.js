@@ -5,8 +5,8 @@ const sharp = require('sharp');
 const fileHash = require('../../../../utils/function/fileHash');
 
 const dirwork = resolve();
-const dest = resolve('.cache', 'img');
-const destSrc = resolve('src', 'resource', 'usuarios');
+const dest = join(dirwork, '.temp', 'img');
+const destSrc = join(dirwork, 'src', 'resource', 'usuarios');
 const fileTypes = /jpeg|jpg|png|webp|tiff|gif|avif/;
 
 const upload = multer({

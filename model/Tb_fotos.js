@@ -28,7 +28,7 @@ const columns = {
 */
 
 class Tb_fotos extends Table {
-  cacheImg = resolve('.cache', 'img')
+  cacheImg = resolve('.temp', 'img')
   /** @param {import('../app')} app */
   constructor(app) {
     super(name);

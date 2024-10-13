@@ -37,6 +37,31 @@ class System {
   networkInterfaces() {
     return os.networkInterfaces();
   }
+  /**
+   * @returns {{ ipv4: string, ipv6: string, internal: string }}
+   */
+  getIPAddress() {
+    const nets = os.networkInterfaces();
+    const result = {};
+
+    for (const name of Object.keys(nets)) {
+      
+      for (const net of nets[name]) {
+        if (net.family === 'IPv4' && !net.internal)
+          result.ipv4 = net.address;
+        else if (net.family === 'IPv4' && net.internal)
+          result.internal = net.address;
+        else if (net.family === 'IPv6' && !net.internal)
+          result.ipv6 = net.address;
+
+        if (result.ipv4 && result.ipv6 && result.internal) break;
+      }
+
+      if (result.ipv4 && result.ipv6 && result.internal) break;
+    }
+
+    return result;
+  }
   async all() {
     let cpu = this.cpu();
     let mem = this.mem();

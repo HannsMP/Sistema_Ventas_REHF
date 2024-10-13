@@ -66,11 +66,8 @@ class App {
   bot = new Bot(this);
 
   constructor() {
-    let net = this.system.networkInterfaces();
-    this.ip = (
-      (this.conecction = net["Ethernet"] || net["Ethernet 3"] || net["Wi-Fi"] || net['Ethernet 5'])?.[1]
-      || (this.conecction = net['wlan0'])?.[0]
-    )?.address;
+    let net = this.system.getIPAddress();
+    this.ip = net.ipv4;
 
     /* SERVER SETTINGS */
     this.app.set('case sensitive routing', true);
@@ -116,7 +113,8 @@ class App {
     }
 
     if (nodeRoute) {
-      this.socket.node.ev.on('nodeCreate', node => node.path == route && nodeRoute.call(this, node))
+      let node = this.socket.node.createNode(route);
+      nodeRoute.call(this, node);
     }
   }
 

@@ -5,7 +5,7 @@ const sharp = require('sharp');
 const fileHash = require('../../../../utils/function/fileHash');
 
 const dirwork = resolve();
-const dest = join(dirwork, '.cache', 'img');
+const dest = join(dirwork, '.temp', 'img');
 const destSrc = join(dirwork, 'src', 'resource', 'productos');
 const fileTypes = /jpeg|jpg|png|webp|tiff|gif|avif/;
 

@@ -5,8 +5,8 @@ const sharp = require('sharp');
 const fileHash = require('../../../../utils/function/fileHash');
 
 const dirwork = resolve();
-const dest = resolve('.cache', 'img');
-const destSrc = resolve('src', 'resource', 'productos');
+const dest = join(dirwork, '.temp', 'img');
+const destSrc = join(dirwork, 'src', 'resource', 'productos');
 const fileTypes = /jpeg|jpg|png|webp|tiff|gif|avif/;
 
 const upload = multer({
@@ -82,7 +82,7 @@ module.exports = {
 
             let normalSizePath = join(destSrc, 'normal', baseFile);
             await sharp(path).resize(500).toFile(normalSizePath);
-  
+
             let smallSizePath = join(destSrc, 'small', baseFile);
             await sharp(path).resize(50).toFile(smallSizePath);
 

@@ -23,25 +23,32 @@ module.exports = {
     },
   ],
   nodeRoute: function (node) {
-    let internalId = setInterval(() => {
-      let CurrentLoadData = this.system.currentLoad();
-      let FsSizeData = this.system.fsSize();
-      let MemData = this.system.mem();
+    let internalId;
 
-      node.sockets.forEach(async s => {
-        s.emit(
-          '/cpu/data/emit',
-          {
-            cpu: await CurrentLoadData,
-            disk: await FsSizeData,
-            mem: await MemData
-          }
-        )
-      })
-    }, 1000);
-
-    node.ev.on('destroy', () => {
+    node.ev.on('remove', socket => {
+      if (node.sockets.size != 0) return
       clearInterval(internalId);
+      internalId = null;
+    })
+
+    node.ev.on('add', () => {
+      if (!internalId)
+        internalId = setInterval(() => {
+          let CurrentLoadData = this.system.currentLoad();
+          let FsSizeData = this.system.fsSize();
+          let MemData = this.system.mem();
+
+          node.sockets.forEach(async s => {
+            s.emit(
+              '/cpu/data/emit',
+              {
+                cpu: await CurrentLoadData,
+                disk: await FsSizeData,
+                mem: await MemData
+              }
+            )
+          })
+        }, 1000);
     })
   }
 }
