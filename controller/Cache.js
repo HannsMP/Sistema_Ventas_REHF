@@ -4,13 +4,24 @@ const { resolve } = require('path');
 
 class Cache {
   config = new FileJSON(resolve('.cache', 'config', 'config.json'), true, {
-    /** @type {import('mysql').PoolConfig} */
-    MYSQL: {
-      connectionLimit: 25,
-      host: 'localhost',
-      user: 'root',
-      password: '',
-      database: 'rehf'
+    DATABASE: {
+      autoRun: true,
+      /** @type {import('mysql').PoolConfig} */
+      owner: {
+        connectionLimit: 2,
+        host: 'localhost',
+        user: 'root',
+        password: '',
+        database: 'rehf'
+      },
+      /** @type {import('mysql').PoolConfig} */
+      production: {
+        connectionLimit: 25,
+        host: 'localhost',
+        user: 'root',
+        password: '',
+        database: 'rehf'
+      }
     },
     /** @type {import('express-session').SessionOptions} */
     SESSION: {
@@ -22,7 +33,8 @@ class Cache {
       }
     },
     SERVER: {
-      port: 80,
+      autoRun: true,
+      port: 80
     },
     APIKEY: {
       length: 7,
@@ -38,6 +50,9 @@ class Cache {
     SHORTAPI: {
       host: 'https://shortlink-62uq.onrender.com/',
       token: 'js96HRPSHw8oBsxrO9zZhCUy8W8StFfMJxbCezDNDpDrMFCmWVtOdVRm4VEGSv6UvIWdBeRu8Nrjw40jqBN0a3BMxPeZAkjVrY3'
+    },
+    SYSTEM: {
+      loggerFile: '/home/eliux/logs/server_cron_log.log'
     }
   });
   /** 

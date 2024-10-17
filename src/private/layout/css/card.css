@@ -33,6 +33,10 @@
     height: fit-content;
   }
 
+  .card-body {
+    margin-bottom: 10px;
+  }
+
   .card-head,
   .card-foot {
     display: flex;
@@ -103,7 +107,7 @@
       }
 
       i:before {
-        font-size: 100px; 
+        font-size: 100px;
       }
 
       img {
@@ -126,20 +130,21 @@
       align-items: start;
       justify-content: center;
       gap: 1.2rem;
+    }
 
-      .data-box {
-        display: flex;
-        flex-direction: column;
-        gap: .3rem;
+  }
 
-        span {
-          color: rgb(var(--secundary));
-        }
+  .data-box {
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
 
-        small {
-          margin-left: .6rem;
-        }
-      }
+    span {
+      color: rgb(var(--secundary)) !important;
+    }
+
+    small {
+      margin-left: .6rem;
     }
   }
 

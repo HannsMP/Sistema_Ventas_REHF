@@ -1,32 +1,36 @@
 const { resolve } = require('path')
 const { NeuralNetwork } = require('../utils/Brain.js');
 const FileJSON = require('../utils/FileJSON.js');
+const SocketRouter = require('../utils/SocketRouter.js');
 
 /** @typedef {{min_compra:number, max_compra:number, min_venta:number, max_venta:number}} Limits  */
 /** @typedef {{iterations:number, time:number, error:Number}} TrainResult  */
-/** @type {{netJson:{}, trainResult:TrainResult, create:number, limit:Limits }} */
-let template = {};
-let complete;
 
 class Precio_venta {
-  /** @type {Promise<TrainResult>} */
-  chargeTrain = new Promise(res => complete = res)
+  optionNeural = { hiddenLayers: [10, 10] };
 
-  fileJSON = new FileJSON(resolve('.cache', 'brain', 'precio_venta.json'), true, template)
+  /** @type {FileJSON<{netJson:{}, trainResult:TrainResult, create:number, limit:Limits }>} */
+  fileJSON = new FileJSON(resolve('.cache', 'brain', 'precio_venta.json'), true);
+
   /** @param {import('../app.js')} app  */
   constructor(app) {
     this.app = app;
-    this.neural = new NeuralNetwork({ hiddenLayers: [10, 10] });
 
-    let { create, netJson, limit, trainResult } = this.fileJSON.readJSON();
+    this.io = new SocketRouter([
+      '/control/servidor/cerebro'
+    ], app)
+
+    let { create, netJson, limit, trainResult, optionNeural = this.optionNeural } = this.fileJSON.readJSON();
+
+    this.neural = new NeuralNetwork(optionNeural);
 
     // si pasaron mas de 6 horas desde el ultimo guardado, refresca el cache.
-    if (!create || (create - Date.now()) > 6 * 60 * 60 * 1000) this.refresh();
+    if (!create)
+      this.chargeTrain = this.refresh();
     // sino pasaron mas de 6 horas, carga el cache guardado.
     else {
       this.neural.fromJSON(netJson);
       this.limit = limit;
-      complete(trainResult);
     };
   }
   /** @param {number} value  */
@@ -45,7 +49,9 @@ class Precio_venta {
   denormalizeSale(value) {
     return value * (this.limit.max_venta - this.limit.min_venta) + this.limit.min_venta;
   }
-  async refresh() {
+  async refresh(iterations, errorThresh) {
+    if (!this.app.model.estado && !await this.app.model._run()) return;
+
     let [limitsResult] = await this.app.model.pool(`
       SELECT 
         MIN(compra) AS min_compra,
@@ -55,37 +61,58 @@ class Precio_venta {
       FROM 
         tb_productos
       WHERE
-        estado = 1
+        estado = 1;
     `)
 
     this.limit = limitsResult[0];
 
     let [data] = await this.app.model.pool(`
       SELECT 
-        compra, 
-        venta
-      FROM
-        tb_productos
-      WHERE
-        estado = 1
+        ((p.compra - sub.min_compra) / (sub.max_compra - sub.min_compra)) AS input,
+        ((p.venta - sub.min_venta) / (sub.max_venta - sub.min_venta)) AS output
+      FROM 
+        tb_productos p,
+        (
+          SELECT 
+            MIN(compra) AS min_compra, 
+            MAX(compra) AS max_compra,
+            MIN(venta) AS min_venta, 
+            MAX(venta) AS max_venta
+          FROM 
+            tb_productos 
+          WHERE 
+            estado = 1
+        ) sub
+      WHERE 
+        p.estado = 1;
     `)
 
-    let dataTrain = data.map(d => {
-      let t = {};
-      t.input = [this.normalizeBuys(d.compra)];
-      t.output = [this.normalizeSale(d.venta)];
-      return t;
+    data.forEach(d => {
+      d.input = [d.input];
+      d.output = [d.output];
     })
 
-    this.chargeTrain = this.neural.trainAsync(dataTrain, {
-      iterations: 25000,
-      errorThresh: 0.005,
+    iterations ??= 25000;
+    errorThresh ??= 0.005;
+
+    let trainResult = this.neural.train(data, {
+      iterations,
+      errorThresh
     });
 
-    let trainResult = await this.chargeTrain;
-
     let netJson = this.neural.toJSON();
-    this.fileJSON.writeJSON({ netJson, trainResult, create: Date.now(), limit: limitsResult[0] });
+
+    let size = data.length;
+    let limit = limitsResult[0];
+    let create = Date.now();
+
+    let json = { netJson, trainResult, create, size, limit, iterations, errorThresh, optionNeural: this.optionNeural };
+    this.fileJSON.writeJSON(json);
+    this.io.emit('/cerebro/data/precioVenta', {
+      data: json,
+      optionNeural: this.optionNeural,
+      prediccion: this.toFunction.toString()
+    });
   }
   /** 
    * @param {number} price  

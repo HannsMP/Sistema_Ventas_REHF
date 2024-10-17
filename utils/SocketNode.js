@@ -1,6 +1,7 @@
 /** @typedef {import('socket.io').Socket<ListenEvents, EmitEvents, ServerSideEvents, SocketData>} SocketClient */
 
 let Event = require('./Event');
+const SocketMap = require('./SocketMap');
 
 class SocketNode {
   /** @type {SocketNode} */
@@ -20,10 +21,9 @@ class SocketNode {
 
   /** @type {Map<string, SocketNode>} */
   children = new Map;
-  /** @type {Map<string, SocketClient>} */
-  sockets = new Map;
-  /** @type {Map<string, SocketClient>} */
-  subrouteSockets = new Map;
+
+  sockets = new SocketMap;
+  subrouteSockets = new SocketMap;
 
   /**
    * @param {string} path 
@@ -67,7 +67,7 @@ class SocketNode {
    * @param {string} path 
    * @returns {SocketNode}
    */
-  createNode(path) {
+  selectNode(path) {
     return this.#nodeCreate(path);
   }
 

@@ -23,12 +23,13 @@ const ShortUrl = require('./utils/ShortUrl');
 const Logger = require('./utils/Logger');
 const System = require('./utils/System');
 const Time = require('./utils/Time');
+const File = require('./utils/File');
 
 /** @typedef {(this: App, req: import('express').Request, res: import('express').Response, next: import('express').NextFunction)=>void} callbackRoute */
 /** @typedef {{load:boolean, route:string, use:callbackRoute[], get:callbackRoute[], post:callbackRoute[], nodeRoute: (node: import('./utils/SocketNode'))=>void}} dataRoute */
 
 class App {
-  estado = 0;
+  estado = false;
   cache = new Cache;
 
   /* Imports */
@@ -55,6 +56,11 @@ class App {
     { colorTime: 'brightRed', colorLog: 'brightRed', autoSave: true, emit: true, log: true },
     this
   );
+
+  logSystem = new File(
+    this.cache.config.readJSON().SYSTEM.loggerFile,
+    { autoSave: false, extname: '.log', default: '' }
+  )
 
   /* Server */
   app = express();
@@ -113,8 +119,10 @@ class App {
     }
 
     if (nodeRoute) {
-      let node = this.socket.node.createNode(route);
+      let node = this.socket.node.selectNode(route);
       nodeRoute.call(this, node);
+      this.logSuccess.changeColor('brightYellow');
+      this.logSuccess.writeStart(`[SKT] Routes: http://${this.ip}:${this.cache.config.readJSON().SERVER.port}${data.route}`);
     }
   }
 
@@ -135,17 +143,22 @@ class App {
   }
 
   async _Run() {
+    let cnfg = this.cache.config.readJSON();
     this.logSuccess.changeColor('brightCyan');
-    // ready sql
-    await this.model.pool('select "1"');
-    this.logSuccess.writeStart(`[Sql] http://localhost/phpmyadmin/`);
 
-    // ready server
-    await this.listen();
+    let intervalId = setInterval(async () => {
+      if (!this.model.estado && !await this.model._run()) return;
 
-    // ready bot
-    if (this.cache.config.readJSON().BOT.autoRun)
-      this.bot.on()
+      // ready server
+      if (cnfg.SERVER.autoRun)
+        this.listen();
+
+      // ready bot
+      if (cnfg.BOT.autoRun)
+        this.bot.on()
+
+      clearInterval(intervalId);
+    }, 1000)
   }
 
   responseErrorApi(req, res, next, e) {
@@ -163,8 +176,8 @@ class App {
       if (this.estado) return res();
       this.listener = this.server.listen(this.cache.config.readJSON().SERVER.port, e => {
         if (e) return rej(e);
-        this.logSuccess.writeStart(`[App] http://${this.ip}:${this.cache.config.readJSON().SERVER.port}`);
-        this.estado = 1;
+        this.logSuccess.writeStart(`[App] Listo: http://${this.ip}:${this.cache.config.readJSON().SERVER.port}`);
+        this.estado = true;
         res();
       })
     })
@@ -177,7 +190,7 @@ class App {
       this.listener.closeAllConnections();
       this.listener.closeIdleConnections();
       this.logSuccess.writeStart(`[App] close`);
-      this.estado = 0;
+      this.estado = false;
       res();
     })
   }

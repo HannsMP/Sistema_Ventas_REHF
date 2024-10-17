@@ -38,8 +38,6 @@ class Socket {
         let route = new URL(referer)
         socketClient.session.route = route.pathname;
 
-        this.node.add(route.pathname, socketClient);
-
         let { usuario } = this.app.cache.apiKey.read(apikey);
 
         await socketClient.join([
@@ -60,6 +58,9 @@ class Socket {
       } catch (error) {
         next(error);
       }
+    })
+    this.io.on('connection', socketClient => {
+      this.node.add(socketClient.session.route, socketClient);
     })
   }
 

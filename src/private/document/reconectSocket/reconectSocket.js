@@ -1,3 +1,4 @@
+/** @type {import('socket.io').Socket} */
 var socket;
 document.addEventListener('DOMContentLoaded', () => {
   function reconectSocket() {

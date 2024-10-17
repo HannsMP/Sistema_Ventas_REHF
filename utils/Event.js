@@ -5,7 +5,7 @@ class Event {
 
   /** 
    * @template O
-   * @param {O & keyof E} name
+   * @param {O | keyof E} name
    * @param {E[O]} data? 
    */
   emit(name, data) {
@@ -22,8 +22,8 @@ class Event {
 
   /** 
    * @template O
-   * @param {O & keyof E} name
-   * @param {(data: E[O]?) => void} callback? 
+   * @param {O | keyof E} name
+   * @param {(data: E[O]) => void} [callback] 
    * @param {{once: boolean, persistence: boolean}} [option]  
    */
   on(name, callback, option = { once: false, persistence: false }) {
@@ -40,7 +40,7 @@ class Event {
 
   /** 
    * @template O
-   * @param {O & keyof E} name
+   * @param {O | keyof E} name
    * @param {(data: E[O]) => void} eventFun 
    */
   off(name, eventFun) {

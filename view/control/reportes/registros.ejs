@@ -28,7 +28,7 @@
   <div class="menu-body">
     <div class="card" id="logguer-success">
       <div class="card-head">
-        <h3 class="card-tittle">Registro Satisfactorios</h3>
+        <h3 class="card-tittle">Logs Satisfactorios</h3>
         <div class="f-row">
           Tamaño: <span id="size"></span> Mb
         </div>
@@ -42,10 +42,11 @@
         <% } %>
         <a class="btn btn-danger" id="clear">Limpiar</a>
       </div>
+      <script src="/src/private/routes/reportes/registros/success.js"></script>
     </div>
     <div class="card" id="logguer-warning">
       <div class="card-head">
-        <h3 class="card-tittle">Registro de Advertencia</h3>
+        <h3 class="card-tittle">Logs de Advertencia</h3>
         <div class="f-row">
           Tamaño: <span id="size"></span> Mb
         </div>
@@ -59,10 +60,11 @@
         <% } %>
         <a class="btn btn-danger" id="clear">Limpiar</a>
       </div>
+      <script src="/src/private/routes/reportes/registros/warn.js"></script>
     </div>
     <div class="card" id="logguer-error">
       <div class="card-head">
-        <h3 class="card-tittle">Registro de Peligro</h3>
+        <h3 class="card-tittle">Logs de Error</h3>
         <div class="f-row">
           Tamaño: <span id="size"></span> Mb
         </div>
@@ -76,8 +78,25 @@
         <% } %>
         <a class="btn btn-danger" id="clear">Limpiar</a>
       </div>
+      <script src="/src/private/routes/reportes/registros/error.js"></script>
+    </div>
+    <div class="card" id="logguer-system">
+      <div class="card-head">
+        <h3 class="card-tittle">Log del Sistema</h3>
+        <div class="f-row">
+          Tamaño: <span id="size"></span> Mb
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="code code-log scroll-y"></div>
+      </div>
+      <div class="card-foot">
+        <% if(session.permiso.exportar){ %>
+        <a class="btn btn-success" id="download">Descargar</a>
+        <% } %>
+        <a class="btn btn-danger" id="clear">Limpiar</a>
+      </div>
+      <script src="/src/private/routes/reportes/registros/system.js"></script>
     </div>
   </div>
 </div>
-
-<script src="/src/private/routes/reportes/registros/index.js"></script>

@@ -8,23 +8,37 @@
   }
 
   window.autoHeight = function (input) {
-    const cursorPos = saveCursorPosition(input);
+    let cursorPos = saveCursorPosition(input);
     input.style.height = 'auto';
     input.style.height = (input.scrollHeight) + "px";
     restoreCursorPosition(input, cursorPos);
   }
 
   window.inputInt = function (input, limit = Infinity) {
-    const cursorPos = saveCursorPosition(input);
+    let cursorPos = saveCursorPosition(input);
     if (input.value.length > limit) return input.value = input.lvp;
     input.value = input.value.replace(/[^0-9]/g, '');
     restoreCursorPosition(input, cursorPos);
   }
 
   window.inputFloat = function (input, limit = Infinity, fixed = 2) {
-    const cursorPos = saveCursorPosition(input);
-    input.lvp = input.lvp ?? "";
+    let cursorPos = saveCursorPosition(input);
+    input.lvp ??= "";
     let v = input.value;
+
+    if (limit == 0) {
+
+      if (!v.startsWith('0.')) {
+        input.lvp = "0.";
+        cursorPos = 3;
+      }
+      else
+        v = v.replace('0.', '').replace(/[^0-9]./g, '')
+
+      v = "0." + v;
+      input.value = input.lvp = v;
+      return restoreCursorPosition(input, cursorPos);
+    }
 
     let integerLimit = limit - (fixed + 1);
 
@@ -62,8 +76,8 @@
   }
 
   window.inputNoSpace = function (input, limit = Infinity) {
-    const cursorPos = saveCursorPosition(input);
-    input.lvp = input.lvp ?? "";
+    let cursorPos = saveCursorPosition(input);
+    input.lvp ??= "";
     if (input.value.length > limit) {
       input.value = input.lvp;
       return restoreCursorPosition(input, cursorPos);
@@ -75,8 +89,8 @@
   }
 
   window.inputLimit = function (input, limit = Infinity) {
-    const cursorPos = saveCursorPosition(input);
-    input.lvp = input.lvp ?? "";
+    let cursorPos = saveCursorPosition(input);
+    input.lvp ??= "";
     if (input.value.length > limit) {
       input.value = input.lvp;
       return restoreCursorPosition(input, cursorPos);
@@ -86,8 +100,8 @@
   }
 
   window.inputCapitalize = function (input, limit = Infinity) {
-    const cursorPos = saveCursorPosition(input);
-    input.lvp = input.lvp ?? "";
+    let cursorPos = saveCursorPosition(input);
+    input.lvp ??= "";
     if (input.value.length > limit) {
       input.value = input.lvp;
       return restoreCursorPosition(input, cursorPos);
@@ -99,8 +113,8 @@
   }
 
   window.inputUppercase = function (input, limit = Infinity) {
-    const cursorPos = saveCursorPosition(input);
-    input.lvp = input.lvp ?? "";
+    let cursorPos = saveCursorPosition(input);
+    input.lvp ??= "";
     if (input.value.length > limit) {
       input.value = input.lvp;
       return restoreCursorPosition(input, cursorPos);
@@ -111,8 +125,8 @@
   }
 
   window.inputLowercase = function (input, limit = Infinity) {
-    const cursorPos = saveCursorPosition(input);
-    input.lvp = input.lvp ?? "";
+    let cursorPos = saveCursorPosition(input);
+    input.lvp ??= "";
     if (input.value.length > limit) {
       input.value = input.lvp;
       return restoreCursorPosition(input, cursorPos);
@@ -123,8 +137,8 @@
   }
 
   window.inputSentenceCase = function (input, limit = Infinity) {
-    const cursorPos = saveCursorPosition(input);
-    input.lvp = input.lvp ?? "";
+    let cursorPos = saveCursorPosition(input);
+    input.lvp ??= "";
     if (input.value.length > limit) {
       input.value = input.lvp;
       return restoreCursorPosition(input, cursorPos);
@@ -140,8 +154,8 @@
   }
 
   window.inputParagraphCase = function (input, limit = Infinity) {
-    const cursorPos = saveCursorPosition(input);
-    input.lvp = input.lvp ?? "";
+    let cursorPos = saveCursorPosition(input);
+    input.lvp ??= "";
     if (input.value.length > limit) {
       input.value = input.lvp;
       return restoreCursorPosition(input, cursorPos);

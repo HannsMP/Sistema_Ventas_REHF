@@ -28,6 +28,7 @@ const Tipo_metodo_pago = require('../model/Tipo_metodo_pago');
 /** @typedef {columns[]} result */
 
 class Model {
+  estado = false;
   /** @param {import('../app')} app */
   constructor(app) {
     this.app = app;
@@ -48,7 +49,24 @@ class Model {
     this.tipo_documento = new Tipo_documento(app);
     this.tipo_metodo_pago = new Tipo_metodo_pago(app);
 
-    this.poolQuery = mysql.createPool(this.app.cache.config.readJSON().MYSQL);
+    let cnfg = app.cache.config.readJSON();
+
+    this.poolQuery = mysql.createPool(cnfg.DATABASE.production);
+
+    // if (cnfg.DATABASE.autoRun)
+    //   this._run();
+  }
+  async _run() {
+    try {
+      await this.pool('select "1"');
+      this.estado = true;
+      this.app.logSuccess.writeStart(`[Sql] Listo: http://localhost/phpmyadmin/`);
+    } catch (e) {
+      this.estado = false;
+      this.app.logError.writeStart(`[Sql] Error: _run`, e.message, e.stack);
+    }
+
+    return this.estado;
   }
   /** 
    * @param {string} query 
@@ -110,7 +128,7 @@ class Model {
    */
   backup() {
     return new Promise((res, rej) => {
-      let { user, password, database } = this.app.cache.config.readJSON().MYSQL;
+      let { user, password, database } = this.app.cache.config.readJSON().DATABASE.owner;
       let fileBackup = resolve('.backup', 'sql', Date.now() + '.sql');
 
       exec(
@@ -129,7 +147,7 @@ class Model {
    */
   restore(filePath) {
     return new Promise((resolve, reject) => {
-      let { user, password, database } = this.app.cache.config.readJSON().MYSQL;
+      let { user, password, database } = this.app.cache.config.readJSON().DATABASE.owner;
 
       exec(
         `mysql -u ${user} -p${password} ${database} < ${filePath}`,

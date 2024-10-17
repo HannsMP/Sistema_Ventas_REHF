@@ -1,0 +1,110 @@
+<div class="content-header">
+  <!---------------------- CSS ---------------------->
+
+  <!-- lib control -->
+
+  <!-- layout -->
+  <link href="/src/private/layout/css/form.css" rel="stylesheet">
+  <link href="/src/private/layout/css/input.css" rel="stylesheet">
+  <link href="/src/private/layout/css/btn.css" rel="stylesheet">
+
+  <!---------------------- JS ---------------------->
+
+  <!-- lib control -->
+  <script src="/src/private/lib/formatTime/formatTime.min.js"></script>
+  <script src="/src/private/lib/code/code.min.js"></script>
+  <script src="/src/private/lib/chart/chart.umd.min.js"></script>
+
+  <!-- layout -->
+  <script src="/src/private/lib/input/input.min.js"></script>
+  <script src="/src/private/lib/Tables/tables.min.js"></script>
+
+  <!---------------------- BODY ---------------------->
+
+  <div class="content-tittle">Cerebro</div>
+  <div class="content-path">
+    <a href="/control">/control</a>
+    <a href="/control/servidor">/servidor</a>
+    <a href="/control/servidor/cerebro">/cerebro</a>
+  </div>
+</div>
+<div class="content-body">
+  <div class="menu-body">
+    <div class="card" id="precio_venta">
+      <div class="card-head">
+        <h3 class="card-tittle">Prediccion Precio de Venta</h3>
+        <a class="btn btn-success" id="recargar">Reentrenar</a>
+      </div>
+
+      <div class="card-body">
+        <div class="card-form">
+          <div class="form-box">
+            <div class="form-body">
+              <div class="form-col">
+                <div class="input-box">
+                  <input id="iterations_train" type="text" oninput="inputInt(this, 10);" required>
+                  <label>Numero de iteracion:</label>
+                </div>
+              </div>
+              <div class="form-col">
+                <div class="input-box">
+                  <input id="errorThresh_train" type="text" oninput="inputFloat(this, 0, 10);" value="0." required>
+                  <label>Umbral de Error:</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-data">
+        <div class="card-col" style="width: 100%;">
+          <canvas id="net"></canvas>
+        </div>
+        <div class="card-col" style="width: 100%;">
+          <canvas id="test"></canvas>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="card-form">
+          <div class="form-box">
+            <div class="form-body">
+              <div class="form-col">
+                <div class="data-box" id="train">
+                  <span class="data-tittle">Entrenamiento</span>
+                  <small class="data" id="tamaño"></small>
+                  <small class="data" id="compra"></small>
+                  <small class="data" id="venta"></small>
+                  <small class="data" id="iteraciones"></small>
+                  <small class="data" id="error"></small>
+                </div>
+              </div>
+              <div class="form-col">
+                <div class="data-box" id="result">
+                  <span class="data-tittle">Resultados</span>
+                  <small class="data" id="creacion"></small>
+                  <small class="data" id="compra"></small>
+                  <small class="data" id="venta"></small>
+                  <small class="data" id="iteraciones"></small>
+                  <small class="data" id="error"></small>
+                </div>
+              </div>
+              <div class="form-col">
+                <div class="input-box">
+                  <input id="data_point" type="text" oninput="inputFloat(this, 10, 2);" required>
+                  <label>Precio de Compra (10):</label>
+                </div>
+                <div class="input-box">
+                  <input id="predicted" type="text" oninput="inputFloat(this, 10, 2);" required disabled>
+                  <label>Precio de Venta (10):</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <script src="/src/private/routes/servidor/cerebro/precioVenta.js"></script>
+    </div>
+  </div>
+</div>

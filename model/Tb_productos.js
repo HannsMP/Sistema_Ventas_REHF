@@ -593,6 +593,31 @@ class Tb_productos extends Table {
     ====================================================================================================
   */
   /** 
+   * @returns {Promise<{compra:number, venta:number}[]>}
+   */
+  readPriceUnic() {
+    return new Promise(async (res, rej) => {
+      try {
+
+        let [result] = await this.app.model.pool(`
+          SELECT 
+            compra, 
+            MAX(venta) as venta
+          FROM 
+            tb_productos
+          GROUP BY 
+            compra
+          ORDER BY 
+            compra
+        `);
+
+        res(result);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
+  /** 
    * @param {number} id 
    * @returns {Promise<{compra:number, venta:number}>}
    */
