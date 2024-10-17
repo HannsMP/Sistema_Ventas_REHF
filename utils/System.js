@@ -3,6 +3,12 @@ const SI = require('systeminformation');
 const { exec } = require('child_process');
 
 class System {
+  os = os;
+  SI = SI;
+  exec = exec;
+  uptime() {
+    return process.uptime();
+  }
   /** @param {'start'|'restart'|'stop'|'status'} action  */
   apache(action) {
     return new Promise((res, rej) => {
@@ -36,6 +42,9 @@ class System {
   }
   networkInterfaces() {
     return os.networkInterfaces();
+  }
+  networkStats() {
+    return SI.networkStats();
   }
   /**
    * @returns {{ ipv4: string, ipv6: string, internal: string }}

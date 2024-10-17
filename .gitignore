@@ -2,6 +2,10 @@
 .temp
 .vs
 .vscode
+src/resource/productos/normal/*
+src/resource/productos/small/*
+src/resource/usuarios/normal/*
+src/resource/usuarios/small/*
 jsconfig.json
 log
 node_modules

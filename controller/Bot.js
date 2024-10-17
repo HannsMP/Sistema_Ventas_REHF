@@ -119,7 +119,7 @@ class Bot {
 
         run(phone, msg, argumentsArray, complete);
       } catch (e) {
-        this.app.logError.writeStart(e);
+        this.app.logError.writeStart(e.message, e.stack);
       }
     });
   }

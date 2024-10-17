@@ -59,7 +59,7 @@ class App {
 
   logSystem = new File(
     this.cache.config.readJSON().SYSTEM.loggerFile,
-    { autoSave: false, extname: '.log', default: '' }
+    { autoSave: true, extname: '.log', default: '' }
   )
 
   /* Server */

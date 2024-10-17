@@ -17,24 +17,25 @@ module.exports = {
     let [JustComand] = arg
 
     let permisos = await this.model.tb_permisos.phonePathAll(phone, JustComand);
-    let sendMsg = [];
 
-    if (permisos.length)
-      permisos.forEach(({ commando, ver }) => {
-        if (!ver) return;
-        let { name, description, cooldown } = this.bot.collection[commando]
-        sendMsg.push(
-          `======== *${name.toUpperCase()}* ========`,
-          `📄 ${description}`,
-          `⏰ Tiempo de enfriamiento: _${cooldown / 1000} seg_`,
-          ''
-        )
-      })
-    else
-      sendMsg.push('No se encontro el comando especificado o puede que no tengas permisos para verlo.')
+    if (!permisos.length) {
+      msg.reply('No se encontro el comando especificado o puede que no tengas permisos para verlo.');
+      return complete();
+    }
 
-    msg.reply(sendMsg.join('\n'));
+    permisos.forEach(({ commando, ver }) => {
+      if (!ver) return;
+      let { name, description, cooldown } = this.bot.collection[commando]
+      let sendMsg = [
+        `======== *${name.toUpperCase()}* ========`,
+        `📄 ${description}`,
+        `⏰ Tiempo de enfriamiento: _${cooldown / 1000} seg_`,
+        ''
+      ];
+      
+      msg.reply(sendMsg.join('\n'));
+    })
 
     complete();
-  }
+}
 }

@@ -4,24 +4,23 @@
 /** @type {{load: boolean, name: string, cooldown: number, onColldown: {}, run: Run}} */
 module.exports = {
   load: true,
-  name: 'reiniciar',
-  cooldown: 5 * 1000,
+  name: 'update',
+  cooldown: 5 * 60 * 1000,
   onColldown: {},
-  description: `Reinicia el sistema, Es bueno refrescar la memoria!
-  Uso: */reiniciar*
-  No tiene parametros`,
+  description: `Actualiza el sistema git a la ultima version del git remoto.
+  Uso: */update *`,
   async run(phone, msg, arg, complete) {
     let permiso = await this.model.tb_permisos.phonePathView(phone, module.exports.name);
-
     if (!permiso) return
 
-    let msgCurrent = await msg.reply('Iniciando Reinicar...');
+    let msgCurrent = await msg.reply('Iniciando actualizacion remota...');
     complete();
 
-    this.system.reboot();
+    await this.system.cmd('(cd /home/eliux/servidor && ping -c 1 google.com && git fetch origin && git reset --hard origin/main) >> /home/eliux/logs/server_cron_log.log 2>&1');
+    await this.system.reboot();
 
     setTimeout(() => {
       msgCurrent.edit('⚠ El proceso fallo.');
-    }, 5000);
+    }, 60 * 1000);
   }
 }
