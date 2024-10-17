@@ -6,6 +6,10 @@ src/resource/productos/normal/*
 src/resource/productos/small/*
 src/resource/usuarios/normal/*
 src/resource/usuarios/small/*
+!src/resource/productos/normal/.gitkeep
+!src/resource/productos/small/.gitkeep
+!src/resource/usuarios/normal/.gitkeep
+!src/resource/usuarios/small/.gitkeep
 jsconfig.json
 log
 node_modules
