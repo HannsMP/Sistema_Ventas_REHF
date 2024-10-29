@@ -1,5 +1,4 @@
-const SocketRouter = require('../utils/SocketRouter');
-const { Table } = require('../utils/UtilsModel');
+const Table = require('../utils/template/Table');
 
 const name = 'tb_fotos'
 const columns = {
@@ -18,6 +17,7 @@ const columns = {
  * }} COLUMNS
  */
 
+/** @extends {Table<COLUMNS>} */
 class Tb_asistencias extends Table {
   /** @param {import('../app')} app */
   constructor(app) {
@@ -25,15 +25,8 @@ class Tb_asistencias extends Table {
     this.columns = columns;
     this.app = app;
 
-    this.io = new SocketRouter([
-      '/control/reportes/asistencia'
-    ], app)
+    this.io = app.socket.node.selectNode('/control/reportes/asistencia', true);
   }
-  /* 
-    ====================================================================================================
-    ============================================== Utiles ==============================================
-    ====================================================================================================
-  */
   /** 
    * @param {number} data 
    * @returns {Promise<import('mysql').OkPacket>}
@@ -65,7 +58,7 @@ class Tb_asistencias extends Table {
         ])
 
         if (result.affectedRows)
-          this.io.emit(
+          this.io.sockets.emit(
             '/asistencias/data/insert',
             _ => this.readIdJoin(result.insertId)
           )
@@ -264,7 +257,7 @@ class Tb_asistencias extends Table {
           usuario_id
         ])
 
-        this.io.emit(
+        this.io.sockets.emit(
           '/asistencias/data/lastDisconnection',
           _ => this.readTodayUser(usuario_id)
         )

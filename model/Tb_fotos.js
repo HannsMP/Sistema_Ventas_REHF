@@ -1,4 +1,4 @@
-const { Table } = require('../utils/UtilsModel');
+const Table = require('../utils/template/Table');
 const deletePath = require('../utils/function/deletePath');
 const { resolve } = require('path');
 
@@ -27,6 +27,7 @@ const columns = {
 * }} COLUMNS
 */
 
+/** @extends {Table<COLUMNS>} */
 class Tb_fotos extends Table {
   cacheImg = resolve('.temp', 'img')
   /** @param {import('../app')} app */
@@ -36,11 +37,6 @@ class Tb_fotos extends Table {
     this.app = app;
     deletePath(this.cacheImg);
   }
-  /* 
-    ====================================================================================================
-    ============================================== Utiles ==============================================
-    ====================================================================================================
-  */
   /** 
    * @param {COLUMNS} data 
    * @returns {Promise<import('mysql').OkPacket>}
@@ -92,34 +88,6 @@ class Tb_fotos extends Table {
         ])
 
         res(result);
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
-  /** 
-   * @param {number} id
-   * @returns {Promise<COLUMNS>}
-   */
-  readId(id) {
-    return new Promise(async (res, rej) => {
-      try {
-        this.constraint('id', id);
-
-        let [result] = await this.app.model.poolValues(`
-          SELECT
-            *
-          FROM
-            tb_fotos
-          WHERE
-            id = ?
-        `, [
-          id
-        ])
-
-        let data = result[0];
-
-        res(data);
       } catch (e) {
         rej(e);
       }

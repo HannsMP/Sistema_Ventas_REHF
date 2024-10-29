@@ -3,7 +3,24 @@ const FileJSON = require('../utils/FileJSON');
 const { resolve } = require('path');
 
 class Cache {
-  config = new FileJSON(resolve('.cache', 'config', 'config.json'), true, {
+  /** 
+   * @type {FileJSON<{
+   *   name: string,
+   *   version: string,
+   *   description: string,
+   *   main: string,
+   *   type: string,
+   *   scripts: string,
+   *   keywords: string[],
+   *   author: string,
+   *   license: string,
+   *   dependencies: {[npm:string]: string},
+   *   devDependencies: {[npm:string]: string}
+   * }>}
+   */
+  packageJSON = new FileJSON(resolve('package.json'));
+
+  configJSON = new FileJSON(resolve('.cache', 'config', 'config.json'), true, {
     DATABASE: {
       autoRun: true,
       /** @type {import('mysql').PoolConfig} */
@@ -55,7 +72,8 @@ class Cache {
       loggerFile: '/home/eliux/logs/server_cron_log.log'
     }
   });
-  /** 
+
+  /** ----------------------------------------------------------------------------------------------------
    * @type {Generador<{
    *   usuario: {
    *     id: Number,
@@ -76,30 +94,39 @@ class Cache {
    * }>} 
    */
   apiKey = new Generador(
-    '    -    -    -    ', // formato
-    { letters: true, numeric: true, symbol: false }, // opciones
+    '    -    -    -    ', // formato pantilla
     {
+      letters: true,
+      numeric: true,
+      symbol: false,
       pathFile: resolve('.cache', 'memory', 'apikey.json'),
       expire: 24 * 60 * 60 * 1000,
       autoResetRun: true,
       autoSave: true
     }
   );
-  /** 
+
+  /** ----------------------------------------------------------------------------------------------------
    * @type {Generador<{
    *   phone: string
    * }>} 
    */
   codeRecovery = new Generador(
-    '      ', // formato
-    { letters: false, numeric: true, symbol: false }, // opciones
+    '      ', // formato pantilla
     {
+      letters: false,
+      numeric: true,
+      symbol: false,
       pathFile: resolve('.cache', 'memory', 'codeRecovery.json'),
       expire: 5 * 60 * 1000,
       autoResetRun: false,
       autoSave: true
     }
   );
+
+  constructor() {
+    console.log(this.packageJSON.readJSON());
+  }
 }
 
 module.exports = Cache;

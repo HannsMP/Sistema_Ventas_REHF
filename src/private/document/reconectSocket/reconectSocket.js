@@ -1,9 +1,10 @@
 /** @type {import('socket.io').Socket} */
-var socket;
-document.addEventListener('DOMContentLoaded', () => {
+var socket = io();
+(() => {
   function reconectSocket() {
     setTimeout(async _ => {
       try {
+        alarm.info('Intentando reconectar...');
         let res = await query.get('/socket.io/socket.io.js')
         if (!res.ok) return reconectSocket();
         window.location.reload();
@@ -13,33 +14,52 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1000)
   }
 
-  function initializeSocket() {
-    socket = io();
+  let CONNECT = new Promise(res => {
+    socket.on('connect', () => res());
+  }); 
 
-    socket.on('connect', () => {
+  let CONNECTED = () => new Promise((res, rej) => {
+    let timeoutId = setTimeout(_ => CONNECTED() && rej(), 200);
+    socket.emit('connected', _ => {
       alarm.success('Conexión establecida');
+      clearTimeout(timeoutId);
+      res();
     });
+  })
+
+  document.addEventListener('DOMContentLoaded', async () => {
 
     socket.on('disconnect', () => {
-      alarm.error('Desconectado. Intentando reconectar...');
+      alarm.error('Desconectado...');
+      reconectSocket();
+    });
+
+    socket.on('disconnecting', () => {
+      alarm.error('Desconectando...');
+      reconectSocket();
+    });
+
+    socket.on('error', () => {
+      alarm.error('Error...');
       reconectSocket();
     });
 
     socket.on('reconnect_attempt', () => {
-      alarm.info('Intentando reconectar...');
+      alarm.error('Intento de reconexión...');
       reconectSocket();
     });
 
     socket.on('reconnect_error', (error) => {
-      alarm.error('Error al reconectar: ' + error.message);
+      alarm.error('Error de reconexión... ');
       reconectSocket();
     });
 
     socket.on('reconnect_failed', () => {
-      alarm.error('Fallo al reconectar. Intentando nuevamente...');
+      alarm.error('Error al volver a conectar...');
       reconectSocket();
     });
-  }
 
-  initializeSocket();
-})
+    await CONNECT;
+    CONNECTED();
+  })
+})()

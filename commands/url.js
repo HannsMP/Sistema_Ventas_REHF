@@ -15,14 +15,10 @@ module.exports = {
 
     if (!permiso) return
 
-    let originalUrl = `http://${this.ip}:${this.cache.config.readJSON().SERVER.port}`;
+    let originalUrl = `http://${this.ip}:${this.cache.configJSON.readJSON().SERVER.port}`;
 
     let msgCurrent = await msg.reply(originalUrl);
 
     complete();
-
-    // let shortUrl = await this.shortUrl.insert(originalUrl);
-
-    // msgCurrent.edit(this.shortUrl.join(shortUrl));
   }
 }

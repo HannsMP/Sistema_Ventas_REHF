@@ -23,7 +23,7 @@ module.exports = {
     let [instancia, propiedades, asignador] = arg;
     let sendMsg = [];
 
-    let dataConfig = this.cache.config.readJSON();
+    let dataConfig = this.cache.configJSON.readJSON();
     try {
       if (!dataConfig.hasOwnProperty(instancia))
         throw `No existe la propiedad principal ${instancia}`;
@@ -54,7 +54,7 @@ module.exports = {
             data = data[a];
         });
 
-        this.cache.config.writeJSON(dataConfig);
+        this.cache.configJSON.writeJSON(dataConfig);
       } else {
         if (propiedades) {
           propiedades.split('.').forEach(a => {

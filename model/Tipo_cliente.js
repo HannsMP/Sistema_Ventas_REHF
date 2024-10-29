@@ -1,5 +1,4 @@
-const { Table } = require('../utils/UtilsModel');
-const SocketRouter = require('../utils/SocketRouter');
+const Table = require('../utils/template/Table');
 
 const name = 'tipo_cliente';
 const columns = {
@@ -16,6 +15,7 @@ const columns = {
  * }} COLUMNS
  */
 
+/** @extends {Table<COLUMNS>} */
 class Tipo_cliente extends Table {
   /** @param {import('../app')} app */  constructor(app) {
     super(name);

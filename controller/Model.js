@@ -2,8 +2,6 @@ const mysql = require('mysql');
 const { resolve } = require('path');
 const { exec } = require('child_process');
 
-const { QueryError, DatabaseError } = require('../utils/UtilsModel');
-
 const Tb_usuarios = require('../model/Tb_usuarios');
 const Tb_fotos = require('../model/Tb_fotos');
 const Tb_acceso = require('../model/Tb_acceso');
@@ -20,6 +18,9 @@ const Tipo_rol = require('../model/Tipo_rol');
 const Tipo_cliente = require('../model/Tipo_cliente');
 const Tipo_documento = require('../model/Tipo_documento');
 const Tipo_metodo_pago = require('../model/Tipo_metodo_pago');
+
+const DatabaseError = require('../utils/error/DataBase');
+const QueryError = require('../utils/error/Query');
 
 /** @typedef {{affectedRows:number, changedRows:number, fieldCount:number, insertId: number, message:string, protocol41:boolean, serverStatus:number|undefined, warningCount: number|undefined}} okPacket */
 
@@ -49,7 +50,7 @@ class Model {
     this.tipo_documento = new Tipo_documento(app);
     this.tipo_metodo_pago = new Tipo_metodo_pago(app);
 
-    let cnfg = app.cache.config.readJSON();
+    let cnfg = app.cache.configJSON.readJSON();
 
     this.poolQuery = mysql.createPool(cnfg.DATABASE.production);
 
@@ -128,7 +129,7 @@ class Model {
    */
   backup() {
     return new Promise((res, rej) => {
-      let { user, password, database } = this.app.cache.config.readJSON().DATABASE.owner;
+      let { user, password, database } = this.app.cache.configJSON.readJSON().DATABASE.owner;
       let fileBackup = resolve('.backup', 'sql', Date.now() + '.sql');
 
       exec(
@@ -147,7 +148,7 @@ class Model {
    */
   restore(filePath) {
     return new Promise((resolve, reject) => {
-      let { user, password, database } = this.app.cache.config.readJSON().DATABASE.owner;
+      let { user, password, database } = this.app.cache.configJSON.readJSON().DATABASE.owner;
 
       exec(
         `mysql -u ${user} -p${password} ${database} < ${filePath}`,

@@ -1,6 +1,6 @@
 const { resolve } = require('path');
 
-const { ModelError } = require('./../../../utils/UtilsModel');
+const ModelError = require('./../../../utils//error/Model');
 
 /** @typedef {import('../../../app')} App */
 /** @typedef {import('../../../utils/SocketNode')} SocketNode */
@@ -57,8 +57,12 @@ module.exports = {
 
         await this.model.tb_asistencias.insertUserId(data_Usuario.id);
 
+        let dataPackage = this.cache.packageJSON.readJSON()
         apiKey = this.cache.apiKey.create({
-          usuario: data_Usuario, theme
+          theme,
+          usuario: data_Usuario,
+          version: dataPackage.version,
+          author: dataPackage.author
         });
 
         res.cookie('apiKey', apiKey, {
@@ -82,7 +86,7 @@ module.exports = {
     async function (req, res, next) {
       let recovery = this.bot.state() == 'CONNECTED';
       let theme = req.cookies['config-theme'];
-      
+
       try {
         if (req.session.intent == 3) {
 
@@ -119,7 +123,13 @@ module.exports = {
         else
           theme = req.cookies['config-theme'];
 
-        let apiKey = this.cache.apiKey.create({ usuario: data_Usuario });
+        let dataPackage = this.cache.packageJSON.readJSON()
+        let apiKey = this.cache.apiKey.create({
+          theme,
+          usuario: data_Usuario,
+          version: dataPackage.version,
+          author: dataPackage.author
+        });
 
         res.cookie('login', { usuario, clave }, {
           maxAge: 30 * 24 * 60 * 60 * 60 * 1000,

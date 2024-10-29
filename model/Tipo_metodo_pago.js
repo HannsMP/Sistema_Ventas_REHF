@@ -1,4 +1,4 @@
-const { Table } = require('../utils/UtilsModel');
+const Table = require('../utils/template/Table');
 
 const name = 'tipo_metodo_pago';
 const columns = {
@@ -17,6 +17,7 @@ const columns = {
  * }} COLUMNS
  */
 
+/** @extends {Table<COLUMNS>} */
 class Tipo_metodo_pago extends Table {
   /** @param {import('../app')} app */  constructor(app) {
     super(name);

@@ -5,7 +5,6 @@ const { resolve, join } = require('path');
 const { readdirSync } = require('fs');
 
 const deletePath = require('../utils/function/deletePath');
-const SocketRouter = require('../utils/SocketRouter');
 
 /** @typedef {import('../app')} App  */
 /** @typedef {(this: App, phone: string, msg: import('whatsapp-web.js').Message, arg: string[], complete: (err: Error?)=>void)=>void} Run */
@@ -25,9 +24,7 @@ class Bot {
 
     this.platform = app.system.platform();
 
-    this.io = new SocketRouter([
-      '/control/administracion/bot'
-    ], app)
+    this.io = app.socket.node.selectNode('/control/administracion/bot', true);
 
     /** @type {import('whatsapp-web.js').ClientOptions} */
     let clientOption = {
@@ -46,24 +43,24 @@ class Bot {
 
     this.client.on('auth_failure', async msg => {
       this.#state = 'AUTHENTICATION_FAILURE';
-      this.io.emit('/bot/authFailure', msg);
+      this.io.sockets.emit('/bot/authFailure', msg);
     });
 
     this.client.on('ready', async () => {
       this.#state = 'CONNECTED';
-      this.io.emit('/bot/ready', this.info());
+      this.io.sockets.emit('/bot/ready', this.info());
       let log = this.app.logSuccess.writeStart('[Bot] listo');
       this.client.setStatus(log)
     });
 
     this.client.on('disconnected', async () => {
-      this.io.emit('/bot/disconnected', this.info())
+      this.io.sockets.emit('/bot/disconnected', this.info())
     });
 
     this.client.on('qr', (qr) => {
       qrcode.generate(qr, { small: true }, qrString => {
         console.log(qrString);
-        this.io.emit('/bot/qr', qrString);
+        this.io.sockets.emit('/bot/qr', qrString);
       });
     });
 
@@ -99,7 +96,7 @@ class Bot {
           if (!cooldown) return;
 
           data.use++;
-          this.io.emit('/bot/command/use', { command, use: data.use });
+          this.io.sockets.emit('/bot/command/use', { command, use: data.use });
           onColldown[phone] = { start: Date.now(), intent: 1 };
           setTimeout(() => { delete onColldown[phone] }, cooldown);
         }
@@ -182,13 +179,13 @@ class Bot {
   async on() {
     await this.client.initialize();
     this.#state = 'AUTHENTICATING';
-    this.io.emit('/bot/initialize');
+    this.io.sockets.emit('/bot/initialize');
   }
   async off() {
     await this.client.destroy();
     this.app.logSuccess.writeStart('[Bot] apagado');
     this.#state = 'DISCONNECTED';
-    this.io.emit('/bot/destroy', this.info());
+    this.io.sockets.emit('/bot/destroy', this.info());
   }
   async logout() {
     await this.client.logout();
@@ -196,7 +193,7 @@ class Bot {
     deletePath(this.cacheWwebjs);
     this.app.logSuccess.writeStart('[Bot] sesion cerrada');
     this.#state = 'LOGOUT';
-    this.io.emit('/bot/logout', this.info());
+    this.io.sockets.emit('/bot/logout', this.info());
   }
   sendMessage(phone, message) {
     if (!this.ready) return;

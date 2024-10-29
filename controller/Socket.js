@@ -1,7 +1,6 @@
 const { Server } = require('socket.io');
 const cookie = require('cookie');
 const SocketNode = require('../utils/SocketNode');
-const SocketRouter = require('../utils/SocketRoot');
 
 /** @typedef {import('socket.io').Socket<ListenEvents, EmitEvents, ServerSideEvents, SocketData>} SocketClient */
 
@@ -13,26 +12,30 @@ class Socket {
     this.app = app;
 
     this.node = new SocketNode;
-    this.rootControl = new SocketRouter('/control', this.app);
 
     this.io.use(async (socketClient, next) => {
       try {
         let cookies = socketClient.handshake.headers.cookie;
 
-        if (!cookies) throw new Error('No se encontraron cookies');
+        if (!cookies)
+          throw new Error('No se encontraron cookies');
 
         let referer = socketClient.handshake.headers.referer;
 
-        if (!referer) throw new Error('No Existe la referencia');
+        if (!referer)
+          throw new Error('No Existe la referencia');
 
         let parsedCookies = cookie.parse(cookies);
         let apikey = parsedCookies.apiKey;
 
-        if (!apikey) throw new Error('ApiKey no encontrada en las cookies');
+        if (!apikey)
+          throw new Error('ApiKey no encontrada en las cookies');
 
         socketClient.session = { apikey };
 
-        if (!this.app.cache.apiKey.exist(apikey)) throw new Error('ApiKey no válida');
+        if (!this.app.cache.apiKey.exist(apikey))
+          throw new Error('ApiKey no válida');
+
         socketClient.session.apikey = apikey;
 
         let route = new URL(referer)
@@ -40,11 +43,8 @@ class Socket {
 
         let { usuario } = this.app.cache.apiKey.read(apikey);
 
-        await socketClient.join([
-          `rol:${usuario.rol_id}`,
-          `usr:${usuario.id}`,
-          `api:${apikey}`
-        ]);
+        let tags = [`rol:${usuario.rol_id}`, `usr:${usuario.id}`, `api:${apikey}`];
+        socketClient.session.tags = tags;
 
         socketClient.on('disconnect', () => {
           this.app.model.tb_asistencias.updateUserId(usuario.id);
@@ -60,7 +60,11 @@ class Socket {
       }
     })
     this.io.on('connection', socketClient => {
-      this.node.add(socketClient.session.route, socketClient);
+      this.node.addSocket(
+        socketClient.session.route,
+        socketClient,
+        socketClient.session.tags
+      );
     })
   }
 
@@ -74,7 +78,7 @@ class Socket {
    * @returns {Promise<T>} 
    */
   async #filterEmit(route, callback, eventName, data, each) {
-    let socketsRoot = this.node.selector(route);
+    let socketsRoot = this.node.selectNode(route).sockets;
 
     if (!socketsRoot.size) return null;
 

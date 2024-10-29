@@ -1,5 +1,4 @@
-const { Table } = require('../utils/UtilsModel');
-const SocketRouter = require('../utils/SocketRouter');
+const Table = require('../utils/template/Table');
 
 const name = 'tb_acceso';
 const columns = {
@@ -20,6 +19,7 @@ const columns = {
  * }} COLUMNS
  */
 
+/** @extends {Table<COLUMNS>} */
 class Tb_acceso extends Table {
   /** @param {import('../app')} app */
   constructor(app) {
@@ -27,9 +27,7 @@ class Tb_acceso extends Table {
     this.columns = columns;
     this.app = app;
 
-    this.io = new SocketRouter([
-      '/control/administracion/acceso'
-    ], app)
+    this.io = app.socket.node.selectNode('/control/administracion/acceso');
   }
   /* 
     ====================================================================================================
@@ -99,7 +97,7 @@ class Tb_acceso extends Table {
           disabled_id
         ]);
 
-        this.io.emit(
+        this.io.sockets.emit(
           '/accesos/permisos/insert',
           _ => this.readIdJoin(result.insertId)
         )
@@ -162,7 +160,7 @@ class Tb_acceso extends Table {
           id
         ]);
 
-        this.io.emit(
+        this.io.sockets.emit(
           '/accesos/permisos/updateId',
           _ => this.readIdJoin(id)
         )
@@ -211,7 +209,7 @@ class Tb_acceso extends Table {
           id
         ]);
 
-        this.io.emit(
+        this.io.sockets.emit(
           '/accesos/permisos/state',
           {
             id,
@@ -603,33 +601,6 @@ class Tb_acceso extends Table {
         let data = [ver, agregar, editar, eliminar, ocultar, exportar];
 
         res({ label, data });
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
-  /* 
-    ====================================================================================================
-    ============================================== Utiles ==============================================
-    ====================================================================================================
-  */
-  /** 
-   * @returns {Promise<COLUMNS[]>}
-   */
-  readAll() {
-    return new Promise(async (res, rej) => {
-      try {
-        let [result] = await this.app.model.pool(`
-            SELECT 
-              id,
-              menu_id,
-              rol_id,
-              permiso_id
-            FROM
-              tb_acceso
-          `)
-
-        res(result);
       } catch (e) {
         rej(e);
       }

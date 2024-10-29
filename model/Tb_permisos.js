@@ -1,4 +1,4 @@
-const { Table } = require('../utils/UtilsModel');
+const Table = require('../utils/template/Table');
 
 const name = 'tb_permisos';
 const columns = {
@@ -23,6 +23,7 @@ const columns = {
  * }} COLUMNS
  */
 
+/** @extends {Table<COLUMNS>} */
 class Tb_permisos extends Table {
   /** @param {import('../app')} app */  constructor(app) {
     super(name);

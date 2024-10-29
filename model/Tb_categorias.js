@@ -1,6 +1,5 @@
-const generateUniqueId = require('generate-unique-id');
-const { Table } = require('../utils/UtilsModel');
-const SocketRouter = require('../utils/SocketRouter');
+const Table = require('../utils/template/Table');
+const Id = require('../utils/Id');
 
 const name = 'tb_categorias';
 const columns = {
@@ -23,18 +22,21 @@ const columns = {
  * }} COLUMNS
  */
 
+/** @extends {Table<COLUMNS>} */
 class Tb_categorias extends Table {
+  id = new Id('T    ', { letters: true, numeric: true });
+
   /** @param {import('../app')} app */
   constructor(app) {
     super(name);
     this.columns = columns;
     this.app = app;
 
-    this.io = new SocketRouter([
+    this.io = app.socket.node.selectNodes(
       '/control/productos',
       '/control/mantenimiento/categorias',
       '/control/mantenimiento/inventario',
-    ], app)
+    );
   }
   /* 
     ====================================================================================================
@@ -81,7 +83,7 @@ class Tb_categorias extends Table {
           estado
         ]);
 
-        this.io.emit(
+        this.io.emitSocket(
           '/categorias/data/insert',
           {
             id: result.insertId,
@@ -93,25 +95,6 @@ class Tb_categorias extends Table {
         )
 
         res(result)
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
-  /**
-   * @returns {Promise<COLUMNS[]>}
-   */
-  readAll() {
-    return new Promise(async (res, rej) => {
-      try {
-        let [result] = await this.app.model.pool(`
-          SELECT 
-            *
-          FROM
-            tb_categorias
-        `);
-
-        res(result);
       } catch (e) {
         rej(e);
       }
@@ -187,35 +170,6 @@ class Tb_categorias extends Table {
   }
   /** 
    * @param {number} id 
-   * @returns {Promise<COLUMNS>}
-   */
-  readId(id) {
-    return new Promise(async (res, rej) => {
-      try {
-
-        this.constraint('id', id);
-
-        let [result] = await this.app.model.poolValues(`
-          SELECT
-            *
-          FROM
-            tb_categorias
-          WHERE
-            id = ?
-        `, [
-          id
-        ]);
-
-        let data = result[0];
-
-        res(data);
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
-  /** 
-   * @param {number} id 
    * @param {COLUMNS} data 
    * @returns {Promise<import('mysql').OkPacket>}
    */
@@ -245,7 +199,7 @@ class Tb_categorias extends Table {
           id
         ]);
 
-        this.io.emit(
+        this.io.emitSocket(
           '/categorias/data/updateId',
           {
             id,
@@ -284,10 +238,10 @@ class Tb_categorias extends Table {
           id
         ]);
 
-        this.io.emit(
+        this.io.emitSocket(
           '/categorias/data/state',
           estado
-            ? _ => this.readId(id)
+            ? _ => this.readIdAll(id)
             : { id, estado }
         )
 
@@ -314,7 +268,7 @@ class Tb_categorias extends Table {
           id
         ]);
 
-        this.io.emit(
+        this.io.emitSocket(
           '/categorias/data/deleteId',
           { id }
         )
@@ -352,11 +306,11 @@ class Tb_categorias extends Table {
           id
         ]);
 
-        this.app.model.tb_productos.io.emit(
+        this.app.model.tb_productos.io.emitSocket(
           '/productos/categorias/deleteId',
           { id }
         )
-        this.io.emit(
+        this.io.emitSocket(
           '/categorias/data/deleteId',
           { id }
         )
@@ -408,9 +362,7 @@ class Tb_categorias extends Table {
         let existKey = 1, uniqueKey = '';
 
         while (existKey) {
-          uniqueKey = 'T'
-            + generateUniqueId({ length: 4, useLetters: true, useNumbers: false })
-              .toUpperCase();
+          uniqueKey = this.id.generate();
 
           let [result] = await this.app.model.poolValues(`
           SELECT 

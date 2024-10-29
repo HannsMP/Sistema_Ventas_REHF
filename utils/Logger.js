@@ -2,7 +2,6 @@ const { colors, optionColors } = require('../utils/function/color');
 const TimeClass = require('../utils/Time');
 const File = require('../utils/File');
 const mergeObjects = require('../utils/function/merge');
-const SocketRouter = require('./SocketRouter');
 
 /**
  * @type {{
@@ -45,9 +44,7 @@ class Logger extends File {
 
     this.Time = Time;
 
-    this.io = new SocketRouter([
-      '/control/reportes/registros'
-    ], app)
+    this.io = app.socket.node.selectNode('/control/reportes/registros',true);
   }
   reset() {
     this.writeFile('');
@@ -67,7 +64,7 @@ class Logger extends File {
 
     this.#log(time, ...msg);
     if (this.#option.emit)
-      this.io.emit(
+      this.io.sockets.emit(
         `/logger/${this.property.name}/writeStart`,
         { log, stat: this.statFile() }
       )
@@ -84,7 +81,7 @@ class Logger extends File {
 
     this.#log(time, ...msg);
     if (this.#option.emit)
-      this.io.emit(
+      this.io.sockets.emit(
         `/logger/${this.property.name}/writeEnd`,
         { log, stat: this.statFile() }
       )

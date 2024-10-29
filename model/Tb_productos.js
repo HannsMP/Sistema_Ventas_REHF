@@ -1,6 +1,5 @@
-const generateUniqueId = require('generate-unique-id');
-const { Table } = require('../utils/UtilsModel');
-const SocketRouter = require('../utils/SocketRouter');
+const Table = require('../utils/template/Table');
+const Id = require('../utils/Id');
 
 const name = 'tb_productos';
 const columns = {
@@ -33,18 +32,21 @@ const columns = {
  * }} COLUMNS
  */
 
+/** @extends {Table<COLUMNS>} */
 class Tb_productos extends Table {
+  id = new Id('I        ', { letters: { upper: true } });
+
   /** @param {import('../app')} app */
   constructor(app) {
     super(name);
     this.columns = columns;
     this.app = app;
 
-    this.io = new SocketRouter([
+    this.io = app.socket.node.selectNodes(
       '/control/productos',
       '/control/movimientos/ventas',
       '/control/mantenimiento/inventario',
-    ], app)
+    )
   }
   /* 
     ====================================================================================================
@@ -110,7 +112,7 @@ class Tb_productos extends Table {
           foto_id || 2
         ]);
 
-        this.io.emit(
+        this.io.emitSocket(
           '/productos/data/insert',
           _ => this.readIdJoin(result.insertId)
         )
@@ -177,7 +179,7 @@ class Tb_productos extends Table {
           values
         );
 
-        this.io.emit(
+        this.io.emitSocket(
           '/productos/data/updateId',
           _ => this.readIdJoin(id)
         )
@@ -215,7 +217,7 @@ class Tb_productos extends Table {
           id
         ]);
 
-        this.io.emit(
+        this.io.emitSocket(
           '/productos/data/state',
           estado
             ? _ => this.readIdJoin(id)
@@ -250,7 +252,7 @@ class Tb_productos extends Table {
           id
         ]);
 
-        this.io.emit(
+        this.io.emitSocket(
           '/productos/data/deleteId',
           { id }
         )
@@ -526,7 +528,7 @@ class Tb_productos extends Table {
             categoria_id
           ]);
 
-        this.io.emit(
+        this.io.emitSocket(
           '/productos/categorias/state',
           async () => {
             let data = estado
@@ -718,9 +720,7 @@ class Tb_productos extends Table {
         let existKey = 1, uniqueKey = '';
 
         while (existKey) {
-          uniqueKey = 'I'
-            + generateUniqueId({ length: 8, useLetters: true, useNumbers: false })
-              .toUpperCase();
+          uniqueKey = this.id.generate();
 
           let [result] = await this.app.model.poolValues(`
             SELECT
@@ -821,59 +821,6 @@ class Tb_productos extends Table {
         })
 
         res({ label, data });
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
-  /* 
-    ====================================================================================================
-    ============================================== Utiles ==============================================
-    ====================================================================================================
-  */
-  /**
-   * @returns {Promise<COLUMNS[]>}
-   */
-  readAll() {
-    return new Promise(async (res, rej) => {
-      try {
-        let [result] = await this.app.model.pool(`
-          SELECT
-            *
-          FROM
-            tb_productos
-        `);
-
-        res(result);
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
-  /** 
-   * @param {number} id 
-   * @returns {Promise<COLUMNS>}
-   */
-  readId(id) {
-    return new Promise(async (res, rej) => {
-      try {
-
-        this.constraint('id', id);
-
-        let [result] = await this.app.model.poolValues(`
-          SELECT
-            *
-          FROM
-            tb_productos
-          WHERE
-            id = ?
-        `, [
-          id
-        ]);
-
-        let data = result[0];
-
-        res(data);
       } catch (e) {
         rej(e);
       }

@@ -30,7 +30,7 @@ module.exports = {
 
         let { id } = req.body;
 
-        let list = await this.model.tb_categorias.readId(Number(id));
+        let list = await this.model.tb_categorias.readIdAll(Number(id));
 
         return res.status(200).json({ list })
       } catch (e) {

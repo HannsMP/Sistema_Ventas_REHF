@@ -6,16 +6,17 @@ const { resolve } = require('path');
 
 /** 
  * @type {{
-*   load:boolean, 
-*   route:string, 
-*   viewLayoutPath:string, 
-*   viewRenderPath:string, 
-*   viewErrorPath:string, 
-*   use: routeArr, 
-*   get: routeArr, 
-*   post: routeArr,
-*   nodeRoute: (this: App, node: SocketNode)=>void
-* }} 
+ *   load:boolean, 
+ *   route:string, 
+ *   viewLayoutPath:string, 
+ *   viewRenderPath:string, 
+ *   viewErrorPath:string, 
+ *   use: routeArr, 
+ *   get: routeArr, 
+ *   post: routeArr,
+ *   nodeOption: {last:boolean, tagsName:boolean, collector:boolean},
+ *   nodeRoute: (this: App, node: SocketNode)=>void
+ * }} 
 */
 module.exports = {
   load: true,
@@ -37,6 +38,9 @@ module.exports = {
       res.render(module.exports.viewRenderPath, { session, userLayout });
     },
   ],
+  nodeOption: {
+    last: true,
+  },
   nodeRoute: function (node) {
     let internalId;
 
@@ -46,7 +50,7 @@ module.exports = {
       internalId = null;
     })
 
-    node.ev.on('add', () => {
+    node.ev.on('connected', () => {
       if (!internalId)
         internalId = setInterval(() => {
           let CurrentLoadData = this.system.currentLoad();

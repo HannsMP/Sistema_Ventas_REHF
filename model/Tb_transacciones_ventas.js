@@ -1,6 +1,5 @@
-const generateUniqueId = require('generate-unique-id');
-const SocketRouter = require('../utils/SocketRouter');
-const { Table } = require('../utils/UtilsModel');
+const Table = require('../utils/template/Table');
+const Id = require('../utils/Id');
 
 const name = 'tb_transacciones_ventas';
 const columns = {
@@ -30,20 +29,18 @@ const columns = {
  * }} COLUMNS
  */
 
+/** @extends {Table<COLUMNS>} */
 class tb_transacciones_ventas extends Table {
+  id = new Id('S        ', { letters: true, numeric: true });
+
   /** @param {import('../app')} app */
   constructor(app) {
     super(name);
     this.columns = columns;
     this.app = app;
 
-    this.io = new SocketRouter([
-      '/control/reportes/ventas'
-    ], app)
-
-    this.io2 = new SocketRouter([
-      '/control/movimientos/ventas'
-    ], app)
+    this.io = app.socket.node.selectNode('/control/reportes/ventas');
+    this.io2 = app.socket.node.selectNode('/control/movimientos/ventas');
   }
   /** 
    * @param {COLUMNS} data 
@@ -111,13 +108,12 @@ class tb_transacciones_ventas extends Table {
         );
 
 
-        this.io.emit(
+        this.io.sockets.emit(
           '/transacciones_ventas/data/insert',
           _ => this.readJoinId(result.insertId)
         )
 
-        this.io2.emitUser(
-          usuario_id,
+        this.io2.tagsName.get(`usr:${usuario_id}`).emit(
           '/transacciones_ventas/data/insert',
           _ => this.readJoinId(result.insertId)
         )
@@ -319,14 +315,13 @@ class tb_transacciones_ventas extends Table {
 
         let dataEmitAfter = await this.readJoinId(id);
 
-        this.io.emit(
+        this.io.sockets.emit(
           '/transacciones_ventas/data/updateId',
           dataEmitAfter
         )
 
         if (dataEmitBefore.usuario_id == dataEmitAfter.usuario_id) {
-          this.io2.emitUser(
-            dataEmitBefore.usuario_id,
+          this.io2.tagsName.get(`usr:${dataEmitBefore.usuario_id}`).emit(
             '/transacciones_ventas/data/deleteId',
             {
               before: dataEmitBefore,
@@ -334,8 +329,7 @@ class tb_transacciones_ventas extends Table {
               usuario_id: dataEmitBefore.usuario_id
             }
           )
-          this.io2.emitUser(
-            dataEmitAfter.usuario_id,
+          this.io2.tagsName.get(`usr:${dataEmitAfter.usuario_id}`).emit(
             '/transacciones_ventas/data/updateId',
             dataEmitAfter
           )
@@ -374,15 +368,14 @@ class tb_transacciones_ventas extends Table {
           id
         ]);
 
-        this.io.emit(
+        this.io.sockets.emit(
           '/transacciones_ventas/data/deleteId',
           { id }
         )
 
         let dataEmit = await this.readJoinId(id);
 
-        this.io2.emitUser(
-          dataEmit.usuario_id,
+        this.io2.tagsName.get(`usr:${dataEmit.usuario_id}`).emit(
           '/transacciones_ventas/data/deleteId',
           dataEmit
         )
@@ -497,8 +490,7 @@ class tb_transacciones_ventas extends Table {
         let existKey = 1, uniqueKey = '';
 
         while (existKey) {
-          uniqueKey = 'S'
-            + generateUniqueId({ length: 8, useLetters: true, useNumbers: true });
+          uniqueKey = this.id.generate();
 
           let [result] = await this.app.model.poolValues(`
             SELECT
@@ -616,7 +608,7 @@ class tb_transacciones_ventas extends Table {
           id
         ]);
 
-        this.io.emit(
+        this.io.sockets.emit(
           '/transacciones_ventas/data/refreshId',
           { id, descuento }
         )

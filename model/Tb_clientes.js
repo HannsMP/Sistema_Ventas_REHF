@@ -1,5 +1,4 @@
-const { Table } = require('../utils/UtilsModel');
-const SocketRouter = require('../utils/SocketRouter');
+const Table = require('../utils/template/Table');
 
 const name = 'tb_clientes';
 const columns = {
@@ -27,16 +26,17 @@ const columns = {
  * }} COLUMNS
  */
 
+/** @extends {Table<COLUMNS>} */
 class Tb_clientes extends Table {
   /** @param {import('../app')} app */  constructor(app) {
     super(name);
     this.columns = columns;
     this.app = app;
 
-    this.io = new SocketRouter([
+    this.io = app.socket.node.selectNodes(
       '/control/movimientos/ventas',
       '/control/mantenimiento/clientes',
-    ], app)
+    )
   }
   /* 
     ====================================================================================================
@@ -97,7 +97,7 @@ class Tb_clientes extends Table {
           estado
         ]);
 
-        this.io.emit(
+        this.io.emitSocket(
           '/clientes/data/insert',
           _ => this.readIdJoin(result.insertId)
         )
@@ -254,7 +254,7 @@ class Tb_clientes extends Table {
           id
         ]);
 
-        this.io.emit(
+        this.io.emitSocket(
           '/clientes/data/updateId',
           _ => this.readIdJoin(id)
         )
@@ -288,7 +288,7 @@ class Tb_clientes extends Table {
           id
         ]);
 
-        this.io.emit(
+        this.io.emitSocket(
           '/clientes/data/state',
           estado
             ? _ => this.readIdJoin(id)

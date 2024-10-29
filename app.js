@@ -18,12 +18,15 @@ const Bot = require('./controller/Bot');
 const NeuralNetwork = require('./controller/NeuralNetwork');
 
 /* Utils */
-const { ModelError, QueryError, DatabaseError } = require('./utils/UtilsModel');
-const ShortUrl = require('./utils/ShortUrl');
 const Logger = require('./utils/Logger');
 const System = require('./utils/System');
 const Time = require('./utils/Time');
 const File = require('./utils/File');
+
+/* Error */
+const DatabaseError = require('./utils/error/DataBase');
+const QueryError = require('./utils/error/Query');
+const ModelError = require('./utils/error/Model');
 
 /** @typedef {(this: App, req: import('express').Request, res: import('express').Response, next: import('express').NextFunction)=>void} callbackRoute */
 /** @typedef {{load:boolean, route:string, use:callbackRoute[], get:callbackRoute[], post:callbackRoute[], nodeRoute: (node: import('./utils/SocketNode'))=>void}} dataRoute */
@@ -34,44 +37,46 @@ class App {
 
   /* Imports */
   system = new System;
-  shortUrl = new ShortUrl(this.cache.config.readJSON().SHORTAPI);
 
   /** @type {Map<string, dataRoute>} */
   routesMap = new Map;
 
-  /* Utils */
-  time = new Time(0, "[YYYY/MM/DD hh:mm:ss tt]");
-  logSuccess = new Logger(
-    resolve('log', 'success.log'), this.time,
-    { colorTime: 'brightGreen', colorLog: 'brightGreen', autoSave: true, emit: true, log: true },
-    this
-  );
-  logWarning = new Logger(
-    resolve('log', 'warn.log'), this.time,
-    { colorTime: 'brightYellow', colorLog: 'brightYellow', autoSave: true, emit: true, log: true },
-    this
-  );
-  logError = new Logger(
-    resolve('log', 'error.log'), this.time,
-    { colorTime: 'brightRed', colorLog: 'brightRed', autoSave: true, emit: true, log: true },
-    this
-  );
-
-  logSystem = new File(
-    this.cache.config.readJSON().SYSTEM.loggerFile,
-    { autoSave: true, extname: '.log', default: '' }
-  )
-
   /* Server */
   app = express();
   server = createServer(this.app);
-  socket = new Socket(this);
-  model = new Model(this);
-  neuralNetwork = new NeuralNetwork(this);
-
-  bot = new Bot(this);
 
   constructor() {
+    this.socket = new Socket(this);
+    this.model = new Model(this);
+
+    this.nodeControl = this.socket.node.selectNode('/control');
+    this.neuralNetwork = new NeuralNetwork(this);
+
+    /* Utils */
+    this.time = new Time(0, "[YYYY/MM/DD hh:mm:ss tt]");
+    this.logSuccess = new Logger(
+      resolve('log', 'success.log'), this.time,
+      { colorTime: 'brightGreen', colorLog: 'brightGreen', autoSave: true, emit: true, log: true },
+      this
+    );
+    this.logWarning = new Logger(
+      resolve('log', 'warn.log'), this.time,
+      { colorTime: 'brightYellow', colorLog: 'brightYellow', autoSave: true, emit: true, log: true },
+      this
+    );
+    this.logError = new Logger(
+      resolve('log', 'error.log'), this.time,
+      { colorTime: 'brightRed', colorLog: 'brightRed', autoSave: true, emit: true, log: true },
+      this
+    );
+
+    this.bot = new Bot(this);
+
+    this.logSystem = new File(
+      this.cache.configJSON.readJSON().SYSTEM.loggerFile,
+      { autoSave: true, extname: '.log', default: '' }
+    )
+
     let net = this.system.getIPAddress();
     this.ip = net.ipv4;
 
@@ -85,7 +90,7 @@ class App {
     this.app.use(express.json());
     this.app.use(expressLayouts);
     this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-    this.app.use(session(this.cache.config.readJSON().SESSION));
+    this.app.use(session(this.cache.configJSON.readJSON().SESSION));
 
     // loads
     this._LoadRoutes();
@@ -95,7 +100,7 @@ class App {
   _Route(data) {
     if (data.constructor.name != 'Object') return;
 
-    let { load, route, use, get, post, nodeRoute } = data;
+    let { load, route, use, get, post, nodeRoute, nodeOption } = data;
     this.routesMap.set(route, data);
 
     if (!load) return;
@@ -103,26 +108,29 @@ class App {
     if (use?.constructor?.name == 'Array') {
       this.app.use(route, use.map(r => r.bind(this)));
       this.logSuccess.changeColor('brightWhite');
-      this.logSuccess.writeStart(`[USE] Middle: http://${this.ip}:${this.cache.config.readJSON().SERVER.port}${data.route} (${data.use.length})`);
+      this.logSuccess.writeStart(`[USE] Middle: http://${this.ip}:${this.cache.configJSON.readJSON().SERVER.port}${data.route} (${data.use.length})`);
     }
 
     if (get?.constructor?.name == 'Array') {
       this.app.get(route, get.map(r => r.bind(this)));
       this.logSuccess.changeColor('brightGreen');
-      this.logSuccess.writeStart(`[GET] Routes: http://${this.ip}:${this.cache.config.readJSON().SERVER.port}${data.route} (${data.get.length})`);
+      this.logSuccess.writeStart(`[GET] Routes: http://${this.ip}:${this.cache.configJSON.readJSON().SERVER.port}${data.route} (${data.get.length})`);
     }
 
     if (post?.constructor?.name == 'Array') {
       this.app.post(route, post.map(r => r.bind(this)));
       this.logSuccess.changeColor('brightBlue');
-      this.logSuccess.writeStart(`[POST] Routes: http://${this.ip}:${this.cache.config.readJSON().SERVER.port}${data.route} (${data.post.length})`);
+      this.logSuccess.writeStart(`[POST] Routes: http://${this.ip}:${this.cache.configJSON.readJSON().SERVER.port}${data.route} (${data.post.length})`);
     }
 
+    if (nodeOption)
+      this.socket.node.createNode(route, nodeOption);
+
     if (nodeRoute) {
-      let node = this.socket.node.selectNode(route);
+      let node = this.socket.node.selectNode(route, true);
       nodeRoute.call(this, node);
       this.logSuccess.changeColor('brightYellow');
-      this.logSuccess.writeStart(`[SKT] Routes: http://${this.ip}:${this.cache.config.readJSON().SERVER.port}${data.route}`);
+      this.logSuccess.writeStart(`[SKT] Routes: http://${this.ip}:${this.cache.configJSON.readJSON().SERVER.port}${data.route}`);
     }
   }
 
@@ -143,7 +151,7 @@ class App {
   }
 
   async _Run() {
-    let cnfg = this.cache.config.readJSON();
+    let cnfg = this.cache.configJSON.readJSON();
     this.logSuccess.changeColor('brightCyan');
 
     let intervalId = setInterval(async () => {
@@ -174,9 +182,9 @@ class App {
   listen() {
     return new Promise((res, rej) => {
       if (this.estado) return res();
-      this.listener = this.server.listen(this.cache.config.readJSON().SERVER.port, e => {
+      this.listener = this.server.listen(this.cache.configJSON.readJSON().SERVER.port, e => {
         if (e) return rej(e);
-        this.logSuccess.writeStart(`[App] Listo: http://${this.ip}:${this.cache.config.readJSON().SERVER.port}`);
+        this.logSuccess.writeStart(`[App] Listo: http://${this.ip}:${this.cache.configJSON.readJSON().SERVER.port}`);
         this.estado = true;
         res();
       })

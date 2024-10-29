@@ -1,7 +1,6 @@
 const { resolve } = require('path')
 const { NeuralNetwork } = require('../utils/Brain.js');
 const FileJSON = require('../utils/FileJSON.js');
-const SocketRouter = require('../utils/SocketRouter.js');
 
 /** @typedef {{min_compra:number, max_compra:number, min_venta:number, max_venta:number}} Limits  */
 /** @typedef {{iterations:number, time:number, error:Number}} TrainResult  */
@@ -16,9 +15,7 @@ class Precio_venta {
   constructor(app) {
     this.app = app;
 
-    this.io = new SocketRouter([
-      '/control/servidor/cerebro'
-    ], app)
+    this.io = app.socket.node.selectNode('/control/servidor/cerebro');
 
     let { create, netJson, limit, trainResult, optionNeural = this.optionNeural } = this.fileJSON.readJSON();
 
@@ -108,7 +105,7 @@ class Precio_venta {
 
     let json = { netJson, trainResult, create, size, limit, iterations, errorThresh, optionNeural: this.optionNeural };
     this.fileJSON.writeJSON(json);
-    this.io.emit('/cerebro/data/precioVenta', {
+    this.io.sockets.emit('/cerebro/data/precioVenta', {
       data: json,
       optionNeural: this.optionNeural,
       prediccion: this.toFunction.toString()

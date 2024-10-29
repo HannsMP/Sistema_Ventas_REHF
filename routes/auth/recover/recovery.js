@@ -1,6 +1,6 @@
 const { resolve } = require('path');
 
-const { ModelError } = require('./../../../utils/UtilsModel');
+const ModelError = require('./../../../utils//error/Model');
 
 /** @typedef {import('../../../app')} App */
 /** @typedef {import('../../../utils/SocketNode')} SocketNode */

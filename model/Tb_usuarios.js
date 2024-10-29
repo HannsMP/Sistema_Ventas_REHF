@@ -1,5 +1,4 @@
-const { Table } = require('../utils/UtilsModel');
-const SocketRouter = require('../utils/SocketRouter');
+const Table = require('../utils/template/Table');
 
 const { hashSync, compareSync } = require('bcryptjs');
 
@@ -35,6 +34,7 @@ const columns = {
  * }} COLUMNS
  */
 
+/** @extends {Table<COLUMNS>} */
 class Tb_usuarios extends Table {
   /** @param {import('../app')} app */
   constructor(app) {
@@ -42,9 +42,7 @@ class Tb_usuarios extends Table {
     this.columns = columns;
     this.app = app;
 
-    this.io = new SocketRouter([
-      '/control/administracion/usuarios',
-    ], app)
+    this.io = app.socket.node.selectNode('/control/administracion/usuarios');
   }
   /* 
     ====================================================================================================
@@ -232,7 +230,7 @@ class Tb_usuarios extends Table {
           1
         ])
 
-        this.io.emitRolToJunior(
+        this.io.tagsName.emitRolToJunior(
           rol_id,
           '/usuarios/data/insert',
           _ => this.readIdJoin(result.insertId)
@@ -346,8 +344,7 @@ class Tb_usuarios extends Table {
           id
         ]);
 
-        this.app.socket.rootControl.emitUser(
-          id,
+        this.app.socket.nodeControl.allTagsName.get(`usr:${id}`).emit(
           '/session/usuario/theme',
           tema
         );
@@ -546,16 +543,16 @@ class Tb_usuarios extends Table {
           user_rol_id
         ]);
 
-        this.app.socket.rootControl.emitUser(
-          id,
+        this.app.socket.nodeControl.allTagsName.get(`usr:${id}`).emit(
           '/session/usuario/reload',
           null,
           (socketClient) => {
             let apikey = socketClient.session.apikey;
             this.app.cache.apiKey.delete(apikey);
-          });
+          }
+        );
 
-        this.io.emitRolToSenior(
+        this.io.tagsName.emitRolToSenior(
           rol_id,
           '/usuarios/data/updateId',
           _ => this.readIdJoin(id)
@@ -594,16 +591,17 @@ class Tb_usuarios extends Table {
           user_rol_id
         ]);
 
-        if (!estado) this.app.socket.rootControl.emitUser(
-          id,
-          '/session/usuario/reload',
-          null,
-          socketClient => {
-            let apikey = socketClient.session.apikey;
-            this.app.cache.apiKey.delete(apikey);
-          });
+        if (!estado)
+          this.app.socket.nodeControl.allTagsName.get(`usr:${id}`).emit(
+            '/session/usuario/reload',
+            null,
+            socketClient => {
+              let apikey = socketClient.session.apikey;
+              this.app.cache.apiKey.delete(apikey);
+            }
+          );
 
-        this.io.emit(
+        this.io.sockets.emit(
           '/usuarios/data/state',
           estado
             ? _ => this.readIdJoin(id)
@@ -640,10 +638,9 @@ class Tb_usuarios extends Table {
           id
         ]);
 
-        this.app.socket.rootControl.emitUser(
-          id,
+        this.app.socket.nodeControl.allTagsName.get(`usr:${id}`).emit(
           '/session/usuario/avatar',
-          _ => dataEmit || this.app.model.tb_fotos.readId(foto_id),
+          _ => dataEmit || this.app.model.tb_fotos.readIdAll(foto_id),
           (socketClient, dataSend) => {
             let apikey = socketClient.session.apikey;
             let apiData = this.app.cache.apiKey.read(apikey);
@@ -656,11 +653,11 @@ class Tb_usuarios extends Table {
           }
         )
 
-        this.io.emit(
+        this.io.sockets.emit(
           '/usuarios/data/deleteId',
           dataEmit
             ? dataEmit
-            : _ => this.app.model.tb_fotos.readId(foto_id)
+            : _ => this.app.model.tb_fotos.readIdAll(foto_id)
         )
 
         res(result)
@@ -687,7 +684,7 @@ class Tb_usuarios extends Table {
           id
         ]);
 
-        this.io.emit(
+        this.io.sockets.emit(
           '/usuarios/data/deleteId',
           { id }
         )
@@ -794,11 +791,6 @@ class Tb_usuarios extends Table {
       }
     })
   }
-  /* 
-    ====================================================================================================
-    ============================================== Utiles ==============================================
-    ====================================================================================================
-  */
   /** 
    * @returns {Promise<COLUMNS[]>}
    */
@@ -835,53 +827,6 @@ class Tb_usuarios extends Table {
         `)
 
         res(result);
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
-  /** 
-    * @returns {Promise<COLUMNS[]>}
-    */
-  readAll() {
-    return new Promise(async (res, rej) => {
-      try {
-        let [result] = await this.app.model.pool(`
-          SELECT 
-            *
-          FROM
-            tb_usuarios
-        `)
-
-        res(result);
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
-  /** 
-   * @param {number} id
-   * @returns {Promise<COLUMNS>}
-   */
-  readId(id) {
-    return new Promise(async (res, rej) => {
-      try {
-        this.constraint('id', id);
-
-        let [result] = await this.app.model.poolValues(`
-          SELECT
-            *
-          FROM
-            tb_usuarios
-          WHERE
-            id = ?
-        `, [
-          id
-        ])
-
-        let data = result[0];
-
-        res(data);
       } catch (e) {
         rej(e);
       }
