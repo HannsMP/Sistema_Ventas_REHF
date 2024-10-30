@@ -113,7 +113,7 @@ class tb_transacciones_ventas extends Table {
           _ => this.readJoinId(result.insertId)
         )
 
-        this.io2.tagsName.get(`usr:${usuario_id}`).emit(
+        this.io2.tagsName.get(`usr:${usuario_id}`)?.emit(
           '/transacciones_ventas/data/insert',
           _ => this.readJoinId(result.insertId)
         )
@@ -321,7 +321,7 @@ class tb_transacciones_ventas extends Table {
         )
 
         if (dataEmitBefore.usuario_id == dataEmitAfter.usuario_id) {
-          this.io2.tagsName.get(`usr:${dataEmitBefore.usuario_id}`).emit(
+          this.io2.tagsName.get(`usr:${dataEmitBefore.usuario_id}`)?.emit(
             '/transacciones_ventas/data/deleteId',
             {
               before: dataEmitBefore,
@@ -329,7 +329,7 @@ class tb_transacciones_ventas extends Table {
               usuario_id: dataEmitBefore.usuario_id
             }
           )
-          this.io2.tagsName.get(`usr:${dataEmitAfter.usuario_id}`).emit(
+          this.io2.tagsName.get(`usr:${dataEmitAfter.usuario_id}`)?.emit(
             '/transacciones_ventas/data/updateId',
             dataEmitAfter
           )
@@ -375,7 +375,7 @@ class tb_transacciones_ventas extends Table {
 
         let dataEmit = await this.readJoinId(id);
 
-        this.io2.tagsName.get(`usr:${dataEmit.usuario_id}`).emit(
+        this.io2.tagsName.get(`usr:${dataEmit.usuario_id}`)?.emit(
           '/transacciones_ventas/data/deleteId',
           dataEmit
         )

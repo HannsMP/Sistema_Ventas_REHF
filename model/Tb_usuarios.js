@@ -344,7 +344,7 @@ class Tb_usuarios extends Table {
           id
         ]);
 
-        this.app.socket.nodeControl.allTagsName.get(`usr:${id}`).emit(
+        this.app.nodeControl.allTagsName.get(`usr:${id}`)?.emit(
           '/session/usuario/theme',
           tema
         );
@@ -543,7 +543,7 @@ class Tb_usuarios extends Table {
           user_rol_id
         ]);
 
-        this.app.socket.nodeControl.allTagsName.get(`usr:${id}`).emit(
+        this.app.nodeControl.allTagsName.get(`usr:${id}`)?.emit(
           '/session/usuario/reload',
           null,
           (socketClient) => {
@@ -592,7 +592,7 @@ class Tb_usuarios extends Table {
         ]);
 
         if (!estado)
-          this.app.socket.nodeControl.allTagsName.get(`usr:${id}`).emit(
+          this.app.nodeControl.allTagsName.get(`usr:${id}`)?.emit(
             '/session/usuario/reload',
             null,
             socketClient => {
@@ -638,7 +638,7 @@ class Tb_usuarios extends Table {
           id
         ]);
 
-        this.app.socket.nodeControl.allTagsName.get(`usr:${id}`).emit(
+        this.app.nodeControl.allTagsName.get(`usr:${id}`)?.emit(
           '/session/usuario/avatar',
           _ => dataEmit || this.app.model.tb_fotos.readIdAll(foto_id),
           (socketClient, dataSend) => {

@@ -77,7 +77,7 @@ module.exports = {
           });
 
           if (data.rol_id) {
-            this.socket.nodeControl.allTagsName.get(`rol:${data.rol_id}`).emit(
+            this.nodeControl.allTagsName.get(`rol:${data.rol_id}`)?.emit(
               '/session/acceso/updateId',
               {
                 menu_ruta: data.menu_ruta,

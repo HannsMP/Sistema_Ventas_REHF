@@ -27,7 +27,7 @@ module.exports = {
         res.clearCookie('apiKey');
         res.clearCookie('remember');
         
-        this.socket.nodeControl.allTagsName.get(`api:${apiKey}`).emit('/session/usuario/logout');
+        this.nodeControl.allTagsName.get(`api:${apiKey}`)?.emit('/session/usuario/logout');
       }
       res.status(200).redirect('/auth/login');
     },
