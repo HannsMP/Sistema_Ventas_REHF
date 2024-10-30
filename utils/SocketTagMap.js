@@ -23,18 +23,26 @@ class SocketTagMap extends Map {
    * @returns {Promise<T>} 
    */
   async emitTag(tags, eventName, data, each) {
-    if (!tags.length && !this.size) return null;
+    if (!tags.length && !this.size)
+      return null;
+
+    tags = tags.filter(t => this.has(t));
+
+    let socketMaps = tags.map(t => this.get(t));
+
+    if (!socketMaps.reduce((collector, current) => current.size + collector, 0))
+      return null;
 
     let dataEmit = typeof data == 'function' ? await data() : data;
 
-    if (tags.length == 1) {
+    if (socketMaps.length == 1) {
       if (each)
-        this.get(tags[0])?.forEach(socketClient => {
+        socketMaps[0].forEach(socketClient => {
           socketClient.emit(eventName, dataEmit);
           each(socketClient, dataEmit);
         })
       else
-        this.get(tags[0])?.forEach(socketClient => {
+        socketMaps[0].forEach(socketClient => {
           socketClient.emit(eventName, dataEmit);
         })
     } else {
@@ -42,20 +50,20 @@ class SocketTagMap extends Map {
       let socketIdSet = new Set;
 
       if (each)
-        tags.forEach(t => this.get(t)?.forEach((socketClient, socketId) => {
+        socketMaps.forEach((socketClient, socketId) => {
           if (socketIdSet.has(socketId)) return;
 
           socketClient.emit(eventName, dataEmit);
           each(socketClient, dataEmit);
           socketIdSet.add(socketId);
-        }))
+        })
       else
-        tags.forEach(t => this.get(t)?.forEach((socketClient, socketId) => {
+        socketMaps.forEach((socketClient, socketId) => {
           if (socketIdSet.has(socketId)) return;
 
           socketClient.emit(eventName, dataEmit);
           socketIdSet.add(socketId);
-        }))
+        })
     }
 
     return dataEmit;
