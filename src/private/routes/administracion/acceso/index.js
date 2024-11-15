@@ -3,19 +3,6 @@ $('.content-body').ready(async () => {
 
     /* 
       ==================================================
-      =================== QUERY DATA ===================
-      ==================================================
-    */
-
-    let resAccesoTbl = await query.post.cookie("/api/acceso/table/readAll");
-    /** @typedef {{agregar:number, editar:number, eliminar:number, exportar:number, ocultar:number, ver:number}} PERMISOS */
-    /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[], permisos: PERMISOS}} */
-    let { list: dataAcceso, uniques: uniquesAcceso, permisos: permisosAcceso } = await resAccesoTbl.json();
-
-    let uniqueMenuRuta = new Set(uniquesAcceso.map(({ ruta }) => ruta?.toLowerCase()));
-
-    /* 
-      ==================================================
       ================== VARIABLES DOM ==================
       ==================================================
     */
@@ -87,7 +74,10 @@ $('.content-body').ready(async () => {
     */
 
     $table.init({
-      data: dataAcceso,
+      serverSide: true,
+      ajax: (data, end) => {
+        socket.emit('/read/table', data, res => end(res))
+      },
       pageLength: 25,
       select: {
         style: 'single'
@@ -95,6 +85,7 @@ $('.content-body').ready(async () => {
       order: [[8, 'asc'], [6, 'asc']],
       columnDefs: [
         {
+          name: 'c.estado',
           className: 'dtr-control',
           orderable: false,
           targets: 0,
@@ -121,6 +112,7 @@ $('.content-body').ready(async () => {
           }
         },
         {
+          name: 'c.estado',
           className: 'dtr-control',
           orderable: false,
           targets: 1,
@@ -147,6 +139,7 @@ $('.content-body').ready(async () => {
           }
         },
         {
+          name: 'c.estado',
           className: 'dtr-control',
           orderable: false,
           targets: 2,
@@ -173,6 +166,7 @@ $('.content-body').ready(async () => {
           }
         },
         {
+          name: 'c.estado',
           className: 'dtr-control',
           orderable: false,
           targets: 3,
@@ -199,6 +193,7 @@ $('.content-body').ready(async () => {
           }
         },
         {
+          name: 'c.estado',
           className: 'dtr-control',
           orderable: false,
           targets: 4,
@@ -225,6 +220,7 @@ $('.content-body').ready(async () => {
           }
         },
         {
+          name: 'c.estado',
           className: 'dtr-control',
           orderable: false,
           targets: 5,
@@ -251,6 +247,15 @@ $('.content-body').ready(async () => {
           }
         },
         {
+          name: 'm.ruta',
+          targets: 6
+        },
+        {
+          name: 'm.principal',
+          targets: 7
+        },
+        {
+          name: 'r.nombre',
           className: 'dtr-tag',
           targets: 8,
           render: (data, _, row) => `<div>${row.rol_id} ${data}</div>`
@@ -416,11 +421,17 @@ $('.content-body').ready(async () => {
     */
 
     inputNuevoRuta.addEventListener('input', () => {
-      let val = inputNuevoRuta.value;
-      if (!uniqueMenuRuta.has(val?.toLowerCase()))
-        return inputNuevoRuta.except = null;
-      inputNuevoRuta.except = `El usuario '${val}' ya existe.`;
-      formError(inputNuevoRuta.except, inputNuevoRuta.parentNode);
+      let value = inputNuevoRuta.value;
+      socket.emit(
+        '/read/unic',
+        { column: 'ruta', value },
+        res => {
+          if (res)
+            return inputNuevoRuta.except = null;
+          inputNuevoRuta.except = `La ruta '${value}' ya existe.`;
+          formError(inputNuevoRuta.except, inputNuevoRuta.parentNode);
+        }
+      )
     })
 
     /* 
@@ -531,8 +542,8 @@ $('.content-body').ready(async () => {
       let { list } = await resUsuarios.json();
 
       inputEditarPrincipal.value = list[0].menu_principal;
-
       inputEditarRuta.value = list[0].menu_ruta;
+      inputEditarRuta.ruta_id = list[0].menu_id;
       inputEditarRuta.beforeValue = list[0].menu_ruta;
 
       list.forEach(column => {
@@ -564,11 +575,18 @@ $('.content-body').ready(async () => {
     */
 
     inputEditarRuta.addEventListener('input', () => {
-      let val = inputEditarRuta.value;
-      if (inputEditarRuta.beforeValue == val || !uniqueMenuRuta.has(val?.toLowerCase()))
-        return inputEditarRuta.except = null;
-      inputEditarRuta.except = `El usuario '${val}' ya existe.`;
-      formError(inputEditarRuta.except, inputEditarRuta.parentNode);
+      let value = inputEditarRuta.value;
+      let id = inputEditarRuta.ruta_id;
+      socket.emit(
+        '/read/unic',
+        { column: 'ruta', value, id },
+        res => {
+          if (res)
+            return inputEditarRuta.except = null;
+          inputEditarRuta.except = `La ruta '${value}' ya existe.`;
+          formError(inputEditarRuta.except, inputEditarRuta.parentNode);
+        }
+      )
     })
 
     /* 
@@ -695,8 +713,6 @@ $('.content-body').ready(async () => {
         permiso_ocultar: data.permiso_ocultar,
         permiso_exportar: data.permiso_exportar
       });
-
-      uniqueMenuRuta.add(data.menu_ruta?.toLowerCase());
     })
 
     socket.on('/accesos/permisos/updateId', data => {
@@ -714,17 +730,10 @@ $('.content-body').ready(async () => {
         permiso_ocultar: data.permiso_ocultar,
         permiso_exportar: data.permiso_exportar
       });
-
-      if (row.menu_ruta?.toLowerCase() != data.menu_ruta?.toLowerCase()) {
-        uniqueMenuRuta.delete(row.menu_ruta?.toLowerCase());
-        uniqueMenuRuta.add(data.menu_ruta?.toLowerCase());
-      }
     })
 
     socket.on('/accesos/permisos/deleteId', data => {
       $table.remove(...data.map(({ id }) => '#' + id));
-
-      uniqueMenuRuta.delete(data.menu_ruta?.toLowerCase());
     })
 
     socket.on('/accesos/permisos/state', data => {

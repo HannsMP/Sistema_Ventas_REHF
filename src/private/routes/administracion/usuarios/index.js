@@ -3,21 +3,6 @@ $('.content-body').ready(async () => {
 
     /* 
       ==================================================
-      =================== QUERY DATA ===================
-      ==================================================
-    */
-
-    let resUsuariosTbl = await query.post.cookie("/api/usuarios/table/readAll");
-    /** @typedef {{agregar:number, editar:number, eliminar:number, exportar:number, ocultar:number, ver:number}} PERMISOS */
-    /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[], uniques: {[column:string]: string|number}[], permisos: PERMISOS}} */
-    let { list: dataUsuarios, uniques: uniqueUsuarios, permisos: permisosUsuarios } = await resUsuariosTbl.json();
-
-    let uniqueUsuario = new Set(uniqueUsuarios.map(({ usuario }) => usuario?.toLowerCase()));
-    let uniqueEmail = new Set(uniqueUsuarios.map(({ email }) => email?.toLowerCase()));
-    let uniqueTelefono = new Set(uniqueUsuarios.map(({ telefono }) => telefono));
-
-    /* 
-      ==================================================
       ================== VARIABLES DOM ==================
       ==================================================
     */
@@ -94,13 +79,18 @@ $('.content-body').ready(async () => {
     */
 
     $table.init({
-      data: dataUsuarios,
+      serverSide: true,
+      ajax: (data, end) => {
+        socket.emit('/read/table', data, res => end(res))
+      },
+      pageLength: 10,
       select: {
         style: 'single'
       },
       order: [[1, 'asc']],
       columnDefs: [
         {
+          name: 'u.estado',
           className: 'dtr-control',
           orderable: false,
           targets: 0,
@@ -114,10 +104,35 @@ $('.content-body').ready(async () => {
           }
         },
         {
+          name: 'u.nombres',
+          targets: 1
+        },
+        {
+          name: 'u.apellidos',
+          targets: 2
+        },
+        {
+          name: 'u.usuario',
+          targets: 3
+        },
+        {
+          name: 'u.telefono',
+          targets: 4
+        },
+        {
+          name: 'u.email',
+          targets: 5
+        },
+        {
+          name: 'r.nombre',
           className: 'dtr-tag',
           targets: 6,
           render: data => '<div>' + data + '</div>'
         },
+        {
+          name: 'u.creacion',
+          targets: 7
+        }
       ],
       columns: [
         { data: 'estado' },
@@ -142,12 +157,10 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    let resRoles = await query.post.cookie("/api/tipo_rol/selector/readAll");
-
-    /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-    let { list: dataRoles } = await resRoles.json();
-
-    let dataSelectorRoles = new SelectorMap(dataRoles, true);
+    let dataSelectorRoles = new OptionsServerside(
+      (req, end) => socket.emit('/selector/rol', req, res => end(res)),
+      { showIndex: true, order: 'asc', noInclude: true }
+    );
 
     /* 
       ==================================================
@@ -155,8 +168,15 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    let nuevoSelectorUnic = new SelectorUnic(inputNuevoSelector, dataSelectorRoles);
-    let editarSelectorUnic = new SelectorUnic(inputEditarSelector, dataSelectorRoles);
+    let nuevoSelectorUnic = new SelectorInput(
+      inputNuevoSelector, 
+      dataSelectorRoles,
+      { autohide: true }
+    );
+    let editarSelectorUnic = new SelectorInput(
+      inputEditarSelector, 
+      dataSelectorRoles
+    );
 
     /* 
       ==================================================
@@ -266,27 +286,45 @@ $('.content-body').ready(async () => {
     */
 
     inputNuevoUsuario.addEventListener('input', () => {
-      let val = inputNuevoUsuario.value;
-      if (!uniqueUsuario.has(val?.toLowerCase()))
-        return inputNuevoUsuario.except = null;
-      inputNuevoUsuario.except = `El usuario '${val}' ya existe.`;
-      formError(inputNuevoUsuario.except, inputNuevoUsuario.parentNode);
+      let value = inputNuevoUsuario.value;
+      socket.emit(
+        '/read/unic',
+        { column: 'usuario', value },
+        res => {
+          if (res)
+            return inputNuevoUsuario.except = null;
+          inputNuevoUsuario.except = `El usuario '${value}' ya existe.`;
+          formError(inputNuevoUsuario.except, inputNuevoUsuario.parentNode);
+        }
+      )
     })
 
     inputNuevoTelefono.addEventListener('input', () => {
-      let val = inputNuevoTelefono.value;
-      if (!uniqueTelefono.has(val))
-        return inputNuevoTelefono.except = null;
-      inputNuevoTelefono.except = `El telefono '${val}' ya existe.`;
-      formError(inputNuevoTelefono.except, inputNuevoTelefono.parentNode);
+      let value = inputNuevoTelefono.value;
+      socket.emit(
+        '/read/unic',
+        { column: 'telefono', value },
+        res => {
+          if (res)
+            return inputNuevoTelefono.except = null;
+          inputNuevoTelefono.except = `El telefono '${value}' ya existe.`;
+          formError(inputNuevoTelefono.except, inputNuevoTelefono.parentNode);
+        }
+      )
     })
 
     inputNuevoEmail.addEventListener('input', () => {
-      let val = inputNuevoEmail.value;
-      if (!uniqueEmail.has(val?.toLowerCase()))
-        return inputNuevoEmail.except = null;
-      inputNuevoEmail.except = `El Email '${val}' ya existe.`;
-      formError(inputNuevoEmail.except, inputNuevoEmail.parentNode);
+      let value = inputNuevoEmail.value;
+      socket.emit(
+        '/read/unic',
+        { column: 'email', value },
+        res => {
+          if (res)
+            return inputNuevoEmail.except = null;
+          inputNuevoEmail.except = `El Email '${value}' ya existe.`;
+          formError(inputNuevoEmail.except, inputNuevoEmail.parentNode);
+        }
+      )
     })
 
     /* 
@@ -386,27 +424,48 @@ $('.content-body').ready(async () => {
     */
 
     inputEditarUsuario.addEventListener('input', () => {
-      let val = inputEditarUsuario.value;
-      if (inputEditarUsuario.beforeValue == val || !uniqueUsuario.has(val?.toLowerCase()))
-        return inputEditarUsuario.except = null;
-      inputEditarUsuario.except = `El usuario '${val}' ya existe.`;
-      formError(inputEditarUsuario.except, inputEditarUsuario.parentNode);
+      let value = inputEditarUsuario.value;
+      let id = Number(inputEditarHidden.value);
+      socket.emit(
+        '/read/unic',
+        { column: 'usuario', value, id },
+        res => {
+          if (res)
+            return inputEditarUsuario.except = null;
+          inputEditarUsuario.except = `El usuario '${value}' ya existe.`;
+          formError(inputEditarUsuario.except, inputEditarUsuario.parentNode);
+        }
+      )
     })
 
     inputEditarTelefono.addEventListener('input', () => {
-      let val = inputEditarTelefono.value;
-      if (inputEditarTelefono.beforeValue == val || !uniqueTelefono.has(val))
-        return inputEditarTelefono.except = null;
-      inputEditarTelefono.except = `El telefono '${val}' ya existe.`;
-      formError(inputEditarTelefono.except, inputEditarTelefono.parentNode);
+      let value = inputEditarTelefono.value;
+      let id = Number(inputEditarHidden.value);
+      socket.emit(
+        '/read/unic',
+        { column: 'telefono', value, id },
+        res => {
+          if (res)
+            return inputEditarTelefono.except = null;
+          inputEditarTelefono.except = `El telefono '${value}' ya existe.`;
+          formError(inputEditarTelefono.except, inputEditarTelefono.parentNode);
+        }
+      )
     })
 
     inputEditarEmail.addEventListener('input', () => {
-      let val = inputEditarEmail.value;
-      if (inputEditarEmail.beforeValue == val || !uniqueEmail.has(val?.toLowerCase()))
-        return inputEditarEmail.except = null;
-      inputEditarEmail.except = `El Email '${val}' ya existe.`;
-      formError(inputEditarEmail.except, inputEditarEmail.parentNode);
+      let value = inputEditarEmail.value;
+      let id = Number(inputEditarHidden.value);
+      socket.emit(
+        '/read/unic',
+        { column: 'email', value, id },
+        res => {
+          if (res)
+            return inputEditarEmail.except = null;
+          inputEditarEmail.except = `El Email '${value}' ya existe.`;
+          formError(inputEditarEmail.except, inputEditarEmail.parentNode);
+        }
+      )
     })
 
     /* 
@@ -496,10 +555,6 @@ $('.content-body').ready(async () => {
 
             let dataBefore = $table.get('#' + id)
 
-            uniqueUsuario.delete(dataBefore.usuario?.toLowerCase());
-            uniqueTelefono.delete(dataBefore.telefono?.toLowerCase());
-            uniqueEmail.delete(dataBefore.email?.toLowerCase());
-
             $table.remove('#' + id);
             alarm.success(`Fila eliminada`);
           }
@@ -527,10 +582,6 @@ $('.content-body').ready(async () => {
         rol_nombre: data.rol_nombre,
         creacion: formatTime('YYYY-MM-DD hh:mm:ss')
       });
-
-      uniqueUsuario.add(data.usuario?.toLowerCase());
-      uniqueEmail.add(data.email?.toLowerCase());
-      uniqueTelefono.add(data.telefono);
     })
 
     socket.on('/usuarios/data/updateId', data => {
@@ -545,19 +596,6 @@ $('.content-body').ready(async () => {
         telefono: data.telefono,
         rol_nombre: data.rol_nombre
       });
-
-      if (row.usuario?.toLowerCase() != data.usuario?.toLowerCase()) {
-        uniqueUsuario.delete(row.usuario?.toLowerCase());
-        uniqueUsuario.add(data.usuario?.toLowerCase());
-      }
-      if (row.email?.toLowerCase() != data.email?.toLowerCase()) {
-        uniqueEmail.delete(row.email?.toLowerCase());
-        uniqueEmail.add(data.email?.toLowerCase());
-      }
-      if (row.telefono?.toLowerCase() != data.telefono?.toLowerCase()) {
-        uniqueTelefono.delete(row.telefono);
-        uniqueTelefono.add(data.telefono);
-      }
 
       let menuEditarid = $table.selected();
       if (menuEditarid && menuEditarid == data.id)

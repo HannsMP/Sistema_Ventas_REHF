@@ -44,6 +44,8 @@ class Socket {
         let { usuario } = this.app.cache.apiKey.read(apikey);
 
         let tags = [`rol:${usuario.rol_id}`, `usr:${usuario.id}`, `api:${apikey}`];
+        socketClient.session.usuario_id = usuario.id;
+        socketClient.session.rol_id = usuario.rol_id;
         socketClient.session.tags = tags;
 
         socketClient.on('disconnect', () => {

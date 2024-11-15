@@ -243,7 +243,7 @@ class Tb_permisos extends Table {
         if (!result.length)
           return rej(this.error(
             'RESPONSE_DATA_EMPTY',
-            'Consulta sin coincidencia'
+            `Consulta sin coincidencia para la ruta '${path}'`
           ));
 
         res(result[0]);

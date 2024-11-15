@@ -3,19 +3,6 @@ $('.content-body').ready(async () => {
 
     /* 
       ==================================================
-      =================== QUERY DATA ===================
-      ==================================================
-    */
-
-    let resCategoriasTbl = await query.post.cookie("/api/categorias/table/readAll");
-    /** @typedef {{agregar:number, editar:number, eliminar:number, exportar:number, ocultar:number, ver:number}} PERMISOS */
-    /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[], permisos: PERMISOS}} */
-    let { list: dataCategorias } = await resCategoriasTbl.json();
-
-    let uniqueNombre = new Set(dataCategorias.map(({ nombre }) => nombre.toLowerCase()));
-
-    /* 
-      ==================================================
       ================== VARIABLES DOM ==================
       ==================================================
     */
@@ -86,13 +73,18 @@ $('.content-body').ready(async () => {
     */
 
     $table.init({
-      data: dataCategorias,
+      serverSide: true,
+      ajax: (data, end) => {
+        socket.emit('/read/table', data, res => end(res))
+      },
+      pageLength: 10,
       select: {
         style: 'single'
       },
       order: [[2, 'asc']],
       columnDefs: [
         {
+          name: 'c.estado',
           className: 'dtr-control',
           orderable: false,
           targets: 0,
@@ -106,15 +98,31 @@ $('.content-body').ready(async () => {
           }
         },
         {
+          name: 'c.codigo',
           className: 'dtr-code',
           orderable: false,
           targets: 1,
         },
         {
+          name: 'c.nombre',
+          targets: 2
+        },
+        {
+          name: 'c.descripcion',
           className: 'dtr-description',
           orderable: false,
           targets: 3,
           render: data => '<div class="scroll-y">' + data + '</div>'
+        },
+        {
+          name: 'c.creacion',
+          className: 'dt-type-date',
+          targets: 4
+        },
+        {
+          name: 'p.cantidad',
+          className: 'dt-type-numeric',
+          targets: 5
         }
       ],
       columns: [
@@ -143,7 +151,7 @@ $('.content-body').ready(async () => {
       nuevo() {
         this.emptyEditar();
         this.now = 'nuevo';
-        $$tableNuevo.show('fast');
+        $tableNuevo.show('fast');
         tableEditar.style.display = 'none';
         sideContent.scrollTop = tableNuevo.offsetTop - sideContent.offsetTop - 100;
       },
@@ -230,11 +238,17 @@ $('.content-body').ready(async () => {
     */
 
     inputNuevoNombre.addEventListener('input', () => {
-      let val = inputNuevoNombre.value;
-      if (!uniqueNombre.has(val?.toLowerCase()))
-        return inputNuevoNombre.except = null;
-      inputNuevoNombre.except = `El Nombre '${val}' ya existe.`;
-      ev && formError(inputNuevoNombre.except, inputNuevoNombre.parentNode);
+      let value = inputNuevoNombre.value;
+      socket.emit(
+        '/read/unic',
+        { column: 'nombre', value },
+        res => {
+          if (res)
+            return inputNuevoNombre.except = null;
+          inputNuevoNombre.except = `El Nombre '${value}' ya existe.`;
+          formError(inputNuevoNombre.except, inputNuevoNombre.parentNode);
+        }
+      )
     })
 
     /* 
@@ -321,11 +335,18 @@ $('.content-body').ready(async () => {
     */
 
     inputEditarNombre.addEventListener('input', () => {
-      let val = inputEditarNombre.value;
-      if (inputEditarNombre.beforeValue == val || !uniqueNombre.has(val?.toLowerCase()))
-        return inputEditarNombre.except = null;
-      inputEditarNombre.except = `El Nombre '${val}' ya existe.`;
-      ev && formError(inputEditarNombre.except, inputEditarNombre.parentNode);
+      let value = inputEditarNombre.value;
+      let id = inputEditarHidden.value;
+      socket.emit(
+        '/read/unic',
+        { column: 'nombre', value, id },
+        res => {
+          if (res)
+            return inputEditarNombre.except = null;
+          inputEditarNombre.except = `El Nombre '${value}' ya existe.`;
+          formError(inputEditarNombre.except, inputEditarNombre.parentNode);
+        }
+      )
     })
 
     /* 
@@ -428,7 +449,6 @@ $('.content-body').ready(async () => {
         creacion: formatTime('YYYY-MM-DD hh:mm:ss'),
         producto_cantidad: 0
       });
-      uniqueNombre.add(data.nombre?.toLowerCase());
     })
 
     socket.on('/categorias/data/updateId', data => {
@@ -439,8 +459,6 @@ $('.content-body').ready(async () => {
         nombre: data.nombre,
         descripcion: data.descripcion
       });
-      uniqueNombre.delete(row.nombre?.toLowerCase());
-      uniqueNombre.add(data.nombre?.toLowerCase());
 
       let menuEditarid = $table.selected();
       if (menuEditarid && menuEditarid == data.id)
@@ -459,7 +477,6 @@ $('.content-body').ready(async () => {
     socket.on('/categorias/data/deleteId', data => {
       let row = $table.get('#' + data.id);
       if (!row) return;
-      uniqueNombre.delete(row.nombre?.toLowerCase());
       $table.remove('#' + data.id);
     })
 

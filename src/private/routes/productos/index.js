@@ -1,4 +1,19 @@
 $('.content-body').ready(async () => {
+
+  /**
+   * @typedef {{
+  *   id:number,
+  *   src:string,
+  *   cantidad: number,
+  *   producto:string,
+  *   categoria_id:number,
+  *   categoria_nombre:string,
+  *   descripcion: string,
+  *   codigo:string,
+  *   venta: string
+  * }} Item 
+  */
+
   try {
     /* 
       ==================================================
@@ -6,12 +21,9 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    let resCategorias = await query.post.cookie("/api/categorias/selector/readAll");
-
-    /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-    let { list: dataCategorias } = await resCategorias.json();
-
-    let dataSelectorCategorias = new SelectorMap(dataCategorias);
+    let dataSelectorCategorias = new OptionsServerside(
+      (req, end) => socket.emit('/selector/categorias', req, res => end(res)),
+      { showIndex: false, order: 'asc', noInclude: true });
 
     /* 
       ==================================================
@@ -32,7 +44,11 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    let filtroSelectorMulti = new SelectorMulti(filtroSelector, dataSelectorCategorias, true);
+    let filtroSelectorMulti = new SelectorInput(
+      filtroSelector,
+      dataSelectorCategorias,
+      { multi: true }
+    );
 
     /* 
       ==================================================
@@ -40,35 +56,42 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    let resProductosTbl = await query.post.cookie("/api/productos/paginator/readAll");
-
-    /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-    let { list: dataProductos } = await resProductosTbl.json();
-
     let catalogoBox = document.getElementById('catalogo');
-    let catalogo = new Catalogue(catalogoBox, (data) => {
-      return `<div class="product">
-  <div class="product-imagen">
-    <img src="${data.src}" class="imagen">
-    <span class="product-counter">${data.cantidad}</span>
-  </div>
-  <div class="product-details">
-    <span class="detail-name">${data.producto}</span>
-    <span class="detail-category">${data.categoria_nombre}</span>
-    <p class="detail-description scroll-y">${data.descripcion}</p>
-    <div class="details-data">
-      <span class="detail-code">${data.codigo}</span>
-      <span class="detail-price">s/ ${data.venta?.toFixed(2)}</span>
-    </div>
-  </div>
-</div>`
-    }, dataProductos, 20);
+
+    /** @type {Catalogue<Item>} */
+    let catalogo = new Catalogue(
+      catalogoBox,
+      (req, end) => socket.emit('/read/catalogue', req, res => end(res)),
+      data => `
+        <div class="product">
+          <div class="product-imagen">
+            <img src="${data.src}" class="imagen">
+            <span class="product-counter">${data.cantidad}</span>
+          </div>
+          <div class="product-details">
+            <span class="detail-name">${data.producto}</span>
+            <span class="detail-category">${data.categoria_nombre}</span>
+            <p class="detail-description scroll-y">${data.descripcion}</p>
+            <div class="details-data">
+              <span class="detail-code">${data.codigo}</span>
+              <span class="detail-price">s/ ${data.venta?.toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+      `,
+      5
+    );
 
     /* 
       ==================================================
       ==================== filtro ====================
       ==================================================
     */
+
+
+    catalogo.ev.on('load', () => cardBody.classList.add('load-spinner'));
+    catalogo.ev.on('complete', () => cardBody.classList.remove('load-spinner'));
+
     let updUrl = (producto, codigo, selected) => {
       let url = new URL(window.location.href);
 
@@ -107,36 +130,38 @@ $('.content-body').ready(async () => {
       let findProducto = filtroProducto.value;
       /** @type {string} */
       let findCodigo = filtroCodigo.value;
-      /** @type {Set<number>} */
-      let findSelected = new Set(filtroSelectorMulti.selected.map(s => Number(s.id)));
+      /** @type {number[]} */
+      let findSelected = filtroSelectorMulti.selected.map(s => Number(s.id));
 
       if (change)
         updUrl(findProducto, findCodigo, findSelected);
 
-      if (findCodigo || findProducto || findSelected.size) {
-        cardBody.classList.add('load-spinner');
-        catalogo.filter(data => {
+      catalogo.filter({
+        value: findProducto,
+        code: findCodigo,
+        nameTags: findSelected,
+        order: 'asc',
+        rangeMax: null,
+        rangeMin: null
+      });
+      // data => {
 
-          /** @type {{ producto:string, codigo:string, categoria_id:number }} */
-          let { producto, codigo, categoria_id } = data,
-            is = false;
-          if (findCodigo && findCodigo != '')
-            is = is || codigo.startsWith(findCodigo);
-          else
-            is = true;
+      //   /** @type {{ producto:string, codigo:string, categoria_id:number }} */
+      //   let { producto, codigo, categoria_id } = data,
+      //     is = false;
+      //   if (findCodigo && findCodigo != '')
+      //     is = is || codigo.startsWith(findCodigo);
+      //   else
+      //     is = true;
 
-          if (findProducto && findProducto != '')
-            is = is && producto.toLowerCase().includes(findProducto.toLowerCase());
+      //   if (findProducto && findProducto != '')
+      //     is = is && producto.toLowerCase().includes(findProducto.toLowerCase());
 
-          if (findSelected.size)
-            is = is && findSelected.has(categoria_id);
+      //   if (findSelected.size)
+      //     is = is && findSelected.has(categoria_id);
 
-          return is;
-        });
-        cardBody.classList.remove('load-spinner');
-      }
-      else
-        catalogo.reset();
+      //   return is;
+      // }
     }
 
     btnFiltro.addEventListener('click', () => search());
@@ -250,7 +275,7 @@ $('.content-body').ready(async () => {
 
     socket.on('/categorias/data/state', async data => {
       if (data.estado)
-        dataSelectorCategorias.set(data.id, data.nombre);
+        dataSelectorCategorias.draw(true);
       else
         dataSelectorCategorias.delete(data.id);
     })

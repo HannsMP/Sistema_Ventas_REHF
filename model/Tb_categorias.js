@@ -43,6 +43,129 @@ class Tb_categorias extends Table {
     =============================================== Tabla ===============================================
     ====================================================================================================
   */
+  /**
+   * @param {import('datatables.net-dt').AjaxData} option 
+   * @returns {Promise<COLUMNS[]>}
+   */
+  readInParts(option) {
+    return new Promise(async (res, rej) => {
+      try {
+        let { order, start, length, search } = option;
+
+        let query = `
+          SELECT 
+            c.id,
+            c.nombre,
+            c.codigo,
+            c.descripcion,
+            c.creacion,
+            c.estado,
+            COALESCE(COUNT(p.id), 0) AS producto_cantidad
+          FROM
+            tb_categorias AS c
+          LEFT JOIN
+            tb_productos AS p
+            ON p.categoria_id = c.id
+        `, queryParams = [];
+
+        if (search.value) {
+          query += `
+            WHERE
+              c.nombre LIKE ?
+              OR c.codigo LIKE ?
+              OR c.descripcion LIKE ?
+              OR c.creacion LIKE ?
+          `;
+
+          queryParams.push(
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`
+          );
+        }
+
+        query += `
+          GROUP BY 
+            c.id
+        `;
+
+        let columnsSet = new Set([
+          'c.nombre',
+          'c.codigo',
+          'c.descripcion',
+          'c.creacion'
+        ]);
+
+        order = order.filter(d => columnsSet.has(d.name));
+
+        if (order?.length) {
+          query += `
+            ORDER BY
+          `
+          order.forEach(({ dir, name }, index) => {
+            query += `
+              ${name} ${dir == 'asc' ? 'ASC' : 'DESC'}`;
+
+            if (index < order.length - 1)
+              query += ', ';
+          })
+        }
+
+        query += `
+          LIMIT ? OFFSET ?
+        `;
+        queryParams.push(length, start);
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        res(result);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
+  /**
+   * @param {import('datatables.net-dt').AjaxData} option 
+   * @returns {Promise<number>}
+   */
+  readInPartsCount(option) {
+    return new Promise(async (res, rej) => {
+      try {
+        let { search } = option;
+
+        let query = `
+          SELECT 
+            COUNT(c.id) AS cantidad
+          FROM
+            tb_categorias AS c
+        `, queryParams = [];
+
+        if (search.value) {
+          query += `
+            WHERE
+              c.nombre LIKE ?
+              OR c.codigo LIKE ?
+              OR c.descripcion LIKE ?
+              OR c.creacion LIKE ?
+          `;
+
+          queryParams.push(
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`
+          );
+        }
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        res(result[0].cantidad);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
   /** 
    * @param {COLUMNS} data 
    * @returns {Promise<import('mysql').OkPacket>}
@@ -101,7 +224,15 @@ class Tb_categorias extends Table {
     })
   }
   /** 
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<{
+   *   id: number,
+   *   nombre: string,
+   *   codigo: string,
+   *   descripcion: string,
+   *   creacion: string,
+   *   estado: string,
+   *   producto_cantidad: number,
+   * }[]>}
    */
   readCountAll() {
     return new Promise(async (res, rej) => {
@@ -132,9 +263,17 @@ class Tb_categorias extends Table {
   }
   /**
    * @param {number} id 
-   * @returns {Promise<COLUMNS>}
+   * @returns {Promise<{
+   *   id: number,
+   *   nombre: string,
+   *   codigo: string,
+   *   descripcion: string,
+   *   creacion: string,
+   *   estado: string,
+   *   producto_cantidad: number,
+   * }>}
    */
-  readCountId(id) {
+  readIdCount(id) {
     return new Promise(async (res, rej) => {
       try {
 
@@ -240,9 +379,7 @@ class Tb_categorias extends Table {
 
         this.io.emitSocket(
           '/categorias/data/state',
-          estado
-            ? _ => this.readIdAll(id)
-            : { id, estado }
+          { id, estado }
         )
 
         res(result)
@@ -326,6 +463,111 @@ class Tb_categorias extends Table {
     ============================================== Selector ==============================================
     ====================================================================================================
   */
+  /**
+   * @param {SelectorRequest} option 
+   * @returns {Promise<COLUMNS[]>}
+   */
+  SelectorInParts(option) {
+    return new Promise(async (res, rej) => {
+      try {
+        let { order, start, length, search, byId, noInclude } = option;
+
+        let query = `
+          SELECT 
+            id,
+            nombre AS name
+          FROM
+            tb_categorias
+          WHERE
+            estado = 1 
+        `, queryParams = [];
+
+        if (search) {
+          if (byId) {
+            query += `
+              AND id = ?
+            `;
+
+            queryParams.push(search);
+          }
+          else {
+            query += `
+              AND nombre LIKE ?
+            `;
+
+            queryParams.push(`%${search}%`);
+          }
+        }
+
+        if (noInclude.length && noInclude.every(id => typeof id == 'number')) {
+          query += `
+            AND id NOT IN (${noInclude.map(_ => '?').join(',')})
+          `
+          queryParams.push(...noInclude);
+        }
+
+        if (order) {
+          query += `
+            ORDER BY
+              nombre ${order == 'asc' ? 'ASC' : 'DESC'}
+          `
+        }
+
+        query += `
+          LIMIT ? OFFSET ?
+        `;
+
+        queryParams.push(length, start);
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        res(result);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
+  /**
+   * @param {SelectorRequest} option 
+   * @returns {Promise<number>}
+   */
+  SelectorInPartsCount(option) {
+    return new Promise(async (res, rej) => {
+      try {
+        let { search, noInclude } = option;
+
+        let query = `
+          SELECT 
+            COUNT(id) AS cantidad
+          FROM
+            tb_categorias
+          WHERE
+            estado = 1 
+        `, queryParams = [];
+
+        if (typeof search == 'string' && search != '') {
+          query += `
+            AND nombre LIKE ?
+          `;
+
+          queryParams.push(`%${search}%`);
+        }
+
+        if (noInclude.length && noInclude.every(id => typeof id == 'number')) {
+          query += `
+            AND id NOT IN (${noInclude.map(_ => '?').join(',')})
+          `
+          queryParams.push(...noInclude);
+        }
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        res(result[0].cantidad);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
   /** 
    * @returns {Promise<Array.<{code: string, name: string}>>}
    */

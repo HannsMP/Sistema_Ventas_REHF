@@ -42,7 +42,7 @@ class Tb_usuarios extends Table {
     this.columns = columns;
     this.app = app;
 
-    this.io = app.socket.node.selectNode('/control/administracion/usuarios');
+    this.io = app.socket.node.selectNode('/control/administracion/usuarios', true);
   }
   /* 
     ====================================================================================================
@@ -360,6 +360,194 @@ class Tb_usuarios extends Table {
     =============================================== Tabla ===============================================
     ====================================================================================================
   */
+  /**
+   * @param {import('datatables.net-dt').AjaxData} option 
+   * @param {number} noId 
+   * @returns {Promise<COLUMNS[]>}
+   */
+  readInParts(option, noId) {
+    return new Promise(async (res, rej) => {
+      try {
+
+        this.constraint('id', noId);
+
+        let { order, start, length, search } = option;
+
+        let query = `
+          SELECT 
+            u.id,
+            u.nombres,
+            u.apellidos,
+            u.usuario,
+            u.clave,
+            u.telefono,
+            u.email,
+            u.rol_id,
+            r.nombre AS rol_nombre,
+            u.foto_id,
+            f.src AS foto_src,
+            u.creacion,
+            u.estado
+          FROM
+            tb_usuarios AS u
+          LEFT 
+            JOIN 
+              tipo_rol AS r 
+            ON 
+              r.id = u.rol_id
+          LEFT 
+            JOIN 
+              tb_fotos AS f 
+            ON 
+              f.id = u.foto_id
+          WHERE
+            u.id != ?
+            AND u.rol_id > (
+              SELECT 
+                rol_id 
+              FROM 
+                tb_usuarios 
+              WHERE 
+                id = ?
+            )
+        `, queryParams = [
+            noId,
+            noId
+          ];
+
+        if (search.value) {
+          query += `
+            AND u.nombres LIKE ?
+            OR u.apellidos LIKE ?
+            OR u.usuario LIKE ?
+            OR u.telefono LIKE ?
+            OR u.email LIKE ?
+            OR r.nombre LIKE ?
+            OR u.creacion LIKE ?
+          `;
+
+          queryParams.push(
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`
+          );
+        }
+
+        let columnsSet = new Set([
+          'u.nombres',
+          'u.apellidos',
+          'u.usuario',
+          'u.telefono',
+          'u.email',
+          'r.nombre',
+          'u.creacion'
+        ]);
+
+        order = order.filter(d => columnsSet.has(d.name));
+
+        if (order?.length) {
+          query += `
+            ORDER BY
+          `
+          order.forEach(({ dir, name }, index) => {
+            query += `
+              ${name} ${dir == 'asc' ? 'ASC' : 'DESC'}`;
+
+            if (index < order.length - 1)
+              query += ', ';
+          })
+        }
+
+        query += `
+          LIMIT ? OFFSET ?
+        `;
+        queryParams.push(length, start);
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        res(result);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
+  /**
+   * @param {import('datatables.net-dt').AjaxData} option 
+   * @param {number} noId 
+   * @returns {Promise<number>}
+   */
+  readInPartsCount(option, noId) {
+    return new Promise(async (res, rej) => {
+      try {
+
+        this.constraint('id', noId);
+
+        let { search } = option;
+
+        let query = `
+          SELECT 
+            COUNT(u.id) AS cantidad
+          FROM
+            tb_usuarios AS u
+          LEFT 
+            JOIN 
+              tipo_rol AS r 
+            ON 
+              r.id = u.rol_id
+          LEFT 
+            JOIN 
+              tb_fotos AS f 
+            ON 
+              f.id = u.foto_id
+          WHERE
+            u.id != ?
+            AND u.rol_id > (
+              SELECT 
+                rol_id 
+              FROM 
+                tb_usuarios 
+              WHERE 
+                id = ?
+            )
+        `, queryParams = [
+            noId,
+            noId
+          ];
+
+        if (search.value) {
+          query += `
+            AND u.nombres LIKE ?
+            OR u.apellidos LIKE ?
+            OR u.usuario LIKE ?
+            OR u.telefono LIKE ?
+            OR u.email LIKE ?
+            OR r.nombre LIKE ?
+            OR u.creacion LIKE ?
+          `;
+
+          queryParams.push(
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`
+          );
+        }
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        res(result[0].cantidad);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
   /** 
    * @param {number} id 
    * @returns {Promise<COLUMNS[]>}
@@ -549,6 +737,7 @@ class Tb_usuarios extends Table {
           (socketClient) => {
             let apikey = socketClient.session.apikey;
             this.app.cache.apiKey.delete(apikey);
+            socketClient.disconnect()
           }
         );
 
@@ -700,6 +889,117 @@ class Tb_usuarios extends Table {
     ============================================== Selector ==============================================
     ====================================================================================================
   */
+  /**
+   * @param {SelectorRequest} option 
+   * @returns {Promise<COLUMNS[]>}
+   */
+  SelectorInParts(option) {
+    return new Promise(async (res, rej) => {
+      try {
+        let { order, start, length, search, byId, noInclude } = option;
+
+        let query = `
+          SELECT 
+            u.id,
+            u.usuario AS name,
+            f.src_small AS src
+          FROM
+            tb_usuarios AS u
+          LEFT
+            JOIN
+              tb_fotos AS f
+            ON
+              f.id = u.foto_id
+          WHERE
+            u.estado = 1 
+        `, queryParams = [];
+
+        if (search) {
+          if (byId) {
+            query += `
+              AND u.id = ?
+            `;
+
+            queryParams.push(search);
+          }
+          else {
+            query += `
+              AND u.usuario LIKE ?
+            `;
+
+            queryParams.push(`%${search}%`);
+          }
+        }
+
+        if (noInclude.length && noInclude.every(id => typeof id == 'number')) {
+          query += `
+            AND u.id NOT IN (${noInclude.map(_ => '?').join(',')})
+          `
+          queryParams.push(...noInclude);
+        }
+
+        if (order) {
+          query += `
+            ORDER BY
+              u.usuario ${order == 'asc' ? 'ASC' : 'DESC'}
+          `
+        }
+
+        query += `
+          LIMIT ? OFFSET ?
+        `;
+
+        queryParams.push(length, start);
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        res(result);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
+  /**
+   * @param {SelectorRequest} option 
+   * @returns {Promise<number>}
+   */
+  SelectorInPartsCount(option) {
+    return new Promise(async (res, rej) => {
+      try {
+        let { search, noInclude } = option;
+
+        let query = `
+          SELECT 
+            COUNT(id) AS cantidad
+          FROM
+            tb_usuarios
+          WHERE
+            estado = 1 
+        `, queryParams = [];
+
+        if (typeof search == 'string' && search != '') {
+          query += `
+            AND nombre LIKE ?
+          `;
+
+          queryParams.push(`%${search}%`);
+        }
+
+        if (noInclude.length && noInclude.every(id => typeof id == 'number')) {
+          query += `
+            AND id NOT IN (${noInclude.map(_ => '?').join(',')})
+          `
+          queryParams.push(...noInclude);
+        }
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        res(result[0].cantidad);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
   /** 
    * @returns {Promise<Array.<{code: string, name: string}>>}
    */

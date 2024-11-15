@@ -17,7 +17,7 @@ class SocketNode {
   /** 
    * @type {Event<{
    *   nodeCreate: SocketNode,
-   *   connected: SocketClient,
+   *   connected: SocketClient & {session: {apikey:string, routes:string, usuario_id:number, rol_id:number, tags string[]}},
    *   remove: SocketClient,
    *   destroy: string,
    * }>} 
@@ -48,7 +48,7 @@ class SocketNode {
     let currentNode = this;
 
     for (let i in routes) {
-      if (currentNode.option.last) 
+      if (currentNode.option.last)
         return false;
 
       let route = routes[i];
@@ -108,7 +108,7 @@ class SocketNode {
     let currentNode = this;
 
     for (let i in routes) {
-      if (currentNode.option.last){
+      if (currentNode.option.last) {
         currentNode.childNodes.clear()
         return undefined;
       }

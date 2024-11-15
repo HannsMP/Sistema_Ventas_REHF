@@ -25,12 +25,13 @@ const columns = {
  *   metodo_pago_id: number,
  *   descuento: number,
  *   serie: string,
+ *   comentario: string,
  *   creacion: string
  * }} COLUMNS
  */
 
 /** @extends {Table<COLUMNS>} */
-class tb_transacciones_ventas extends Table {
+class Tb_transacciones_ventas extends Table {
   id = new Id('S        ', { letters: true, numeric: true });
 
   /** @param {import('../app')} app */
@@ -39,8 +40,165 @@ class tb_transacciones_ventas extends Table {
     this.columns = columns;
     this.app = app;
 
-    this.io = app.socket.node.selectNode('/control/reportes/ventas');
-    this.io2 = app.socket.node.selectNode('/control/movimientos/ventas');
+    this.io = app.socket.node.selectNode('/control/reportes/ventas', true);
+  }
+  /* 
+    ====================================================================================================
+    =============================================== Tabla ===============================================
+    ====================================================================================================
+  */
+  /**
+   * @param {import('datatables.net-dt').AjaxData} option 
+   * @returns {Promise<COLUMNS[]>}
+   */
+  readInParts(option) {
+    return new Promise(async (res, rej) => {
+      try {
+        let { order, start, length, search } = option;
+
+        let query = `
+          SELECT 
+            tv.id,
+            tv.usuario_id,
+            u.usuario,
+            tv.metodo_pago_id, 
+            mp.nombre AS metodo_pago_nombre,
+            tv.cliente_id,
+            c.nombres,
+            tv.codigo,
+            tv.importe_total,
+            tv.descuento,
+            tv.creacion
+          FROM 
+            tb_transacciones_ventas AS tv
+          INNER 
+            JOIN tb_usuarios AS u
+              ON 
+                tv.usuario_id = u.id
+          INNER 
+            JOIN tipo_metodo_pago AS mp
+              ON
+                tv.metodo_pago_id = mp.id
+          INNER 
+            JOIN tb_clientes AS c
+              ON
+                tv.cliente_id = c.id
+        `, queryParams = [];
+
+        if (search.value) {
+          query += `
+            WHERE
+              tv.codigo LIKE ?
+              OR u.usuario LIKE ?
+              OR mp.nombre LIKE ?
+              OR tv.descuento LIKE ?
+              OR tv.importe_total LIKE ?
+              OR tv.creacion LIKE ?
+          `;
+
+          queryParams.push(
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`
+          );
+        }
+
+        let columnsSet = new Set([
+          'tv.codigo',
+          'u.usuario',
+          'mp.nombre',
+          'tv.descuento',
+          'tv.importe_total',
+          'tv.creacion'
+        ]);
+
+        order = order.filter(d => columnsSet.has(d.name));
+
+        if (order?.length) {
+          query += `
+            ORDER BY
+          `
+          order.forEach(({ dir, name }, index) => {
+            query += `
+              ${name} ${dir == 'asc' ? 'ASC' : 'DESC'}`;
+
+            if (index < order.length - 1)
+              query += ', ';
+          })
+        }
+
+        query += `
+          LIMIT ? OFFSET ?
+        `;
+        queryParams.push(length, start);
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        res(result);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
+  /**
+   * @param {import('datatables.net-dt').AjaxData} option 
+   * @returns {Promise<COLUMNS[]>}
+   */
+  readInPartsCount(option) {
+    return new Promise(async (res, rej) => {
+      try {
+        let { search } = option;
+
+        let query = `
+          SELECT 
+            COUNT(tv.id) AS cantidad
+          FROM 
+            tb_transacciones_ventas AS tv
+          INNER 
+            JOIN tb_usuarios AS u
+              ON 
+                tv.usuario_id = u.id
+          INNER 
+            JOIN tipo_metodo_pago AS mp
+              ON
+                tv.metodo_pago_id = mp.id
+          INNER 
+            JOIN tb_clientes AS c
+              ON
+                tv.cliente_id = c.id
+        `, queryParams = [];
+
+        if (search.value) {
+          query += `
+            WHERE
+              tv.codigo LIKE ?
+              OR u.usuario LIKE ?
+              OR mp.nombre LIKE ?
+              OR tv.descuento LIKE ?
+              OR tv.importe_total LIKE ?
+              OR tv.creacion LIKE ?
+          `;
+
+          queryParams.push(
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`
+          );
+        }
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        res(result[0].cantidad);
+      } catch (e) {
+        rej(e);
+      }
+    })
   }
   /** 
    * @param {COLUMNS} data 
@@ -113,7 +271,7 @@ class tb_transacciones_ventas extends Table {
           _ => this.readJoinId(result.insertId)
         )
 
-        this.io2.tagsName.get(`usr:${usuario_id}`)?.emit(
+        this.app.model.tb_ventas.io.tagsName.get(`usr:${usuario_id}`)?.emit(
           '/transacciones_ventas/data/insert',
           _ => this.readJoinId(result.insertId)
         )
@@ -176,7 +334,7 @@ class tb_transacciones_ventas extends Table {
     })
   }
   /**
-   * @param {number} id 
+   * @param {number} usuario_id 
    * @returns {Promise<{
    *   id: number, 
    *   usuario_id: number,   
@@ -321,7 +479,7 @@ class tb_transacciones_ventas extends Table {
         )
 
         if (dataEmitBefore.usuario_id == dataEmitAfter.usuario_id) {
-          this.io2.tagsName.get(`usr:${dataEmitBefore.usuario_id}`)?.emit(
+          this.app.model.tb_ventas.io.tagsName.get(`usr:${dataEmitBefore.usuario_id}`)?.emit(
             '/transacciones_ventas/data/deleteId',
             {
               before: dataEmitBefore,
@@ -329,7 +487,7 @@ class tb_transacciones_ventas extends Table {
               usuario_id: dataEmitBefore.usuario_id
             }
           )
-          this.io2.tagsName.get(`usr:${dataEmitAfter.usuario_id}`)?.emit(
+          this.app.model.tb_ventas.io.tagsName.get(`usr:${dataEmitAfter.usuario_id}`)?.emit(
             '/transacciones_ventas/data/updateId',
             dataEmitAfter
           )
@@ -375,7 +533,7 @@ class tb_transacciones_ventas extends Table {
 
         let dataEmit = await this.readJoinId(id);
 
-        this.io2.tagsName.get(`usr:${dataEmit.usuario_id}`)?.emit(
+        this.app.model.tb_ventas.io.tagsName.get(`usr:${dataEmit.usuario_id}`)?.emit(
           '/transacciones_ventas/data/deleteId',
           dataEmit
         )
@@ -686,4 +844,4 @@ class tb_transacciones_ventas extends Table {
   }
 }
 
-module.exports = tb_transacciones_ventas;
+module.exports = Tb_transacciones_ventas;

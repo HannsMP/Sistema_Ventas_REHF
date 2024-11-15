@@ -82,7 +82,7 @@ class Time {
       tt: _ => hora >= 12 ? 'pm' : 'am'
     };
 
-    return format.replace(/hh|mm|ss|h|m|s|DDDD|DDD|DD|D|MMMM|MMM|MM|M|YYYY|YY|tt/g, match => formats[match]());
+    return format.replace(/hh|HH|mm|ss|h|H|m|s|DDDD|DDD|DD|D|MMMM|MMM|MM|M|YYYY|YY|tt|TT/g, match => formats[match]());
   }
 }
 

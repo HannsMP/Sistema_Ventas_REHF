@@ -15,10 +15,10 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    let resSuccess = await query.post.cookie("/api/cerebro/precio_venta/readJson");
+    let resPrecioVenta = await query.post.cookie("/api/cerebro/precio_venta/readJson");
 
     /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-    let { data, option, prediccion } = await resSuccess.json();
+    let { data, option, prediccion } = await resPrecioVenta.json();
 
     let resPrecios = await query.post.cookie('/api/productos/chart/readPrice');
 

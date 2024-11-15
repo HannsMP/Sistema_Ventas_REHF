@@ -1,6 +1,6 @@
 const Table = require('../utils/template/Table');
 
-const name = 'tb_fotos'
+const name = 'tb_asistencias'
 const columns = {
   id: { name: 'id', null: false, type: 'Integer', limit: 11 },
   usuario_id: { name: 'usuario_id', null: false, type: 'Integer', limit: 11 },
@@ -26,6 +26,148 @@ class Tb_asistencias extends Table {
     this.app = app;
 
     this.io = app.socket.node.selectNode('/control/reportes/asistencia', true);
+  }
+  /* 
+    ====================================================================================================
+    =============================================== Tabla ===============================================
+    ====================================================================================================
+  */
+  /**
+   * @param {import('datatables.net-dt').AjaxData} option 
+   * @returns {Promise<COLUMNS[]>}
+   */
+  readInParts(option) {
+    return new Promise(async (res, rej) => {
+      try {
+        let { order, start, length, search } = option;
+
+        let query = `
+          SELECT 
+            a.id,
+            u.usuario,
+            u.telefono,
+            r.nombre AS rol_nombre,
+            DATE_FORMAT(a.creacion, '%Y-%m-%d') AS fecha_creacion,
+            DATE_FORMAT(a.creacion, '%r') AS hora_coneccion,
+            DATE_FORMAT(a.desconeccion, '%r') AS hora_desconeccion
+          FROM
+            tb_asistencias AS a
+          LEFT 
+            JOIN 
+              tb_usuarios AS u
+            ON 
+              u.id = a.usuario_id
+          LEFT 
+            JOIN 
+              tipo_rol AS r
+            ON 
+              r.id = u.rol_id
+        `, queryParams = [];
+
+        if (search.value) {
+          query += `
+            WHERE
+              u.usuario LIKE ?
+              OR u.telefono LIKE ?
+              OR r.nombre LIKE ?
+              OR a.creacion LIKE ?
+          `;
+
+          queryParams.push(
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`
+          );
+        }
+
+        let columnsSet = new Set([
+          'u.usuario',
+          'u.telefono',
+          'r.nombre',
+          'a.creacion',
+          'a.desconeccion',
+          'a.creacion'
+        ]);
+
+        order = order.filter(d => columnsSet.has(d.name));
+
+        if (order?.length) {
+          query += `
+            ORDER BY
+          `
+          order.forEach(({ dir, name }, index) => {
+            query += `
+              ${name} ${dir == 'asc' ? 'ASC' : 'DESC'}`;
+
+            if (index < order.length - 1)
+              query += ', ';
+          })
+        }
+
+        query += `
+          LIMIT ? OFFSET ?
+        `;
+        queryParams.push(length, start);
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        res(result);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
+  /**
+   * @param {import('datatables.net-dt').AjaxData} option 
+   * @returns {Promise<number>}
+   */
+  readInPartsCount(option) {
+    return new Promise(async (res, rej) => {
+      try {
+        let { search } = option;
+
+        let query = `
+          SELECT 
+            COUNT(a.id) AS cantidad
+          FROM
+            tb_asistencias AS a
+          LEFT 
+            JOIN 
+              tb_usuarios AS u
+            ON 
+              u.id = a.usuario_id
+          LEFT 
+            JOIN 
+              tipo_rol AS r
+            ON 
+              r.id = u.rol_id
+        `, queryParams = [];
+
+        if (search.value) {
+          query += `
+            WHERE
+              u.usuario LIKE ?
+              OR u.telefono LIKE ?
+              OR r.nombre LIKE ?
+              OR a.creacion LIKE ?
+          `;
+
+          queryParams.push(
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`
+          );
+        }
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        res(result[0].cantidad);
+      } catch (e) {
+        rej(e);
+      }
+    })
   }
   /** 
    * @param {number} data 

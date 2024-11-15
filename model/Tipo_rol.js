@@ -28,6 +28,135 @@ class Tb_roles extends Table {
     ============================================== Selector ==============================================
     ====================================================================================================
   */
+  /**
+   * @param {SelectorRequest} option 
+   * @param {number} myRolId 
+   * @returns {Promise<COLUMNS[]>}
+   */
+  SelectorInParts(option, myRolId) {
+    return new Promise(async (res, rej) => {
+      try {
+        let { order, start, length, search, byId, noInclude } = option;
+
+        let query = `
+          SELECT 
+            id,
+            nombre AS name
+          FROM
+            tipo_rol
+        `, queryParams = [];
+
+        let includeWhere = false;
+        if (search) {
+          if (byId) {
+            query += `
+              WHERE
+                id = ?
+            `;
+
+            includeWhere = true;
+            queryParams.push(search);
+          }
+          else {
+            query += `
+              WHERE
+                nombre LIKE ?
+            `;
+
+            includeWhere = true;
+            queryParams.push(`%${search}%`);
+          }
+        }
+
+        if (myRolId > 1 && Number.isInteger(myRolId)) {
+          query += ` 
+            ${includeWhere ? 'AND' : 'WHERE'} 
+            ? < id 
+          `;
+          includeWhere = true;
+          queryParams.push(myRolId);
+        }
+
+        if (noInclude.length && noInclude.every(id => typeof id == 'number')) {
+          query += `
+            ${includeWhere ? 'AND' : 'WHERE'}
+              id NOT IN (${noInclude.map(_ => '?').join(',')})
+          `
+          queryParams.push(...noInclude);
+        }
+
+        if (order) {
+          query += `
+            ORDER BY
+              id ${order == 'asc' ? 'ASC' : 'DESC'}
+          `
+        }
+
+        query += `
+          LIMIT ? OFFSET ?
+        `;
+
+        queryParams.push(length, start);
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        res(result);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
+  /**
+   * @param {SelectorRequest} option 
+   * @param {number} myRolId 
+   * @returns {Promise<number>}
+   */
+  SelectorInPartsCount(option, myRolId) {
+    return new Promise(async (res, rej) => {
+      try {
+        let { search, noInclude } = option;
+
+        let query = `
+          SELECT 
+            COUNT(id) AS cantidad
+          FROM
+            tipo_rol
+        `, queryParams = [];
+
+        if (typeof search == 'string' && search != '') {
+          query += `
+            WHERE
+              nombre LIKE ?
+          `;
+
+          queryParams.push(`%${search}%`);
+        }
+
+        if (myRolId > 1 && Number.isInteger(myRolId)) {
+          query += ` 
+            ${includeWhere ? 'AND' : 'WHERE'} 
+            ? < id 
+          `;
+          includeWhere = true;
+          queryParams.push(myRolId);
+        }
+
+        if (noInclude.length && noInclude.every(id => typeof id == 'number')) {
+          query += `
+            WHERE
+              id NOT IN (${noInclude.map(_ => '?').join(',')})
+          `
+          queryParams.push(...noInclude);
+        }
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        res(result[0].cantidad);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
   /** 
    * @returns {Promise<Array.<{code: string, name: string}>>}
    */
@@ -35,7 +164,7 @@ class Tb_roles extends Table {
     return new Promise(async (res, rej) => {
       try {
         let [result] = rol_id == 1
-          ? await this.app.model.poolValues(`
+          ? await this.app.model.pool(`
               SELECT 
                 id,
                 nombre AS name
@@ -50,7 +179,7 @@ class Tb_roles extends Table {
                 tipo_rol
               WHERE ? < id
             `, [rol_id])
-            
+
         res(result);
       } catch (e) {
         rej(e);

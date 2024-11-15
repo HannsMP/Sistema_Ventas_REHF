@@ -3,17 +3,6 @@ $('.content-body').ready(async () => {
 
     /* 
       ==================================================
-      =================== QUERY DATA ===================
-      ==================================================
-    */
-
-    let resAsistenciaTbl = await query.post.cookie("/api/asistencia/table/readAll");
-    /** @typedef {{agregar:number, editar:number, eliminar:number, exportar:number, ocultar:number, ver:number}} PERMISOS */
-    /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[], permisos: PERMISOS}} */
-    let { list: dataAsistencias } = await resAsistenciaTbl.json();
-
-    /* 
-      ==================================================
       ================== VARIABLES DOM ==================
       ==================================================
     */
@@ -34,29 +23,42 @@ $('.content-body').ready(async () => {
     */
 
     $table.init({
-      data: dataAsistencias,
+      serverSide: true,
+      ajax: (data, end) => {
+        socket.emit('/read/table', data, res => end(res))
+      },
       pageLength: 10,
       order: [[5, 'des'], [3, 'des']],
       columnDefs: [
         {
+          name: 'u.usuario',
           className: 'dtr-tag',
           targets: 0,
           render: data => '<div>' + data + '</div>'
         },
         {
+          name: 'u.telefono',
+          className: 'dt-type-numeric',
+          targets: 1
+        },
+        {
+          name: 'r.nombre',
           className: 'dtr-tag',
           targets: 2,
           render: data => '<div>' + data + '</div>'
         },
         {
+          name: 'a.creacion',
           className: 'dt-type-date',
           targets: 3
         },
         {
+          name: 'a.desconeccion',
           className: 'dt-type-date',
           targets: 4
         },
         {
+          name: 'a.creacion',
           className: 'dt-type-date',
           targets: 5
         }

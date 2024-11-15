@@ -29,7 +29,7 @@ module.exports = {
 
         let { id } = req.body;
 
-        let count = await this.model.tb_categorias.readCountId(Number(id))
+        let count = await this.model.tb_categorias.readIdCount(Number(id))
 
         let OkPacket
         if (!count?.producto_cantidad)

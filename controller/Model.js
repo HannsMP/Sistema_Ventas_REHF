@@ -13,6 +13,7 @@ const Tb_productos = require('../model/Tb_productos');
 const Tb_clientes = require('../model/Tb_clientes');
 const Tb_ventas = require('../model/Tb_ventas');
 const Tb_transacciones_ventas = require('../model/Tb_transacciones_ventas');
+const Tb_Yapes = require('../model/Tb_Yapes');
 
 const Tipo_rol = require('../model/Tipo_rol');
 const Tipo_cliente = require('../model/Tipo_cliente');
@@ -44,6 +45,7 @@ class Model {
     this.tb_clientes = new Tb_clientes(app);
     this.tb_ventas = new Tb_ventas(app);
     this.tb_transacciones_ventas = new Tb_transacciones_ventas(app);
+    this.tb_Yapes = new Tb_Yapes(app);
 
     this.tipo_rol = new Tipo_rol(app);
     this.tipo_cliente = new Tipo_cliente(app);
@@ -120,9 +122,14 @@ class Model {
       });
     });
   }
-  /** @param {string} query @param {columns | values[] | (values[])[] | columns[]} values  */
-  format(query, values) {
-    return mysql.format(query, values);
+  /**
+   * @param {string} query 
+   * @param {columns | values[] | (values[])[] | columns[]} [values] 
+   * @param {boolean} [stringifyObjects] 
+   * @param {string} [timeZone] 
+   */
+  format(query, values, stringifyObjects, timeZone) {
+    return mysql.format(query, values, stringifyObjects, timeZone);
   }
   /**
    * @returns {Promise<string>}

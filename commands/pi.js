@@ -9,21 +9,21 @@ module.exports = {
   onColldown: {},
   description: `Permite controlar el estado del dispositivo. 
   Uso: */pi [accion?] [force?]*
-  si no se especifica accion: retorna informacion del servidor.
+  si no se especifica accion: retorna informacion del dispositivo.
   accion:
     *poweroff*: apaga el sistema, ¿lo encenderas manualmente?.
     *reboot*: reinicia el sistema, Es bueno refrescar la memoria!.
   force:
-    *-y*: reinicia el servidor.`,
+    *-y*: reinicia el dispositivo.`,
   async run(phone, msg, arg, complete) {
 
     let permiso = await this.model.tb_permisos.phonePathView(phone, module.exports.name);
 
     if (!permiso) return
 
-    let platform = app.system.platform();
+    let platform = this.system.platform();
 
-    if (this.platform == 'linux') {
+    if (platform == 'linux') {
       /** @type {['poweroff'|'reboot', '-y']} */
       let [accion, force] = arg;
 
@@ -80,7 +80,7 @@ module.exports = {
         `💾 **Número de Núcleos**: ${cpuInfo.length}`,
         `🚀 **Velocidad del Procesador**: ${cpuInfo[0].speed} MHz`,
         `🕒 **Tiempo de Uso**: ${Math.floor(usageInfo / 60)} minutos`,
-        `💻 **Uso del Sistema**: ${os.loadavg().map(load => load.toFixed(2)).join(', ')}`,
+        `💻 **Uso del Sistema**: ${this.system.os.loadavg().map(load => load.toFixed(2)).join(', ')}`,
         "",
         "🔋 **Memoria RAM**",
         `    - Total: ${totalMemory} GB`,
@@ -92,7 +92,7 @@ module.exports = {
       diskInfo
         .map(disk => sendMsg.push(
           `- Total: ${(disk.size / 1024 / 1024 / 1024).toFixed(2)} Gb`,
-          `- Libre: ${(disk.free / 1024 / 1024 / 1024).toFixed(2)} Gb`
+          `- Libre: ${(disk.available / 1024 / 1024 / 1024).toFixed(2)} Gb`
         ))
       sendMsg.push(
         "",

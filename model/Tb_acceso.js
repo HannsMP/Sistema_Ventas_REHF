@@ -27,13 +27,187 @@ class Tb_acceso extends Table {
     this.columns = columns;
     this.app = app;
 
-    this.io = app.socket.node.selectNode('/control/administracion/acceso');
+    this.io = app.socket.node.selectNode('/control/administracion/acceso', true);
   }
   /* 
     ====================================================================================================
     =============================================== Tabla ===============================================
     ====================================================================================================
   */
+  /**
+   * @param {import('datatables.net-dt').AjaxData} option 
+   * @returns {Promise<COLUMNS[]>}
+   */
+  readInParts(option) {
+    return new Promise(async (res, rej) => {
+      try {
+        let { order, start, length, search } = option;
+
+        let query = `
+          SELECT
+            a.id,
+            a.menu_id,
+            m.ruta AS menu_ruta,
+            m.principal AS menu_principal,
+            a.rol_id,
+            r.nombre AS rol_nombre,
+            a.permiso_id,
+            CASE
+              WHEN d.ver = 1 THEN -1
+              ELSE p.ver
+            END AS permiso_ver,
+            CASE 
+              WHEN d.agregar = 1 THEN -1 
+              ELSE p.agregar 
+            END AS permiso_agregar,
+            CASE 
+              WHEN d.editar = 1 THEN -1 
+              ELSE p.editar 
+            END AS permiso_editar,
+            CASE 
+              WHEN d.eliminar = 1 THEN -1 
+              ELSE p.eliminar 
+            END AS permiso_eliminar,
+            CASE 
+              WHEN d.ocultar = 1 THEN -1 
+              ELSE p.ocultar 
+            END AS permiso_ocultar,
+            CASE 
+              WHEN d.exportar = 1 THEN -1 
+              ELSE p.exportar 
+            END AS permiso_exportar
+          FROM
+            tb_acceso AS a
+          INNER 
+            JOIN 
+              tb_menus AS m
+            ON 
+              m.id = a.menu_id
+          INNER 
+            JOIN 
+              tipo_rol AS r
+            ON 
+              r.id = a.rol_id
+          INNER 
+            JOIN 
+              tb_permisos AS p
+            ON 
+              p.id = a.permiso_id
+          INNER 
+            JOIN 
+              tb_permisos AS d
+            ON 
+              d.id = a.disabled_id
+        `, queryParams = [];
+
+        if (search.value) {
+          query += `
+            WHERE
+              m.ruta LIKE ?
+              OR m.principal LIKE ?
+              OR r.nombre LIKE ?
+          `;
+
+          queryParams.push(
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`
+          );
+        }
+
+        let columnsSet = new Set([
+          'm.ruta',
+          'm.principal',
+          'r.nombre'
+        ]);
+
+        order = order.filter(d => columnsSet.has(d.name));
+
+        if (order?.length) {
+          query += `
+            ORDER BY
+          `
+          order.forEach(({ dir, name }, index) => {
+            query += `
+              ${name} ${dir == 'asc' ? 'ASC' : 'DESC'}`;
+
+            if (index < order.length - 1)
+              query += ', ';
+          })
+        }
+
+        query += `
+          LIMIT ? OFFSET ?
+        `;
+        queryParams.push(length, start);
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        res(result);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
+  /**
+   * @param {import('datatables.net-dt').AjaxData} option 
+   * @returns {Promise<number>}
+   */
+  readInPartsCount(option) {
+    return new Promise(async (res, rej) => {
+      try {
+        let { search } = option;
+
+        let query = `
+          SELECT 
+            COUNT(a.id) AS cantidad
+          FROM
+            tb_acceso AS a
+          INNER 
+            JOIN 
+              tb_menus AS m
+            ON 
+              m.id = a.menu_id
+          INNER 
+            JOIN 
+              tipo_rol AS r
+            ON 
+              r.id = a.rol_id
+          INNER 
+            JOIN 
+              tb_permisos AS p
+            ON 
+              p.id = a.permiso_id
+          INNER 
+            JOIN 
+              tb_permisos AS d
+            ON 
+              d.id = a.disabled_id
+        `, queryParams = [];
+
+        if (search.value) {
+          query += `
+            WHERE
+              m.ruta LIKE ?
+              OR m.principal LIKE ?
+              OR r.nombre LIKE ?
+          `;
+
+          queryParams.push(
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`
+          );
+        }
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        res(result[0].cantidad);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
   /** 
    * @param {{
    *   menu_id: number,

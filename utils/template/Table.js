@@ -60,6 +60,49 @@ class Table {
       }
     })
   }
+  /**
+   * @param {number[]} [noIds] 
+   * @param {(T extends { estado: any } ? boolean : undefined)} active 
+   * @returns {Promise<number>}
+   */
+  readCount(noIds, active) {
+    return new Promise(async (res, rej) => {
+      try {
+        let query = `
+          SELECT 
+            COUNT(1) AS cantidad
+          FROM
+            ${this.name}
+        `
+
+        if (noIds?.length) {
+          noIds = noIds.filter(id => this.constraint('id', id))
+
+          if (noIds.length)
+            query += `
+              WHERE
+                id NOT IN (${noIds.map(_ => '?').join(', ')})
+                ${active ? 'AND estado = 1' : ''}
+            `
+
+          let [result] = await this.app.model.poolValues(query, noIds);
+          res(result[0].cantidad);
+        }
+        else {
+          if (active)
+            query += `
+              WHERE 
+                estado = 1
+            `
+
+          let [result] = await this.app.model.pool(query);
+          res(result[0].cantidad);
+        }
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
   /** 
    * @template C
    * @param {C & keyof T} column 
@@ -67,13 +110,13 @@ class Table {
    * @param {{unic: boolean}} compute  
    */
   constraint(column, data, compute) {
-    const columnInfo = this.columns[column];
-
-    if (!columnInfo)
+    if (!this.isColumn(column))
       throw this.error(
         'COLUMN_UNEXIST_FIELD',
         `La columna ${column} no existe.`
       );
+
+    const columnInfo = this.columns[column];
 
     if (data == undefined) {
       if (!columnInfo.null)
@@ -91,7 +134,7 @@ class Table {
       );
 
     if (compute?.unic)
-      if (columnInfo.unic && !this._computeUnic(data, column, compute.unic))
+      if (columnInfo.unic && !this.isUnic(column, data, compute.unic))
         throw this.error(
           'VALUE_NOT_UNIC',
           `El parámetro de la columna ${column} no es unico`
@@ -152,34 +195,57 @@ class Table {
     if (!typeFun) return false;
     return typeFun(value, column);
   }
+  isColumn(column_name) {
+    return this.columns.hasOwnProperty(column_name)
+  }
+  isColumnUnic(column_name) {
+    return this.isColumn(column_name)
+      && Boolean(this.columns[column_name].unic);
+  }
+  /** 
+   * @template C
+   * @param {C & keyof T} column 
+   * @param {T[C]} value 
+   * @param {number} [id] 
+   * @returns {Promise<boolean>} 
+   */
+  isUnic(column, value, id) {
+    return new Promise(async (res, rej) => {
+      let query, params;
 
-  async _computeUnic(value, column, id) {
-
-    let [result] = typeof id == 'boolean'
-      ? await this.app.model.poolValues(`
+      if (typeof id === 'number') {
+        query = `
         SELECT 
-          1
-        FROM 
-          ${this.name}
-        WHERE 
-          ${column} = ?
-      `, [
-        value
-      ])
-      : await this.app.model.poolValues(`
+          EXISTS (
+            SELECT 
+              1 
+            FROM 
+              ${this.name} 
+            WHERE 
+              ${column} = ?
+              AND id != ?
+          ) AS isExists
+      `;
+        params = [value, id];
+      } else {
+        query = `
         SELECT 
-          1
-        FROM 
-          ${this.name}
-        WHERE 
-          ${column} = ?
-          AND id != ?
-      `, [
-        value,
-        id
-      ])
+          EXISTS (
+            SELECT 
+              1 
+            FROM 
+              ${this.name} 
+            WHERE 
+              ${column} = ?
+          ) AS isExists
+      `;
+        params = [value];
+      }
 
-    return result[0] ? false : true
+      let [result] = await this.app.model.poolValues(query, params);
+
+      res(result[0].isExists == 1 ? false : true);
+    });
   }
   /**
    * @param {keyof errorMessages} code 

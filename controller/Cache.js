@@ -123,10 +123,6 @@ class Cache {
       autoSave: true
     }
   );
-
-  constructor() {
-    console.log(this.packageJSON.readJSON());
-  }
 }
 
 module.exports = Cache;

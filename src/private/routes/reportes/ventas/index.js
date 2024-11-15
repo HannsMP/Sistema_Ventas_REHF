@@ -3,17 +3,6 @@ $('.content-body').ready(async () => {
 
     /* 
       ==================================================
-      =================== QUERY DATA ===================
-      ==================================================
-    */
-
-    let resTransaccionesVentas = await query.post.cookie("/api/transacciones_ventas/table/readAll");
-    /** @typedef {{agregar:number, editar:number, eliminar:number, exportar:number, ocultar:number, ver:number}} PERMISOS */
-    /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[], permisos: PERMISOS}} */
-    let { list: dataTransaccionesVentas, permisos: permisosTransaccionesVentas } = await resTransaccionesVentas.json();
-
-    /* 
-      ==================================================
       ================== VARIABLES DOM ==================
       ==================================================
     */
@@ -67,35 +56,47 @@ $('.content-body').ready(async () => {
     */
 
     $tableMain.init({
-      data: dataTransaccionesVentas,
+      serverSide: true,
+      ajax: (data, end) => {
+        socket.emit('/read/table', data, res => end(res))
+      },
+      pageLength: 10,
       select: true,
       pageLength: 10,
       order: [[5, 'des']],
       columnDefs: [
         {
+          name: 'tv.codigo',
           className: 'dtr-code',
           orderable: false,
           targets: 0
         },
         {
+          name: 'u.usuario',
           className: 'dtr-tag',
           targets: 1,
           render: data => '<div>' + data + '</div>'
         },
         {
+          name: 'mp.nombre',
           className: 'dtr-tag',
           targets: 2,
           render: data => '<div>' + data + '</div>'
         },
         {
+          name: 'tv.descuento',
+          className: 'dt-type-numeric',
           targets: 3,
           render: data => data?.toFixed(2)
         },
         {
+          name: 'tv.importe_total',
+          className: 'dt-type-numeric',
           targets: 4,
           render: data => data?.toFixed(2)
         },
         {
+          name: 'tv.creacion',
           className: 'dt-type-date',
           targets: 5
         }
@@ -181,26 +182,20 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    let resProductos = await query.post.cookie("/api/productos/selector/readAll");
+    let dataSelectorProductos = new OptionsServerside(
+      (req, end) => socket.emit('/selector/producto', req, res => end(res)),
+      { showIndex: 'img', order: 'asc', noInclude: true }
+    );
 
-    /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-    let { list: dataProductos } = await resProductos.json();
+    let dataSelectorMetodoPago = new OptionsServerside(
+      (req, end) => socket.emit('/selector/metodoPago', req, res => end(res)),
+      { showIndex: false, order: 'asc', noInclude: true }
+    );
 
-    let dataSelectorProductos = new SelectorMap(dataProductos, 'img');
-
-    let resMetodoPago = await query.post.cookie("/api/tipo_metodo_pago/selector/readAll");
-
-    /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-    let { list: dataMetodoPago } = await resMetodoPago.json();
-
-    let dataSelectorMetodoPago = new SelectorMap(dataMetodoPago);
-
-    let resUsuarios = await query.post.cookie("/api/usuarios/selector/readAll");
-
-    /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-    let { list: dataUsuarios } = await resUsuarios.json();
-
-    let dataSelectorUsuarios = new SelectorMap(dataUsuarios);
+    let dataSelectorUsuario = new OptionsServerside(
+      (req, end) => socket.emit('/selector/usuario', req, res => end(res)),
+      { showIndex: 'img', order: 'asc', noInclude: true }
+    );
 
     /* 
       ==================================================
@@ -208,10 +203,24 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    let productosNuevoSelectorUnic = new SelectorUnic(inputNuevoSelectorProductos, dataSelectorProductos);
-    let productosEditarSelectorUnic = new SelectorUnic(inputEditarSelectorProductos, dataSelectorProductos);
-    let metodoTransaccionSelectorUnic = new SelectorUnic(inputSelectorMetodoPago, dataSelectorMetodoPago);
-    let usuarioSelectorUnic = new SelectorUnic(inputSelectorVendedor, dataSelectorUsuarios);
+    let productosNuevoSelectorUnic = new SelectorInput(
+      inputNuevoSelectorProductos,
+      dataSelectorProductos
+    );
+    let productosEditarSelectorUnic = new SelectorInput(
+      inputEditarSelectorProductos,
+      dataSelectorProductos
+    );
+    let metodoTransaccionSelectorUnic = new SelectorInput(
+      inputSelectorMetodoPago,
+      dataSelectorMetodoPago,
+      { autohide: true }
+    );
+    let usuarioSelectorUnic = new SelectorInput(
+      inputSelectorVendedor,
+      dataSelectorUsuario,
+      { autohide: true }
+    );
 
     /* 
       ==================================================
@@ -442,26 +451,59 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    if (permisosTransaccionesVentas.eliminar) {
-      tblEliminarMain.forEach(btn => btn.addEventListener('click', _ => {
-        let id = $tableMain.selected();
-        if (!id) return alarm.warn('Selecciona una fila');
+    tblEliminarMain.forEach(btn => btn.addEventListener('click', _ => {
+      let id = $tableMain.selected();
+      if (!id) return alarm.warn('Selecciona una fila');
 
-        Swal.fire({
+      Swal.fire({
+        title: "Estás seguro?",
+        text: "No podrás revertir esto!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "rgb(13, 204, 242)",
+        cancelButtonColor: "rgb(220, 53, 69)",
+        confirmButtonText: "Si, borralo!",
+        cancelButtonText: "Cancelar",
+        background: 'rgb(24, 20, 47)',
+        color: 'rgb(255, 255, 255)',
+      })
+        .then(async (result) => {
+          if (result.isConfirmed) {
+            let resClientes = await query.post.json.cookie("/api/transacciones_ventas/table/deleteId", { id });
+
+            /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
+            let { err } = await resClientes.json();
+
+            if (err)
+              return alarm.error(`Transaccion no Eliminada.`);
+
+            alarm.success(`Transaccion eliminada.`);
+          }
+        });
+    }))
+
+    tblEliminarVentas.forEach(btn => btn.addEventListener('click', _ => {
+      let id = $tableVentas.selected();
+
+      let transaccion_id = $tableMain.selected();
+
+      if ($tableVentas.datatable.rows().count() == 1)
+        return Swal.fire({
           title: "Estás seguro?",
-          text: "No podrás revertir esto!",
+          text: "Es el ultimo registro, tambien se borrar la trasaccion",
           icon: "warning",
           showCancelButton: true,
           confirmButtonColor: "rgb(13, 204, 242)",
-          cancelButtonColor: "rgb(220, 53, 69)",
+          cancelButtonColor: "rgb(24, 20, 47)",
           confirmButtonText: "Si, borralo!",
           cancelButtonText: "Cancelar",
-          background: 'rgb(24, 20, 47)',
+          background: 'rgb(220, 53, 69)',
           color: 'rgb(255, 255, 255)',
         })
           .then(async (result) => {
             if (result.isConfirmed) {
-              let resClientes = await query.post.json.cookie("/api/transacciones_ventas/table/deleteId", { id });
+
+              let resClientes = await query.post.json.cookie("/api/transacciones_ventas/table/deleteId", { id: transaccion_id });
 
               /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
               let { err } = await resClientes.json();
@@ -472,72 +514,37 @@ $('.content-body').ready(async () => {
               alarm.success(`Transaccion eliminada.`);
             }
           });
-      }))
 
-      tblEliminarVentas.forEach(btn => btn.addEventListener('click', _ => {
-        let id = $tableVentas.selected();
+      if (!id) return alarm.warn('Selecciona una fila');
 
-        let transaccion_id = $tableMain.selected();
+      Swal.fire({
+        title: "Está seguro?",
+        text: "No podrás revertir esto!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "rgb(13, 204, 242)",
+        cancelButtonColor: "rgb(220, 53, 69)",
+        confirmButtonText: "Si, borralo!",
+        cancelButtonText: "Cancelar",
+        background: 'rgb(24, 20, 47)',
+        color: 'rgb(255, 255, 255)',
+      })
+        .then(async (result) => {
+          if (result.isConfirmed) {
 
-        if ($tableVentas.datatable.rows().count() == 1)
-          return Swal.fire({
-            title: "Estás seguro?",
-            text: "Es el ultimo registro, tambien se borrar la trasaccion",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "rgb(13, 204, 242)",
-            cancelButtonColor: "rgb(24, 20, 47)",
-            confirmButtonText: "Si, borralo!",
-            cancelButtonText: "Cancelar",
-            background: 'rgb(220, 53, 69)',
-            color: 'rgb(255, 255, 255)',
-          })
-            .then(async (result) => {
-              if (result.isConfirmed) {
+            let resClientes = await query.post.json.cookie("/api/ventas/table/deleteId", { id, transaccion_id });
 
-                let resClientes = await query.post.json.cookie("/api/transacciones_ventas/table/deleteId", { id: transaccion_id });
+            /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
+            let { err } = await resClientes.json();
 
-                /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-                let { err } = await resClientes.json();
+            if (err)
+              return alarm.error(`Venta no Eliminada.`);
 
-                if (err)
-                  return alarm.error(`Transaccion no Eliminada.`);
+            alarm.success(`Venta eliminada.`);
+          }
+        });
 
-                alarm.success(`Transaccion eliminada.`);
-              }
-            });
-
-        if (!id) return alarm.warn('Selecciona una fila');
-
-        Swal.fire({
-          title: "Está seguro?",
-          text: "No podrás revertir esto!",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonColor: "rgb(13, 204, 242)",
-          cancelButtonColor: "rgb(220, 53, 69)",
-          confirmButtonText: "Si, borralo!",
-          cancelButtonText: "Cancelar",
-          background: 'rgb(24, 20, 47)',
-          color: 'rgb(255, 255, 255)',
-        })
-          .then(async (result) => {
-            if (result.isConfirmed) {
-
-              let resClientes = await query.post.json.cookie("/api/ventas/table/deleteId", { id, transaccion_id });
-
-              /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-              let { err } = await resClientes.json();
-
-              if (err)
-                return alarm.error(`Venta no Eliminada.`);
-
-              alarm.success(`Venta eliminada.`);
-            }
-          });
-
-      }))
-    }
+    }))
 
     /* 
       ==================================================

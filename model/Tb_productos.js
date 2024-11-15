@@ -5,7 +5,7 @@ const name = 'tb_productos';
 const columns = {
   id: { name: 'id', null: false, type: 'Integer', limit: 11 },
   codigo: { name: 'codigo', null: false, type: 'String', limit: 20, unic: true },
-  producto: { name: 'nombre', null: false, type: 'String', limit: 50, unic: true },
+  producto: { name: 'nombre', null: false, type: 'String', limit: 50 },
   descripcion: { name: 'descripcion', null: true, type: 'String', limit: 250 },
   compra: { name: 'compra', null: false, type: 'Number', limit: 10, decimal: 2 },
   venta: { name: 'venta', null: false, type: 'Number', limit: 10, decimal: 2 },
@@ -53,6 +53,154 @@ class Tb_productos extends Table {
     =============================================== Tabla ===============================================
     ====================================================================================================
   */
+  /**
+   * @param {import('datatables.net-dt').AjaxData} option 
+   * @returns {Promise<COLUMNS[]>}
+   */
+  readInParts(option) {
+    return new Promise(async (res, rej) => {
+      try {
+        let { order, start, length, search } = option;
+
+        let query = `
+          SELECT 
+            p.id,
+            p.codigo,
+            p.producto,
+            p.descripcion,
+            p.compra,
+            p.venta,
+            p.cantidad,
+            p.categoria_id,
+            c.nombre AS categoria_nombre,
+            p.foto_id,
+            f.src AS foto_src,
+            p.creacion,
+            p.estado
+          FROM
+            tb_productos AS p
+          LEFT 
+            JOIN 
+              tb_categorias AS c
+            ON 
+              c.id = p.categoria_id
+          LEFT 
+            JOIN 
+              tb_fotos AS f
+            ON 
+              f.id = p.foto_id
+          WHERE
+            p.estado in (1, 0)
+        `, queryParams = [];
+
+        if (search.value) {
+          query += `
+            AND p.codigo LIKE ?
+            OR p.producto LIKE ?
+            OR p.descripcion LIKE ?
+            OR c.nombre LIKE ?
+            OR p.creacion LIKE ?
+          `;
+
+          queryParams.push(
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`
+          );
+        }
+
+        let columnsSet = new Set([
+          'p.codigo',
+          'p.producto',
+          'p.descripcion',
+          'c.nombre',
+          'p.creacion'
+        ]);
+
+        order = order.filter(d => columnsSet.has(d.name));
+
+        if (order?.length) {
+          query += `
+            ORDER BY
+          `
+          order.forEach(({ dir, name }, index) => {
+            query += `
+              ${name} ${dir == 'asc' ? 'ASC' : 'DESC'}`;
+
+            if (index < order.length - 1)
+              query += ', ';
+          })
+        }
+
+        query += `
+          LIMIT ? OFFSET ?
+        `;
+        queryParams.push(length, start);
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        res(result);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
+  /**
+   * @param {import('datatables.net-dt').AjaxData} option 
+   * @returns {Promise<number>}
+   */
+  readInPartsCount(option) {
+    return new Promise(async (res, rej) => {
+      try {
+        let { search } = option;
+
+        let query = `
+          SELECT 
+            COUNT(p.id) AS cantidad
+          FROM
+            tb_productos AS p
+          LEFT 
+            JOIN 
+              tb_categorias AS c
+            ON 
+              c.id = p.categoria_id
+          LEFT 
+            JOIN 
+              tb_fotos AS f
+            ON 
+              f.id = p.foto_id
+          WHERE
+            p.estado in (1, 0)
+        `, queryParams = [];
+
+        if (search.value) {
+          query += `
+            AND p.codigo LIKE ?
+            OR p.producto LIKE ?
+            OR p.descripcion LIKE ?
+            OR c.nombre LIKE ?
+            OR p.creacion LIKE ?
+          `;
+
+          queryParams.push(
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`
+          );
+        }
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        res(result[0].cantidad);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
   /** 
    * @param {COLUMNS} data 
    * @returns {Promise<import('mysql').OkPacket>}
@@ -72,7 +220,7 @@ class Tb_productos extends Table {
         } = data;
 
         this.constraint('codigo', codigo);
-        this.constraint('producto', producto, { unic: true });
+        this.constraint('producto', producto);
         this.constraint('descripcion', descripcion);
         this.constraint('compra', compra);
         this.constraint('venta', venta);
@@ -141,7 +289,7 @@ class Tb_productos extends Table {
         } = data;
 
         this.constraint('id', id);
-        this.constraint('producto', producto, { unic: id });
+        this.constraint('producto', producto);
         this.constraint('descripcion', descripcion);
         this.constraint('categoria_id', categoria_id);
         this.constraint('compra', compra);
@@ -297,8 +445,7 @@ class Tb_productos extends Table {
             ON 
               f.id = p.foto_id
           WHERE
-            p.estado = 1
-            OR p.estado = 0
+            p.estado in (1, 0)
         `);
 
         res(result);
@@ -382,6 +529,138 @@ class Tb_productos extends Table {
     ============================================= Categoria =============================================
     ====================================================================================================
   */
+  /**
+   * @param {CatalogueRequest} option 
+   * @returns {Promise<Item[]>}
+   */
+  catalogueInParts(option) {
+    return new Promise(async (res, rej) => {
+      try {
+        let { start, length, filter } = option;
+        let query = `
+        SELECT
+          p.id,
+          p.codigo,
+          p.producto,
+          p.descripcion,
+          p.venta,
+          p.cantidad,
+          p.categoria_id,
+          c.nombre AS categoria_nombre,
+          f.src AS src
+        FROM
+          tb_productos AS p
+        LEFT 
+          JOIN 
+            tb_categorias AS c 
+          ON 
+            c.id = p.categoria_id
+        LEFT 
+          JOIN 
+            tb_fotos AS f 
+          ON 
+            f.id = p.foto_id
+        WHERE
+          p.estado = 1
+      `, queryParams = [];
+
+        if (filter.value) {
+          query += ` AND p.producto LIKE ? `;
+          queryParams.push(`%${filter.value}%`);
+        }
+        if (filter.code) {
+          query += ` AND p.codigo = ? `;
+          queryParams.push(filter.code);
+        }
+        if (filter.rangeMin !== undefined) {
+          query += ` AND p.venta >= ? `;
+          queryParams.push(filter.rangeMin);
+        }
+        if (filter.rangeMax !== undefined) {
+          query += ` AND p.venta <= ? `;
+          queryParams.push(filter.rangeMax);
+        }
+        if (filter.nameTags?.length) {
+          query += ` AND p.categoria_id IN (${filter.nameTags.map(() => '?').join(', ')}) `;
+          queryParams.push(...filter.nameTags);
+        }
+        if (filter.order) {
+          query += ` ORDER BY p.producto ${filter.order === 'asc' ? 'ASC' : 'DESC'} `;
+        }
+
+        // Paginación
+        query += ` LIMIT ? OFFSET ? `;
+        queryParams.push(length, start);
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+        res(result);
+      } catch (e) {
+        rej(e);
+      }
+    });
+  }
+
+  /**
+   * @param {CatalogueRequest} option 
+   * @returns {Promise<number>}
+   */
+  catalogueInPartsCount(option) {
+    return new Promise(async (res, rej) => {
+      try {
+        let { filter } = option;
+
+        let query = `
+          SELECT 
+            COUNT(p.id) AS cantidad
+          FROM
+            tb_productos AS p
+          LEFT
+            JOIN 
+              tb_categorias AS c
+            ON
+              c.id = p.categoria_id
+          LEFT
+            JOIN 
+              tb_fotos AS f
+            ON
+              f.id = p.foto_id
+          WHERE
+            p.estado = 1
+        `, queryParams = [];
+
+        // Condiciones de búsqueda general
+        if (filter?.value) {
+          query += ` AND p.producto LIKE ? `;
+          queryParams.push(`%${filter.value}%`);
+        }
+        if (filter?.code) {
+          query += ` AND p.codigo = ? `;
+          queryParams.push(filter.code);
+        }
+        if (filter?.rangeMin !== undefined) {
+          query += ` AND p.venta >= ? `;
+          queryParams.push(filter.rangeMin);
+        }
+        if (filter?.rangeMax !== undefined) {
+          query += ` AND p.venta <= ? `;
+          queryParams.push(filter.rangeMax);
+        }
+        if (filter?.nameTags?.length) {
+          query += ` AND p.categoria_id IN (${filter.nameTags.map(() => '?').join(', ')}) `;
+          queryParams.push(...filter.nameTags);
+        }
+        if (filter?.order) {
+          query += ` ORDER BY p.producto ${filter.order === 'asc' ? 'ASC' : 'DESC'} `;
+        }
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        res(result[0].cantidad);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
   /**
    * @param {number} categoria_id 
    * @returns {Promise<{
@@ -678,6 +957,117 @@ class Tb_productos extends Table {
     ============================================== Selector ==============================================
     ====================================================================================================
   */
+  /**
+   * @param {SelectorRequest} option 
+   * @returns {Promise<COLUMNS[]>}
+   */
+  SelectorInParts(option) {
+    return new Promise(async (res, rej) => {
+      try {
+        let { order, start, length, search, byId, noInclude } = option;
+
+        let query = `
+          SELECT
+            p.id,
+            CONCAT(p.codigo, ' - ', p.producto) AS name,
+            f.src_small AS src
+          FROM
+            tb_productos AS p
+          LEFT
+            JOIN
+              tb_fotos AS f
+            ON
+              f.id = p.foto_id
+          WHERE
+            p.estado = 1 
+        `, queryParams = [];
+
+        if (search) {
+          if (byId) {
+            query += `
+              AND p.id = ?
+            `;
+
+            queryParams.push(search);
+          }
+          else {
+            query += `
+              AND p.producto LIKE ?
+            `;
+
+            queryParams.push(`%${search}%`);
+          }
+        }
+
+        if (noInclude.length && noInclude.every(id => typeof id == 'number')) {
+          query += `
+            AND p.id NOT IN (${noInclude.map(_ => '?').join(',')})
+          `
+          queryParams.push(...noInclude);
+        }
+
+        if (order) {
+          query += `
+            ORDER BY
+              p.producto ${order == 'asc' ? 'ASC' : 'DESC'}
+          `
+        }
+
+        query += `
+          LIMIT ? OFFSET ?
+        `;
+
+        queryParams.push(length, start);
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        res(result);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
+  /**
+   * @param {SelectorRequest} option 
+   * @returns {Promise<number>}
+   */
+  SelectorInPartsCount(option) {
+    return new Promise(async (res, rej) => {
+      try {
+        let { search, noInclude } = option;
+
+        let query = `
+          SELECT 
+            COUNT(id) AS cantidad
+          FROM
+            tb_productos
+          WHERE
+            estado = 1 
+        `, queryParams = [];
+
+        if (typeof search == 'string' && search != '') {
+          query += `
+            AND producto LIKE ?
+          `;
+
+          queryParams.push(`%${search}%`);
+        }
+
+        if (noInclude.length && noInclude.every(id => typeof id == 'number')) {
+          query += `
+            AND id NOT IN (${noInclude.map(_ => '?').join(',')})
+          `
+          queryParams.push(...noInclude);
+        }
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        res(result[0].cantidad);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
   /** 
    * @returns {Promise<Array.<{code: string, name: string}>>}
    */

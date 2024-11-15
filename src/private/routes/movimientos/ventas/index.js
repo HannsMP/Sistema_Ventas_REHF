@@ -49,72 +49,57 @@ $('.content-body').ready(async () => {
     */
 
     $tableHistory.init({
-      data: dataTransaccionesVentas,
-      /*  select: true, */
+      serverSide: true,
+      ajax: (data, end) => {
+        socket.emit('/read/table', data, res => end(res))
+      },
       pageLength: 10,
       order: [[5, 'asc']],
       columnDefs: [
         {
+          name: 'tv.codigo',
           className: 'dtr-code',
           targets: 0,
         },
         {
+          name: 'p.producto',
           className: 'dtr-tag',
           orderable: false,
           targets: 1,
           render: data => '<div>' + data + '</div>'
         },
         {
-          className: 'dtr-tag',
+          name: 'mp.nombre',
           targets: 2,
-          render: data => '<div>' + data + '</div>'
+          render: data => data?.toFixed(2)
         },
         {
+          name: 'tv.descuento',
           targets: 3,
           render: data => data?.toFixed(2)
         },
         {
+          name: 'tv.importe_total',
           targets: 4,
           render: data => data?.toFixed(2)
         },
         {
+          name: 'hora',
           className: 'dt-type-date',
           targets: 5
         }
       ],
       columns: [
-        { data: 'codigo' },
-        { data: 'cliente_nombres' },
-        { data: 'metodo_pago_nombre' },
+        { data: 'transaccion_codigo' },
+        { data: 'producto_nombre' },
+        { data: 'cantidad' },
+        { data: 'importe' },
         { data: 'descuento' },
-        { data: 'importe_total' },
-        { data: 'hora' }
+        { data: 'transaccion_hora' }
       ],
     })
     $tableHistory.buttons('.tables-utils .download');
-    /* 
-      $tableHistory.datatable.on('select', async (e, dt, type, indexes) => {
-    
-        Swal.fire({
-          input: "textarea",
-          inputPlaceholder: "Escribe tu mensaje aquí...",
-          text: "Que problema tiene esta venta?",
-          icon: "question",
-          showCancelButton: true,
-          confirmButtonColor: "rgb(13, 204, 242)",
-          cancelButtonColor: "rgb(220, 53, 69)",
-          confirmButtonText: "Informar",
-          cancelButtonText: "Cancelar",
-          background: 'rgb(24, 20, 47)',
-          color: 'rgb(255, 255, 255)',
-        })
-          .then(async (result) => {
-    
-            let { id } = $tableHistory.datatable.rows(indexes).data().toArray()[0];
-          })
-    
-      })
-     */
+
     /* 
       ==================================================
       =================== WITGETTABLE ===================
@@ -138,12 +123,10 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    let resMetodoPago = await query.post.cookie("/api/tipo_metodo_pago/selector/readAll");
-
-    /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-    let { list: dataMetodoPago } = await resMetodoPago.json();
-
-    let dataSelectorMetodoPago = new SelectorMap(dataMetodoPago);
+    let dataSelectorMetodoPago = new OptionsServerside(
+      (req, end) => socket.emit('/selector/metodoPago', req, res => end(res)),
+      { showIndex: false, order: 'asc', noInclude: true }
+    );
 
     /* ===================== SOCKET ===================== */
 
@@ -154,12 +137,10 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    let resClientes = await query.post.cookie("/api/clientes/selector/readAll");
-
-    /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-    let { list: dataClientes } = await resClientes.json();
-
-    let dataSelectorClientes = new SelectorMap(dataClientes);
+    let dataSelectorClientes = new OptionsServerside(
+      (req, end) => socket.emit('/selector/cliente', req, res => end(res)),
+      { showIndex: false, order: 'asc', noInclude: true }
+    );
 
     /* ===================== SOCKET ===================== */
 
@@ -188,12 +169,10 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    let resProductos = await query.post.cookie("/api/productos/selector/readAll");
-
-    /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-    let { list: dataProductos } = await resProductos.json();
-
-    let dataSelectorProductos = new SelectorMap(dataProductos, 'img');
+    let dataSelectorProductos = new OptionsServerside(
+      (req, end) => socket.emit('/selector/producto', req, res => end(res)),
+      { showIndex: 'img', order: 'asc', noInclude: true }
+    );
 
     /* ===================== SOCKET ===================== */
 
@@ -207,7 +186,7 @@ $('.content-body').ready(async () => {
 
     socket.on('/productos/data/state', data => {
       if (data.estado)
-        dataSelectorProductos.set(data.id, data.codigo + ' - ' + data.producto, data.foto_src_small);
+        dataSelectorProductos.draw(true);
       else
         dataSelectorProductos.delete(data.id);
     })
@@ -222,8 +201,16 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    let metodoPagoSelectorUnic = new SelectorUnic(inputSelectorMetodoPago, dataSelectorMetodoPago, true);
-    let clientesSelectorUnic = new SelectorUnic(inputSelectorCliente, dataSelectorClientes, true);
+    let metodoPagoSelectorUnic = new SelectorInput(
+      inputSelectorMetodoPago,
+      dataSelectorMetodoPago,
+      { autohide: true }
+    );
+    let clientesSelectorUnic = new SelectorInput(
+      inputSelectorCliente,
+      dataSelectorClientes,
+      { autohide: true }
+    );
 
     /* 
       ==================================================
@@ -302,7 +289,11 @@ $('.content-body').ready(async () => {
       let inputCount = inputBoxCount.querySelector('input');
       let inputSelect = inputBoxSelect.querySelector('input');
 
-      let selector = inputBoxSelect.Selector = new SelectorUnic(inputSelect, dataSelectorProductos, true);
+      let selector = inputBoxSelect.Selector = new SelectorInput(
+        inputSelect,
+        dataSelectorProductos,
+        { autohide: true }
+      );
 
       let row = witgetTable.newRow({
         cantidad: inputBoxCount,
@@ -456,7 +447,7 @@ $('.content-body').ready(async () => {
       });
     })
 
-    socket.on('/productos/data/updateId', (data) => {
+    socket.on('/transacciones_ventas/data/updateId', (data) => {
       let row = $tableHistory.get('#' + data.id);
       if (!row) return;
 

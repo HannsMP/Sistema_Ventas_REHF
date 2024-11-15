@@ -37,7 +37,7 @@ module.exports = {
         let OkPacket = await this.model.tb_acceso.deleteMenusById(Number(id), list);
         await this.model.tb_menus.deleteId(menu_id);
 
-        this.model.tb_acceso.io.emit(
+        this.model.tb_acceso.io.sockets.emit(
           '/accesos/permisos/deleteId',
           _ => list
         )

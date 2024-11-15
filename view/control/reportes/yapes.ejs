@@ -1,0 +1,107 @@
+<div class="content-header">
+  <!---------------------- CSS ---------------------->
+
+  <!-- lib control -->
+  <link href="/src/private/lib/dataTables/datatables.min.css" rel="stylesheet">
+  <link href="/src/private/lib/calendar/calendar.min.css" rel="stylesheet">
+  <link href="/src/private/lib/file/File.min.css" rel="stylesheet">
+
+  <!-- layout -->
+  <link href="/src/private/layout/css/btn.css" rel="stylesheet">
+
+  <!---------------------- JS ---------------------->
+
+  <!-- lib control -->
+  <script src="/src/private/lib/dataTables/datatables.min.js"></script>
+  <script src="/src/private/lib/formatTime/formatTime.min.js"></script>
+  <script src="/src/private/lib/calendar/calendar.min.js"></script>
+  <script src="/src/private/lib/file/File.min.js"></script>
+  <script src="/src/private/lib/xlsx/xlsx.full.min.js"></script>
+  <script src="/src/private/lib/formatTime/formatTime.min.js"></script>
+
+  <!-- layout -->
+  <script src="/src/private/lib/Tables/tables.min.js"></script>
+
+  <!---------------------- BODY ---------------------->
+
+  <div class="content-tittle">Yapes</div>
+  <div class="content-path">
+    <a href="/control">/control</a>
+    <a href="/control/reportes">/reportes</a>
+    <a href="/control/reportes/asistencia">/yapes</a>
+  </div>
+</div>
+<div class="content-body">
+  <div class="menu-body">
+    <div class="card" id="card-main">
+      <div class="card-head">
+        <h3 class="card-tittle">Tabla de Yapes</h3>
+      </div>
+      <div class="card-body">
+        <div class="table-box">
+          <table id="table-main" style="width: auto;">
+            <thead>
+              <tr>
+                <th>Emisor</th>
+                <th>Receptor</th>
+                <th>Monto</th>
+                <th>Mensaje</th>
+                <th>Fecha</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <div class="cards">
+            <div class="tables-utils">
+              <div class="download"> </div>
+              <a class="btn btn-warning tbl-upload">
+                <i class='bx bx-import'></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card" id="card-import">
+      <div class="card-head">
+        <h3 class="card-tittle">Tabla de importacion</h3>
+        <a class="card-close">
+          <i class="bx bx-x"></i>
+        </a>
+      </div>
+      <div class="card-body" style="display: none;">
+        <div class="table-box">
+          <table id="table-import" style="width: auto;">
+            <thead>
+              <tr>
+                <th>Emisor</th>
+                <th>Receptor</th>
+                <th>Monto</th>
+                <th>Mensaje</th>
+                <th>Fecha</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-foot">
+        <div class="input-box" style="width: 100%; min-width: 200px; max-width: 300px;">
+          <input type="file" id="datatable-import" accept=".xlsx">
+        </div>
+        <a class="btn btn-success" id="tbl-charge">
+          Guardar
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="menu-side">
+    <div class="card" id="select-date">
+      <div class="card-body">
+        <div class="calendario"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/src/private/routes/reportes/yapes/index.js"></script>

@@ -1,468 +1,430 @@
-(() => {
 
-  /*
-    ----------------------------------------------------
-    ---------------------- Eventos --------------------
-    ----------------------------------------------------
-  */
+/*
+  ----------------------------------------------------
+  ---------------------- Selector --------------------
+  ----------------------------------------------------
+*/
 
-  class Event {
-    /** @type {{[event: string]: {once:boolean, persistence:boolean, callback:(...data)=>void}[]}} */
-    #data = {};
-    /** @param {string} name  */
-    emit(name, ...data) {
-      if (typeof name != 'string')
-        throw new TypeError('El nombre de emit debe ser un "string"');
-      let eventList = this.#data[name];
-      if (eventList?.length)
-        this.#data[name] = eventList
-          .filter(event => {
-            event.callback(...data);
-            return event.persistence || !event.once;
-          });;
-    }
-    /** @param {string} name @param {(...data)=>void} callback @param {{once:boolean, persistence:boolean}} option  */
-    on(name, callback, option) {
-      if (typeof name != 'string')
-        throw new TypeError('El nombre del evento debe ser un "string"');
-      if (typeof callback != 'function')
-        throw new TypeError('El callback del evento debe ser una "funcion"');
+/** 
+ * @typedef {{ 
+*   id: string,
+*   selectedBox: HTMLDivElement,
+*   closeAnchor: HTMLAnchorElement,
+*   indexData: IndexData
+* }} IndexSeleted
+*/
 
-      if (!this.#data[name])
-        this.#data[name] = [];
+/** 
+ * @typedef {{ 
+ *   id:number
+ *   name:string, 
+ *   src:string,
+ *   selected:number,
+ *   selectorBox: HTMLDivElement
+ * }} IndexData
+ */
 
-      this.#data[name].push({ callback, once: option?.once, persistence: option?.persistence });
-    }
-    /** @param {string} name @param {(...data)=>void} callback  */
-    off(name, eventFun) {
-      if (typeof name != 'string')
-        throw new TypeError('El nombre del evento debe ser un "string"');
-      if (typeof eventFun != 'function')
-        throw new TypeError('El eventFun del evento debe ser una "funcion"');
+/** 
+ * @typedef {{
+ *   search: string,
+ *   byId: boolean,
+ *   start: number,
+ *   length: number,
+ *   order: 'asc'|'desc',
+ *   noInclude: number[]
+ * }} SelectorRequest 
+ */
 
-      let event = this.#data[name];
-      if (event?.length)
-        event = event.filter(e => e != eventFun);
-    }
-    /** @param {string} name  */
-    empty(name) {
-      if (typeof name != 'string')
-        throw new TypeError('El nombre de remove debe ser un "string"');
+/** 
+ * @typedef {(SelectorResponse: {
+ *   data: IndexData[],
+ *   recordsFiltered: number,
+ *   recordsTotal: number
+ * })=>void} SelectorEnd 
+ */
 
-      if (!this.#data[name]) return;
-      this.#data[name] = this.#data[name].filter(event => event.persistence);
+class OptionsServerside {
+  #blocked = false;
+  /** 
+   * @type {EventListener<{
+   *   click:IndexSeleted,
+   *   select:IndexSeleted,
+   *   close:IndexSeleted,
+   *   search:string
+   * }>} 
+   */
+  event = new EventListener();
+
+  /** @type {Map<number, IndexSeleted>} */
+  #selected = new Map();
+
+  /** @type {Map<number, IndexData>} */
+  #data = new Map();
+
+  #chunkSize = 20;
+  #chunkCounter = 0;
+  #recordsFiltered = 0;
+  #recordsTotal = 0;
+  #currentSearch = '';
+  #callback = _ => _;
+
+  /** 
+   * @param {(req:SelectorRequest, end:SelectorEnd)=>void} callback 
+   * @param {{showIndex:boolean|'img', noInclude?:boolean, order?:'asc'|'desc', associative?:boolean }} options 
+   */
+  constructor(callback, options = {}) {
+    this.#callback = callback;
+    this.options = options;
+
+    this.wrapperBox = document.createElement('div');
+    this.wrapperBox.className = 'selector-wrapper';
+
+    this.menuBox = document.createElement('div');
+    this.menuBox.className = 'selector-menu scroll-y';
+    this.menuBox.innerHTML = `<span class="menu-warn"></span>`;
+
+    this.footerBox = document.createElement('div');
+    this.footerBox.className = 'selector-footer';
+
+    this.wrapperBox.append(this.menuBox, this.footerBox);
+
+    this.menuBox.addEventListener('scroll', () => {
+      let { scrollTop, clientHeight, scrollHeight } = this.menuBox;
+      if (scrollTop + clientHeight < scrollHeight - 1) return;
+      this.#loadNextChunk();
+    });
+
+    this.menuBox.addEventListener('click', ev => {
+      let menuIndex = ev.target.closest('.menu-index');
+      if (!menuIndex) return;
+      let id = parseInt(menuIndex.dataset.id);
+      if (this.options.associative) {
+        menuIndex.remove();
+      }
+      this.#select(id);
+    });
+  }
+
+  reset() {
+    this.#selected.forEach(selectedData => selectedData.closeAnchor.click());
+  }
+
+  /** 
+   * Realiza una búsqueda en el servidor con el valor proporcionado 
+   * @param {string} value 
+   */
+  search(value = '') {
+    this.#chunkCounter = 0;
+    this.#currentSearch = value?.trim() || '';
+    this.#data.clear();  // Limpia los datos en cada nueva búsqueda
+    this.menuBox.innerHTML = '';
+    this.#loadNextChunk();
+  }
+
+  /**
+   * vuelve a pintar todas las opciones y lo seleccionado relativo a la data guardada
+   * @param {boolean} reboot verdadero para rememplazar por la data actual
+   * @returns 
+   */
+  draw(reboot) {
+    this.menuBox.innerHTML = '';
+    if (reboot)
+      return this.#loadNextChunk(0, this.#chunkSize * this.#chunkCounter);
+
+    this.#data.forEach(item => this.menuBox.append(
+      this.#createSelectorBox(item.id, item.name, item.src)
+    ));
+  }
+
+  /**
+   *  Selecciona un elemento del servidor usando el ID 
+   * @param {number} id 
+   * @returns {Promise<IndexSeleted>}
+   */
+
+  select(id) {
+    return new Promise(res => {
+      if (typeof id !== 'number') return;
+      if (id == NaN) return;
+
+      this.#callback(
+        {
+          search: id,
+          byId: true,
+          start: 0,
+          length: 1,
+          order: 'desc',
+          noInclude: []
+        },
+        ({ data: [indexData] }) => {
+          if (!indexData) return;
+
+          let selectedBox = this.#createSelectedBox(indexData.name);
+          let closeAnchor = selectedBox.querySelector('a');
+
+          closeAnchor.addEventListener('click', () => {
+            this.event.emit('close', data);
+            indexData.selected = 0;
+            selectedBox.remove();
+            this.#selected.delete(id);
+            this.#renderFooter();
+          }, { once: true });
+
+          let data = { id, indexData, selectedBox, closeAnchor };
+          this.#selected.set(id, data);
+          this.event.emit('select', data);
+
+          indexData.selected = 1;
+          this.#renderFooter();
+
+          res(data);
+        }
+      );
+    })
+  }
+
+  /**
+   * Actualiza un elemento en #data y en #selected, y actualiza el HTML si está seleccionado 
+   * @param {number} id 
+   * @param {IndexData} newData 
+   */
+  set(id, newData) {
+    this.#data.set(id, newData);
+    if (this.#selected.has(id)) {
+      let selectedData = this.#selected.get(id);
+      selectedData.indexData = newData;
+      selectedData.selectedBox.querySelector('span').textContent = newData.name;
     }
   }
 
-  /*
-    ----------------------------------------------------
-    ---------------------- Selector --------------------
-    ----------------------------------------------------
-  */
+  /** 
+   * Elimina un elemento de #data y de #selected si existe en ambos 
+   * @param {number} id 
+   */
+  delete(id) {
+    if (this.#selected.has(id)) {
+      let selectedData = this.#selected.get(id);
+      selectedData.closeAnchor.click();
+    }
+
+    if (this.#data.has(id)) {
+      let indexData = this.#data.get(id);
+      indexData.selectorBox?.remove();
+      this.#data.delete(id);
+    }
+
+  }
+
+  #loadNextChunk(start = this.#chunkSize * this.#chunkCounter, length = this.#chunkSize) {
+    if (this.#blocked) return;
+    if (this.#recordsFiltered < start) return;
+
+    this.#blocked = true;
+    this.#callback(
+      {
+        start,
+        length,
+        byId: false,
+        search: this.#currentSearch,
+        order: this.options.order || 'desc',
+        noInclude: this.options.noInclude ? Array.from(this.#selected.keys()) : []
+      },
+      response => {
+        response.data.forEach(item => {
+          item.selectorBox = this.#createSelectorBox(item.id, item.name, item.src)
+          this.#data.set(item.id, item);
+          this.menuBox.append(item.selectorBox);
+        });
+
+        this.#recordsFiltered = response.recordsFiltered;
+        this.#recordsTotal = response.recordsTotal;
+
+        this.#chunkCounter++;
+        this.#renderFooter();
+        this.#blocked = false;
+      }
+    );
+  }
+
+  #select(id) {
+    if (!this.#data.has(id)) return;
+
+    let indexData = this.#data.get(id);
+    if (indexData.selected === 1) return;
+
+    let selectedBox = this.#createSelectedBox(indexData.name);
+    let closeAnchor = selectedBox.querySelector('a');
+
+    closeAnchor.addEventListener('click', () => {
+      this.event.emit('close', data);
+      indexData.selected = 0;
+      selectedBox.remove();
+      this.#selected.delete(id);
+      this.#renderFooter();
+    }, { once: true });
+
+    let data = { id, indexData, selectedBox, closeAnchor };
+    this.#selected.set(id, data);
+    this.event.emit('click', data);
+
+    indexData.selected = 1;
+    this.#renderFooter();
+
+    return data;
+  }
+
+  #createSelectedBox(name) {
+    let selectedBox = document.createElement('div');
+    selectedBox.innerHTML = `<span>${name}</span><a><i class="bx bx-x"></i></a>`;
+    return selectedBox;
+  }
+
+  #createSelectorBox(id, name, src) {
+    let selectorBox = document.createElement('div');
+    selectorBox.dataset.id = id;
+    selectorBox.className = 'menu-index';
+    selectorBox.innerHTML = this.options.showIndex
+      ? this.options.showIndex === 'img'
+        ? `<img src="${src}"><span>${name}</span>`
+        : `<small>${id}</small><span>${name}</span>`
+      : `<span>${name}</span>`;
+    return selectorBox;
+  }
+
+  #renderFooter() {
+    this.footerBox.innerHTML = `<small>Mostrando ${Math.min(this.#chunkCounter * this.#chunkSize, this.#recordsFiltered)} de ${this.#recordsFiltered} filtrados</small><br><small>Total: ${this.#recordsTotal}</small>`;
+  }
+}
+
+class SelectorInput extends EventListener {
+  /** @type {IndexSeleted[]} */
+  selected = [];
 
   /** 
-   * @typedef {{ 
-   *   name:string, 
-   *   src:string,
-   *   selected:number
-   * }} IndexData
+   * @param {HTMLInputElement} inputElement 
+   * @param {OptionsServerside} selectorClass  
+   * @param {{ autohide?: boolean, multi?: boolean }} options 
    */
+  constructor(inputElement, selectorClass, options = {}) {
+    if (!(inputElement instanceof HTMLInputElement)) throw new TypeError('El elemento no es un input.');
+    if (!(selectorClass instanceof OptionsServerside)) throw new TypeError('Se requiere una instancia de SelectorServerside.');
 
-  /** 
-   * @typedef {{ 
-   *   id: string,
-   *   selectedBox: HTMLDivElement,
-   *   closeAnchor: HTMLAnchorElement,
-   *   indexData: IndexData
-   * }} IndexSeleted
-   */
+    super();
+    this.inputElement = inputElement;
+    this.selectorClass = selectorClass;
+    this.options = {
+      multi: Boolean(options?.multi),
+      autoHide: Boolean(options?.autohide)
+    };
+    this.isDisabled = inputElement.disabled;
 
-  /** @extends {Map<string, IndexData>} */
-  class SelectorMap extends Map {
-    event = new Event;
-    /** @type {Map<string, IndexSeleted>} */
-    #seleted = new Map
-    /** @type {string[]} */
-    #chunks = [];
-    #chunkSize = 20;
-    #chunkCounter = 0;
-    /** @param {IndexData[]} datas @param {boolean} showIndex */
-    constructor(datas, showIndex = false) {
-      super();
-      this.menuBox = document.createElement('div');
-      this.menuBox.className = 'selector-menu scroll-y';
-      this.menuBox.innerHTML = `<span class="menu-warn"></span>`;
-      this.showIndex = showIndex;
-      // Asegúrate de que el id sea tratado como string
-      datas.forEach(({ id, name, src }) => this.set(String(id), { name, src, selected: 0 }));
+    inputElement.insertAdjacentHTML('beforebegin', '<div class="selected-collection"></div>');
+    this.collectionBox = inputElement.previousElementSibling;
 
-      this.menuBox.addEventListener('scroll', () => {
-        let { scrollTop, clientHeight, scrollHeight } = this.menuBox;
-        if (scrollTop + clientHeight < scrollHeight) return;
-        this.#loadNextChunk();
+    if (!this.isDisabled) {
+      selectorClass.event.on('click', (data) => this.#handleSelect(data), { persistence: true });
+      selectorClass.event.on('close', (data) => this.#handleDeselect(data), { persistence: true });
+
+      let timeoutId;
+      this.inputElement.addEventListener('input', e => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          this.emit('input', inputElement.value);
+          selectorClass.search(inputElement.value);
+        }, 300);
       });
 
-      this.menuBox.addEventListener('click', ev => {
-        let menuIndex = ev.target.closest('.menu-index');
+      this.inputElement.addEventListener('focusin', e => {
+        this.emit('focusin', e);
+        this.inputElement.parentNode.append(selectorClass.wrapperBox);
+        selectorClass.search(inputElement.value);
+      });
 
-        if (!menuIndex) return;
-        let id = menuIndex.dataset.id;
-
-        menuIndex.remove();
-        this._selected(id);
-      })
-    }
-
-    // Asegura que los métodos de Map siempre conviertan id a string
-    set(id, data) {
-      id = String(id);
-      return super.set(id, data);
-    }
-
-    get(id) {
-      id = String(id);
-      return super.get(id);
-    }
-
-    has(id) {
-      id = String(id);
-      return super.has(id);
-    }
-
-    delete(id) {
-      id = String(id);
-      return super.delete(id);
-    }
-
-    reset() {
-      this.#seleted.forEach(IndexSeleted => IndexSeleted.closeAnchor.click());
-    }
-
-    /** @param {string} id  */
-    _selected(id) {
-      id = String(id);
-      let indexData = super.get(id);
-
-      if (!indexData) return;
-
-      let data = {};
-
-      data.id = id;
-      data.indexData = indexData
-      let selectedBox = data.selectedBox = this.#createSeletedBox(indexData.name);
-      let closeAnchor = data.closeAnchor = selectedBox.querySelector('a')
-      this.#seleted.set(id, data);
-
-      this.event.emit('click', data);
-      indexData.selected = 1;
-      this.draw();
-
-      closeAnchor.addEventListener('click', () => {
-        this.event.emit('close', data);
-        indexData.selected = 0;
-        selectedBox.remove();
-        this.draw();
-        this.#seleted.delete(id)
-      }, { once: true });
-
-      return data
-    }
-
-    #createSeletedBox(name) {
-      let seletedBox = document.createElement('div');
-      seletedBox.innerHTML = `<span>${name}</span><a><i class="bx bx-x"></i></a>`;
-      return seletedBox
-    }
-
-    /** @param {string} id  */
-    _deselect(id) {
-      id = String(id);
-      let IndexSeleted = this.#seleted.get(id);
-      if (!IndexSeleted) return;
-
-      IndexSeleted.closeAnchor.click();
-    }
-
-    search(value = '') {
-      if (typeof value != 'string') return;
-
-      this.#chunks = [];
-      this.event.emit('search', value);
-
-      if (value == '') {
-        this.forEach((indexData, id) => {
-          if (indexData.selected != 1) {
-            this.#chunks.push(id);
-            indexData.selected = 0;
-          }
-        })
-        this.#displayNoDataWarning();
-      } else {
-        this.forEach((indexData, id) => {
-          if (indexData.selected == 1) return;
-
-          if (!indexData.name.toLowerCase().includes(value.toLowerCase()))
-            return indexData.selected = -1;
-
-          this.#chunks.push(id);
-          indexData.selected = 0;
-        })
-        this.#displayNoMatchWarning();
-      }
-
-      this.draw();
-    }
-
-    #displayNoDataWarning() {
-      if (!this.#chunks.length)
-        this.menuBox.innerHTML = `<span class="menu-warn">Sin datos.</span>`;
-    }
-
-    #displayNoMatchWarning() {
-      if (!this.#chunks.length)
-        this.menuBox.innerHTML = `<span class="menu-warn">Sin coincidencia.</span>`;
-    }
-
-    draw(order = 'asc') {
-      this.menuBox.innerHTML = '';
-      if (this.#chunks.length) {
-        if (order == 'asc')
-          this.#chunks.sort((a, b) => {
-            a = super.get(a)?.name;
-            b = super.get(b)?.name;
-            return a < b ? -1 : a > b ? 1 : 0;
-          });
-        if (order == 'des')
-          this.#chunks.sort((a, b) => {
-            a = super.get(a)?.name;
-            b = super.get(b)?.name;
-            return a < b ? 1 : a > b ? -1 : 0;
-          });
-      }
-      this.#chunkCounter = 0;
-      this.#loadNextChunk();
-    }
-
-    #loadNextChunk() {
-      let start = this.#chunkSize * this.#chunkCounter;
-      let end = start + this.#chunkSize;
-      if (this.#chunks.length < start) return;
-
-      let chunks = this.#chunks.slice(start, end).filter(chunkId => super.has(chunkId));
-
-      this.menuBox.append(...chunks.map(chunkId => {
-        let indexData = super.get(chunkId);
-        return this.#createSelectorBox(chunkId, indexData.name, indexData.src);
-      }));
-
-      this.#chunkCounter++;
-    }
-
-    #createSelectorBox(id, name, src) {
-      let selectorBox = document.createElement('div');
-      selectorBox.dataset.id = id;
-      selectorBox.className = 'menu-index';
-      selectorBox.innerHTML = this.showIndex
-        ? this.showIndex == 'img'
-          ? `<img src="${src}"><span>${name}</span>`
-          : `<small>${id}</small><span>${name}</span>`
-        : `<span>${name}</span>`
-
-      return selectorBox;
+      this.inputElement.addEventListener('focusout', e => {
+        this.emit('focusout', e);
+        setTimeout(() => {
+          selectorClass.wrapperBox.remove();
+        }, 200);
+      });
     }
   }
 
-  class SelectorUnic extends Event {
-    /** @type {IndexSeleted[]} */
-    selected = [];
-    /** @param {HTMLInputElement} inputElement @param {SelectorMap} selectorClass  */
-    constructor(inputElement, selectorClass, autoHide = false) {
-      if (!(inputElement instanceof HTMLInputElement)) throw new TypeError('El elemento no es un input.');
-      if (!(selectorClass instanceof SelectorMap)) throw new TypeError('Es necesario el parametro Selector.');
-      super();
+  #handleSelect(data) {
+    if (this.selectorClass.wrapperBox.parentNode !== this.inputElement.parentNode) return;
 
-      this.inputElement = inputElement;
-      this.selectorClass = selectorClass;
-      this.autoHide = autoHide;
-      this.isDisabled = inputElement.disabled;
-
-      inputElement.insertAdjacentHTML('beforebegin', '<div class="selected-colletion"></div>');
-      this.colletionBox = inputElement.previousElementSibling;
-
-      if (!this.isDisabled) {
-
-        selectorClass.event.on('click', IndexSeleted => {
-          if (selectorClass.menuBox.parentNode != inputElement.parentNode) return;
-
-          let indexBefore = this.selected[0];
-
-          if (indexBefore) {
-            indexBefore.closeAnchor.click();
-            this.emit('change', indexBefore, IndexSeleted);
-          }
-
-          this.colletionBox.append(IndexSeleted.selectedBox);
-          this.emit('selected', IndexSeleted);
-          this.selected[0] = IndexSeleted;
-          if (autoHide) inputElement.style.display = 'none';
-        }, { persistence: true })
-
-        selectorClass.event.on('close', data => {
-          if (data.selectedBox.closest('.selected-colletion') != this.colletionBox) return;
-
-          this.emit('deselected', data);
-          this.selected.slice(0, 1);
-          if (autoHide) inputElement.style.display = '';
-        }, { persistence: true })
-
-        let timeoutId;
-        this.inputElement.addEventListener('input', e => {
-          clearTimeout(timeoutId);
-          timeoutId = setTimeout(() => {
-            this.emit('input', inputElement.value);
-            selectorClass.search(inputElement.value);
-          }, 300)
-        });
-
-        this.inputElement.addEventListener('focusin', e => {
-          this.emit('focusin', e);
-          this.inputElement.parentNode.append(selectorClass.menuBox);
-          selectorClass.search(inputElement.value);
-        });
-
-        this.inputElement.addEventListener('focusout', e => {
-          this.emit('focusout', e);
-          setTimeout(() => {
-            selectorClass.menuBox.remove()
-          }, 200);
-        });
+    if (!this.options.multi) {
+      let previousSelection = this.selected[0];
+      if (previousSelection) {
+        previousSelection.closeAnchor.click();
+        this.emit('change', previousSelection, data);
       }
+      this.selected = [data];
+    } else {
+      this.selected.push(data);
     }
-    select(id) {
-      id = String(id);  // Convertimos a string
-      if (!this.selectorClass.has(id)) return;
 
-      let indexData = this.selectorClass.get(id);
-      if (indexData.selected == 1) return;
+    this.collectionBox.append(data.selectedBox);
+    this.emit('selected', data);
 
-      if (this.autoHide) this.inputElement.style.display = 'none';
-
-      let indexBefore = this.selected[0];
-
-      if (indexBefore) {
-        this.emit('diselected', indexBefore);
-        indexBefore.closeAnchor.click();
-        this.emit('change', indexBefore);
-      }
-
-      let IndexSeleted = this.selectorClass._selected(id);
-
-      this.colletionBox.append(IndexSeleted.selectedBox);
-      this.emit('selected', IndexSeleted);
-      this.selected[0] = IndexSeleted;
-    }
-    deselect(id) {
-      id = String(id);  // Convertimos a string
-      if (!this.selectorClass.has(id)) return;
-      if (this.selected[0].id != id) return;
-
-      if (this.autoHide) this.inputElement.style.display = '';
-
-      this.selected[0].closeAnchor.click();
-    }
-    empty() {
-      if (!this.selected.length) return;
-      this.selected[0].closeAnchor.click();
-    }
+    if (this.options.autoHide) this.inputElement.style.display = 'none';
+    this.inputElement.value = '';
   }
 
-  class SelectorMulti extends Event {
-    /** @type {IndexSeleted[]} */
-    selected = [];
-    /** @param {HTMLInputElement} inputElement @param {SelectorMap} selectorClass  */
-    constructor(inputElement, selectorClass) {
-      if (inputElement.tagName != 'INPUT') throw new TypeError('El elemento no es un input.');
-      if (!(selectorClass instanceof SelectorMap)) throw new TypeError('Es necesario el parametro Selector.');
+  #handleDeselect(data) {
+    if (data.selectedBox.closest('.selected-collection') !== this.collectionBox) return;
 
-      super();
-      this.inputElement = inputElement;
-      this.selectorClass = selectorClass;
-
-      this.isDisabled = this.inputElement.hasAttribute('disabled');
-
-      inputElement.insertAdjacentHTML('beforebegin', '<div class="selected-colletion"></div>');
-      this.colletionBox = inputElement.previousElementSibling;
-
-      if (!this.isDisabled) {
-
-        selectorClass.event.on('click', data => {
-          if (selectorClass.menuBox.parentNode != inputElement.parentNode) return;
-
-          this.colletionBox.append(data.selectedBox);
-          this.emit('selected', data);
-          this.selected.push(data);
-        }, { persistence: true })
-
-        selectorClass.event.on('close', data => {
-          if (data.selectedBox.closest('.selected-colletion') != this.colletionBox) return;
-
-          let index = this.selected.findIndex(IndexSeleted => IndexSeleted == data);
-          this.emit('deselected', data);
-          this.selected.splice(index, 1);
-        }, { persistence: true })
-
-        let timeoutId;
-        this.inputElement.addEventListener('input', e => {
-          clearTimeout(timeoutId);
-          timeoutId = setTimeout(() => {
-            this.emit('input', inputElement.value);
-            selectorClass.search(inputElement.value)
-          }, 300)
-        });
-        this.inputElement.addEventListener('focusin', e => {
-          this.emit('focusin', e);
-          this.inputElement.parentNode.append(selectorClass.menuBox);
-          selectorClass.search(inputElement.value);
-        });
-
-        this.inputElement.addEventListener('focusout', e => {
-          this.emit('focusout', e);
-          setTimeout(() => {
-            selectorClass.menuBox.remove()
-          }, 200);
-        });
-      }
+    if (!this.options.multi) {
+      this.selected = [];
+      if (this.options.autoHide) this.inputElement.style.display = '';
+    } else {
+      let index = this.selected.findIndex(item => item === data);
+      if (index !== -1) this.selected.splice(index, 1);
     }
-    select(id) {
-      id = String(id);  // Convertimos a string
-      if (!this.selectorClass.has(id)) return;
 
-      let indexData = this.selectorClass.get(id);
-      if (indexData.selected == 1) return;
+    this.emit('deselected', data);
+  }
 
-      let IndexSeleted = this.selectorClass._selected(id);
+  async select(id) {
+    id = Number(id);
+    let IndexSeleted = await this.selectorClass.select(id);
 
-      this.colletionBox.append(IndexSeleted.selectedBox);
-      this.emit('selected', IndexSeleted);
+    if (!this.options.multi) {
+      let previousSelection = this.selected[0];
+      if (previousSelection) {
+        previousSelection.closeAnchor.click();
+        this.emit('change', previousSelection, IndexSeleted);
+      }
+      this.selected = [IndexSeleted];
+    } else {
       this.selected.push(IndexSeleted);
     }
-    deselect(id) {
-      id = String(id);  // Convertimos a string
-      if (!this.selectorClass.has(id)) return;
-      let index = this.selected.findIndex(indexData => indexData.id == id);
-      if (index == -1) return;
 
-      let IndexSeleted = this.selected[index];
-      IndexSeleted.closeAnchor.click();
-      this.selected.splice(index, 1);
-    }
-    empty() {
-      if (!this.selected.length) return;
-      this.selected.forEach(IndexSeleted => IndexSeleted.closeAnchor.click())
+    this.collectionBox.append(IndexSeleted.selectedBox);
+    this.emit('selected', IndexSeleted);
+
+    if (this.options.autoHide) this.inputElement.style.display = 'none';
+  }
+
+  deselect(id) {
+    id = Number(id);
+    if (id == NaN) return;
+
+    if (!this.options.multi) {
+      if (this.selected[0].id != id && !this.selected[0]?.closeAnchor) return;
+
+      if (this.options.autoHide) this.inputElement.style.display = '';
+      this.selected[0].closeAnchor.click();
+    } else {
+      let selectedIndex = this.selected.findIndex(item => item.id === id);
+      if (selectedIndex == -1) return;
+
+      this.selected[selectedIndex]?.closeAnchor.click();
+      this.selected.splice(selectedIndex, 1);
     }
   }
 
-  window.SelectorMap = SelectorMap;
-  window.SelectorUnic = SelectorUnic;
-  window.SelectorMulti = SelectorMulti;
-})()
+  empty() {
+    if (!this.selected.length) return;
+    this.selected.forEach(data => data.closeAnchor.click());
+  }
+}

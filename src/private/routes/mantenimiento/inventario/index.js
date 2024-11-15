@@ -7,12 +7,12 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    let resProductosTbl = await query.post.cookie("/api/productos/table/readAll");
-    /** @typedef {{agregar:number, editar:number, eliminar:number, exportar:number, ocultar:number, ver:number}} PERMISOS */
-    /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[], permisos: PERMISOS}} */
-    let { list: dataProductos, prediccion } = await resProductosTbl.json();
+    let resPrecioVenta = await query.post.cookie("/api/cerebro/precio_venta/readJson");
 
-    let prediccionPrecioVenta = new Function('return ' + prediccion.precio_venta)();
+    /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[], permisos: PERMISOS}} */
+    let { prediccion } = await resPrecioVenta.json();
+
+    let prediccionPrecioVenta = new Function('return ' + prediccion)();
 
     /* 
       ==================================================
@@ -94,13 +94,18 @@ $('.content-body').ready(async () => {
     */
 
     $table.init({
-      data: dataProductos,
+      serverSide: true,
+      ajax: (data, end) => {
+        socket.emit('/read/table', data, res => end(res))
+      },
+      pageLength: 10,
       select: {
         style: 'single'
       },
       order: [[2, 'asc']],
       columnDefs: [
         {
+          name: 'estado',
           className: 'dtr-control',
           orderable: false,
           targets: 0,
@@ -114,28 +119,43 @@ $('.content-body').ready(async () => {
           }
         },
         {
+          name: 'codigo',
           className: 'dtr-code',
           orderable: false,
           targets: 1
         },
         {
+          name: 'producto',
+          targets: 2
+        },
+        {
+          name: 'descripcion',
           className: 'dtr-description',
           orderable: false,
           targets: 3,
           render: data => '<div class="scroll-y">' + data + '</div>'
         },
         {
+          name: 'categoria_nombre',
           className: 'dtr-tag',
           targets: 4,
           render: data => '<div>' + data + '</div>'
         },
         {
+          name: 'compra',
+          className: 'dt-type-numeric',
           targets: 5,
           render: data => data?.toFixed(2)
         },
         {
+          name: 'venta',
+          className: 'dt-type-numeric',
           targets: 6,
           render: data => data?.toFixed(2)
+        }, {
+          name: 'creacion',
+          className: 'dt-type-date',
+          targets: 7
         }
       ],
       columns: [
@@ -161,32 +181,30 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    let resCategorias = await query.post.cookie("/api/categorias/selector/readAll");
-
-    /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-    let { list: dataCategorias } = await resCategorias.json();
-
-    let dataSelectorCategorias = new SelectorMap(dataCategorias);
+    let selectorOptionsCategorias = new OptionsServerside(
+      (req, end) => socket.emit('/selector/categorias', req, res => end(res)),
+      { showIndex: false, order: 'asc', noInclude: true }
+    );
 
     /* ===================== SOCKET ===================== */
 
     socket.on('/categorias/data/insert', data => {
-      dataSelectorCategorias.set(data.id, data.nombre);
+      selectorOptionsCategorias.set(data.id, data.nombre);
     })
 
     socket.on('/categorias/data/updateId', data => {
-      dataSelectorCategorias.set(data.id, { name: data.nombre });
+      selectorOptionsCategorias.set(data.id, { name: data.nombre });
     })
 
     socket.on('/categorias/data/state', data => {
       if (data.estado)
-        dataSelectorCategorias.set(data.id, data.nombre);
+        selectorOptionsCategorias.draw(true);
       else
-        dataSelectorCategorias.delete(data.id);
+        selectorOptionsCategorias.delete(data.id);
     })
 
     socket.on('/categorias/data/deleteId', data => {
-      dataSelectorCategorias.delete(data.id);
+      selectorOptionsCategorias.delete(data.id);
     })
 
     /* 
@@ -195,8 +213,16 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    let nuevoSelectorUnic = new SelectorUnic(inputNuevoSelector, dataSelectorCategorias);
-    let editarSelectorUnic = new SelectorUnic(inputEditarSelector, dataSelectorCategorias);
+    let nuevoSelectorUnic = new SelectorInput(
+      inputNuevoSelector,
+      selectorOptionsCategorias,
+      { autohide: true }
+    );
+    let editarSelectorUnic = new SelectorInput(
+      inputEditarSelector,
+      selectorOptionsCategorias,
+      { autohide: true }
+    );
 
     /* 
       ==================================================

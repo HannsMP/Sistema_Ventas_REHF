@@ -3,7 +3,7 @@
     return input.selectionStart;
   }
 
-  function restoreCursorPosition(input, position) {
+  function restoreCursorPosition(input, position=0) {
     input.setSelectionRange(position, position);
   }
 

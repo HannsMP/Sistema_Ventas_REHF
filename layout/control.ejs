@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" theme="<%=session.usuario.tema || 'purple' %>">
+<html lang="en" theme="<%= typeof session?.usuario?.tema == 'string' ? session?.usuario?.tema : 'purple' %>">
 <% if(userLayout['/control']?.ver){ %>
 
 <head>
@@ -41,11 +41,13 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <!-- lib control -->
+  <script src="/src/private/lib/query/query.min.js"></script>
+  <script src="/src/private/lib/Event/EventListener.min.js"></script>
+
+  <!-- Control -->
   <script src="/src/private/document/dropper/dropper.min.js"></script>
   <script src="/src/private/document/alarm/alarm.min.js"></script>
   <script src="/src/private/document/reconectSocket/reconectSocket.min.js"></script>
-
-  <script src="/src/private/lib/query/query.min.js"></script>
 
   <!-- layout -->
   <script src="/src/private/layout/js/control.js"></script>
@@ -162,6 +164,15 @@
                 <i class='bx bxs-cart-download'></i>
                 <a class="nav-link" href="/control/reportes/ventas">
                   <span> Ventas </span>
+                </a>
+              </div>
+            </div>
+
+            <div class="nav-item" <% if(!userLayout['/control/reportes/yapes']?.ver){ %> style="display: none" <% } %>>
+              <div class="nav-icon">
+                <i class='bx bx-credit-card'></i>
+                <a class="nav-link" href="/control/reportes/yapes">
+                  <span> Yapes </span>
                 </a>
               </div>
             </div>

@@ -5,23 +5,20 @@ class Tables {
     this.table = this.i[0];
   }
   /** @param {import('datatables.net-dt').Config} config  */
-  init(config, autoparam = true) {
-    this.table.classList.add('load-spinner');
+  init(config, urlSearch = true) {
 
-    this.datatable = this.i.DataTable({
-      data: config.data || [],
+    /** @type {import('datatables.net-dt').Config}  */
+    let tableConfig = {
+      data: [],
+      pageLength: 50,
       rowId: 'id',
       autoWidth: false,
       ordering: true,
       paging: true,
-      pageLength: config.pageLength || 50,
-      select: config.select,
-      order: config.order,
       searching: true,
       searchDelay: 200,
-      columns: config.columns,
       deferRender: true,
-      columnDefs: config.columnDefs,
+      processing: true,
       language: {
         decimal: '',
         emptyTable: 'No hay datos disponibles en la tabla',
@@ -32,7 +29,7 @@ class Tables {
         thousands: ',',
         lengthMenu: 'Mostrar _MENU_ entradas',
         loadingRecords: 'Cargando...',
-        processing: 'Procesando...',
+        processing: 'Cargando datos, por favor espera...',
         search: 'Buscar:',
         zeroRecords: 'No se encontraron registros coincidentes',
         select: {
@@ -83,15 +80,26 @@ class Tables {
           extend: 'print',
           text: 'Imprimir'
         }
-      ],
-      initComplete: (settings, json) => {
-        this.table.classList.remove('load-spinner');
-      },
-    });
+      ]
+    }
 
-    this.config = config;
+    if (config.data) tableConfig.data = config.data;
+    if (config.pageLength) tableConfig.pageLength = config.pageLength;
+    if (config.select) tableConfig.select = config.select;
+    if (config.order) tableConfig.order = config.order;
+    if (config.columns) tableConfig.columns = config.columns;
+    if (config.columnDefs) tableConfig.columnDefs = config.columnDefs;
+    if (config.serverSide) tableConfig.serverSide = config.serverSide;
+    if (config.ajax) tableConfig.ajax = config.ajax;
 
-    if (autoparam) {
+    this.datatable = this.i.DataTable(tableConfig);
+
+    this.datatable.on('preXhr.dt', () => $('.dt-processing').css('display', 'flex'));
+
+    /** @type {import('datatables.net-dt').Config}  */
+    this.config = tableConfig;
+
+    if (urlSearch) {
       let timeoutId;
       this.datatable.on('search', (_, arg) => {
         clearTimeout(timeoutId);

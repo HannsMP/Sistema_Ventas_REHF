@@ -1,17 +1,5 @@
 $('.content-body').ready(async () => {
   try {
-    /* 
-      ==================================================
-      =================== QUERY DATA ===================
-      ==================================================
-    */
-
-    let resClientesTbl = await query.post.cookie("/api/clientes/table/readAll");
-    /** @typedef {{agregar:number, editar:number, eliminar:number, exportar:number, ocultar:number, ver:number}} PERMISOS */
-    /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[], permisos: PERMISOS}} */
-    let { list: dataClientes } = await resClientesTbl.json();
-
-    let uniqueTelefono = new Set(dataClientes.map(({ telefono }) => telefono));
 
     /* 
       ==================================================
@@ -84,12 +72,6 @@ $('.content-body').ready(async () => {
       this.disabled = false;
     }
 
-    dataClientes.forEach(d => {
-      d.tipo_cliente_nombre = '<div>' + d.tipo_cliente_nombre + '</div>';
-      d.tipo_documento_nombre = '<div>' + d.tipo_documento_nombre + '</div>';
-    })
-
-
     /* 
       ==================================================
       ================= DATATABLE STATE =================
@@ -97,13 +79,18 @@ $('.content-body').ready(async () => {
     */
 
     $table.init({
-      data: dataClientes,
+      serverSide: true,
+      ajax: (data, end) => {
+        socket.emit('/read/table', data, res => end(res))
+      },
+      pageLength: 10,
       select: {
         style: 'single'
       },
       order: [[1, 'asc']],
       columnDefs: [
         {
+          name: 'c.estado',
           className: 'dtr-control',
           orderable: false,
           targets: 0,
@@ -117,14 +104,39 @@ $('.content-body').ready(async () => {
           }
         },
         {
+          name: 'c.nombres',
+          targets: 1
+        },
+        {
+          name: 'tc.nombre',
           className: 'dtr-tag',
           targets: 2,
           render: data => '<div>' + data + '</div>'
         },
         {
+          name: 'c.telefono',
+          className: 'dt-type-numeric',
+          targets: 3
+        },
+        {
+          name: 'c.direccion',
+          targets: 4
+        },
+        {
+          name: 'td.nombre',
           className: 'dtr-tag',
           targets: 5,
           render: data => '<div>' + data + '</div>'
+        },
+        {
+          name: 'c.num_documento',
+          className: 'dt-type-numeric',
+          targets: 6
+        },
+        {
+          name: 'c.creacion',
+          className: 'dt-type-date',
+          targets: 7
         }
       ],
       columns: [
@@ -150,19 +162,15 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    let resTipoCliente = await query.post.cookie("/api/tipo_cliente/selector/readAll");
+    let selectorOptionsTipoCliente = new OptionsServerside(
+      (req, end) => socket.emit('/selector/tipoCliente', req, res => end(res)),
+      { showIndex: false, order: 'asc', noInclude: true }
+    );
 
-    /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-    let { list: dataTipoCliente } = await resTipoCliente.json();
-
-    let dataSelectorTipoCliente = new SelectorMap(dataTipoCliente);
-
-    let resTipoDocumento = await query.post.cookie("/api/tipo_documento/selector/readAll");
-
-    /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-    let { list: dataTipoDocumento } = await resTipoDocumento.json();
-
-    let dataSelectorTipoDocumento = new SelectorMap(dataTipoDocumento);
+    let selectorOptionsTipoDocumento = new OptionsServerside(
+      (req, end) => socket.emit('/selector/tipoDocumento', req, res => end(res)),
+      { showIndex: false, order: 'asc', noInclude: true }
+    );
 
     /* 
       ==================================================
@@ -170,10 +178,24 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    let nuevoSelectorUnicTipoCliente = new SelectorUnic(inputNuevoSelectorTipoCliente, dataSelectorTipoCliente);
-    let nuevoSelectorUnicTipoDocumento = new SelectorUnic(inputNuevoSelectorTipoDocumento, dataSelectorTipoDocumento);
-    let editarSelectorUnicTipoCliente = new SelectorUnic(inputEditarSelectorTipoCliente, dataSelectorTipoCliente);
-    let editarSelectorUnicTipoDocumento = new SelectorUnic(inputEditarSelectorTipoDocumento, dataSelectorTipoDocumento);
+    let nuevoSelectorUnicTipoCliente = new SelectorInput(
+      inputNuevoSelectorTipoCliente,
+      selectorOptionsTipoCliente,
+      { autohide: true }
+    );
+    let nuevoSelectorUnicTipoDocumento = new SelectorInput(
+      inputNuevoSelectorTipoDocumento,
+      selectorOptionsTipoDocumento,
+      { autohide: true }
+    );
+    let editarSelectorUnicTipoCliente = new SelectorInput(
+      inputEditarSelectorTipoCliente,
+      selectorOptionsTipoCliente
+    );
+    let editarSelectorUnicTipoDocumento = new SelectorInput(
+      inputEditarSelectorTipoDocumento,
+      selectorOptionsTipoDocumento
+    );
 
     /* 
       ==================================================
@@ -277,11 +299,17 @@ $('.content-body').ready(async () => {
     */
 
     inputNuevoTelefono.addEventListener('input', () => {
-      let val = inputNuevoTelefono.value;
-      if (!uniqueTelefono.has(val?.toLowerCase()))
-        return inputNuevoTelefono.except = null;
-      inputNuevoTelefono.except = `El Telefono '${val}' ya existe.`;
-      formError(inputNuevoTelefono.except, inputNuevoTelefono.parentNode);
+      let value = inputNuevoTelefono.value;
+      socket.emit(
+        '/read/unic',
+        { column: 'telefono', value },
+        res => {
+          if (res)
+            return inputNuevoTelefono.except = null;
+          inputNuevoTelefono.except = `El Telefono '${value}' ya existe.`;
+          formError(inputNuevoTelefono.except, inputNuevoTelefono.parentNode);
+        }
+      )
     })
 
     /* 
@@ -387,11 +415,17 @@ $('.content-body').ready(async () => {
     */
 
     inputEditarTelefono.addEventListener('input', () => {
-      let val = inputEditarTelefono.value;
-      if (inputEditarTelefono.beforeValue == val || !uniqueTelefono.has(val?.toLowerCase()))
-        return inputEditarTelefono.except = null;
-      inputEditarTelefono.except = `El Telefono '${val}' ya existe.`;
-      formError(inputEditarTelefono.except, inputEditarTelefono.parentNode);
+      let value = inputEditarTelefono.value;
+      socket.emit(
+        '/read/unic',
+        { column: 'telefono', value },
+        res => {
+          if (res)
+            return inputEditarTelefono.except = null;
+          inputEditarTelefono.except = `El Telefono '${value}' ya existe.`;
+          formError(inputEditarTelefono.except, inputEditarTelefono.parentNode);
+        }
+      )
     })
 
     /* 
@@ -498,7 +532,6 @@ $('.content-body').ready(async () => {
         num_documento: data.num_documento,
         creacion: formatTime('YYYY-MM-DD hh:mm:ss')
       });
-      uniqueTelefono.add(data.telefono?.toLowerCase());
     })
 
     socket.on('/clientes/data/updateId', data => {
@@ -516,8 +549,6 @@ $('.content-body').ready(async () => {
         tipo_documento_nombre: data.tipo_documento_nombre,
         num_documento: data.num_documento
       });
-      uniqueTelefono.delete(row.telefono?.toLowerCase());
-      uniqueTelefono.add(data.telefono?.toLowerCase());
 
       let menuEditarid = $table.selected();
       if (menuEditarid && menuEditarid == data.id)
@@ -536,7 +567,6 @@ $('.content-body').ready(async () => {
     socket.on('/clientes/data/deleteId', data => {
       let row = $table.get('#' + data.id);
       if (!row) return;
-      uniqueTelefono.delete(row.telefono?.toLowerCase());
       $table.remove('#' + data.id);
     })
 

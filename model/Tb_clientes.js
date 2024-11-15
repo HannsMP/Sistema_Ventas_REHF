@@ -6,7 +6,7 @@ const columns = {
   nombres: { name: 'nombres', null: false, type: 'String', limit: 50 },
   telefono: { name: 'telefono ', null: true, type: 'String', limit: 20, unic: true },
   direccion: { name: 'direccion', null: true, type: 'String', limit: 50 },
-  tipo_cliente_id: { name: 'fotipo_cliente_id', null: false, type: 'Integer', limit: 11 },
+  tipo_cliente_id: { name: 'tipo_cliente_id', null: false, type: 'Integer', limit: 11 },
   tipo_documento_id: { name: 'tipo_documento_id', null: false, type: 'Integer', limit: 11 },
   num_documento: { name: 'num_documento ', null: false, type: 'String', limit: 20, unic: true },
   creacion: { name: 'creacion', null: false, type: 'String', limit: 25 },
@@ -43,6 +43,156 @@ class Tb_clientes extends Table {
     =============================================== Tabla ===============================================
     ====================================================================================================
   */
+  /**
+   * @param {import('datatables.net-dt').AjaxData} option 
+   * @returns {Promise<COLUMNS[]>}
+   */
+  readInParts(option) {
+    return new Promise(async (res, rej) => {
+      try {
+        let { order, start, length, search } = option;
+
+        let query = `
+          SELECT
+            c.id,
+            c.nombres,
+            c.telefono,
+            c.direccion,
+            c.tipo_cliente_id,
+            tc.nombre AS tipo_cliente_nombre,
+            c.tipo_documento_id,
+            td.nombre AS tipo_documento_nombre,
+            c.num_documento,
+            c.creacion,
+            c.estado
+          FROM 
+            tb_clientes AS c
+          INNER 
+            JOIN 
+              tipo_cliente AS tc
+            ON 
+              tc.id = c.tipo_cliente_id
+          INNER 
+            JOIN 
+              tipo_documento AS td
+            ON 
+              td.id = c.tipo_documento_id
+        `, queryParams = [];
+
+        if (search.value) {
+          query += `
+            WHERE
+              c.nombres LIKE ?
+              OR c.telefono LIKE ?
+              OR c.direccion LIKE ?
+              OR c.num_documento LIKE ?
+              OR tc.nombre LIKE ?
+              OR td.nombre LIKE ?
+          `;
+
+          queryParams.push(
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`
+          );
+        }
+
+        let columnsSet = new Set([
+          'c.nombres',
+          'c.telefono',
+          'c.direccion',
+          'c.num_documento',
+          'tc.nombre',
+          'td.nombre',
+          'c.creacion'
+        ]);
+
+        order = order.filter(d => columnsSet.has(d.name));
+
+        if (order?.length) {
+          query += `
+            ORDER BY
+          `
+          order.forEach(({ dir, name }, index) => {
+            query += `
+              ${name} ${dir == 'asc' ? 'ASC' : 'DESC'}`;
+
+            if (index < order.length - 1)
+              query += ', ';
+          })
+        }
+
+        query += `
+          LIMIT ? OFFSET ?
+        `;
+        queryParams.push(length, start);
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        res(result);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
+  /**
+   * @param {import('datatables.net-dt').AjaxData} option 
+   * @returns {Promise<number>}
+   */
+  readInPartsCount(option) {
+    return new Promise(async (res, rej) => {
+      try {
+        let { search } = option;
+
+        let query = `
+          SELECT
+            COUNT(c.id) AS cantidad
+          FROM 
+            tb_clientes AS c
+          INNER 
+            JOIN 
+              tipo_cliente AS tc
+            ON 
+              tc.id = c.tipo_cliente_id
+          INNER 
+            JOIN 
+              tipo_documento AS td
+            ON 
+              td.id = c.tipo_documento_id
+        `, queryParams = [];
+
+        if (search.value) {
+          query += `
+            WHERE
+              c.nombres LIKE ?
+              OR c.telefono LIKE ?
+              OR c.direccion LIKE ?
+              OR c.num_documento LIKE ?
+              OR tc.nombre LIKE ?
+              OR td.nombre LIKE ?
+          `;
+
+          queryParams.push(
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`
+          );
+        }
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        res(result[0].cantidad);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
   /** 
    * @param {COLUMNS} data 
    * @returns {Promise<import('mysql').OkPacket>}
@@ -335,6 +485,111 @@ class Tb_clientes extends Table {
     ============================================== Selector ==============================================
     ====================================================================================================
   */
+  /**
+   * @param {SelectorRequest} option 
+   * @returns {Promise<COLUMNS[]>}
+   */
+  SelectorInParts(option) {
+    return new Promise(async (res, rej) => {
+      try {
+        let { order, start, length, search, byId, noInclude } = option;
+
+        let query = `
+          SELECT 
+            id,
+            nombres AS name
+          FROM
+            tb_clientes
+          WHERE
+            estado = 1 
+        `, queryParams = [];
+
+        if (search) {
+          if (byId) {
+            query += `
+              AND id = ?
+            `;
+
+            queryParams.push(search);
+          }
+          else {
+            query += `
+              AND nombres LIKE ?
+            `;
+
+            queryParams.push(`%${search}%`);
+          }
+        }
+
+        if (noInclude.length && noInclude.every(id => typeof id == 'number')) {
+          query += `
+            AND id NOT IN (${noInclude.map(_ => '?').join(',')})
+          `
+          queryParams.push(...noInclude);
+        }
+
+        if (order) {
+          query += `
+            ORDER BY
+              nombres ${order == 'asc' ? 'ASC' : 'DESC'}
+          `
+        }
+
+        query += `
+          LIMIT ? OFFSET ?
+        `;
+
+        queryParams.push(length, start);
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        res(result);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
+  /**
+   * @param {SelectorRequest} option 
+   * @returns {Promise<number>}
+   */
+  SelectorInPartsCount(option) {
+    return new Promise(async (res, rej) => {
+      try {
+        let { search, noInclude } = option;
+
+        let query = `
+          SELECT 
+            COUNT(id) AS cantidad
+          FROM
+            tipo_documento
+          WHERE
+            estado = 1 
+        `, queryParams = [];
+
+        if (typeof search == 'string' && search != '') {
+          query += `
+            AND nombres LIKE ?
+          `;
+
+          queryParams.push(`%${search}%`);
+        }
+
+        if (noInclude.length && noInclude.every(id => typeof id == 'number')) {
+          query += `
+            AND id NOT IN (${noInclude.map(_ => '?').join(',')})
+          `
+          queryParams.push(...noInclude);
+        }
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        res(result[0].cantidad);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
   /** 
    * @returns {Promise<Array.<{code: string, name: string}>>}
    */

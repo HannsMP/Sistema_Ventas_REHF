@@ -28,6 +28,166 @@ class tb_ventas extends Table {
     super(name);
     this.columns = columns;
     this.app = app;
+
+    this.io = app.socket.node.selectNode('/control/movimientos/ventas', true);
+  }
+  /* 
+    ====================================================================================================
+    =============================================== Tabla ===============================================
+    ====================================================================================================
+  */
+  /**
+   * @param {import('datatables.net-dt').AjaxData} option 
+   * @param {number} usuario_id 
+   * @returns {Promise<{
+   *   id: number,
+   *   transaccion_id: number,
+   *   transaccion_codigo: string,
+   *   producto_id: number,
+   *   producto_nombre: string,
+   *   cantidad: number,
+   *   importe: number,
+   *   descuento: number,
+   *   transaccion_hora: string
+   * }[]>}
+   */
+  readInParts(option, usuario_id) {
+    return new Promise(async (res, rej) => {
+      try {
+        let { order, start, length, search } = option;
+
+        let query = `
+          SELECT 
+            v.id,
+            tv.id AS transaccion_id,
+            tv.codigo AS transaccion_codigo,
+            p.id AS producto_id,
+            p.producto AS producto_nombre,
+            v.cantidad,
+            v.importe,
+            v.descuento,
+            DATE_FORMAT(tv.creacion, '%r') AS transaccion_hora
+          FROM
+            tb_ventas AS v
+          INNER 
+            JOIN tb_transacciones_ventas AS tv
+              ON v.transaccion_id = tv.id
+          INNER 
+            JOIN tb_productos AS p
+              ON v.producto_id = p.id
+          WHERE 
+            DATE(tv.creacion) = CURDATE()
+            AND tv.usuario_id = ?
+        `, queryParams = [usuario_id];
+
+        if (search.value) {
+          query += `
+            AND p.producto LIKE ?
+            OR v.cantidad LIKE ?
+            OR v.importe LIKE ?
+            OR v.descuento LIKE ?
+            OR tv.creacion LIKE ?
+          `;
+
+          queryParams.push(
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`
+          );
+        }
+
+        let columnsSet = new Set([
+          'p.producto',
+          'v.cantidad',
+          'v.importe',
+          'v.descuento',
+          'tv.creacion'
+        ]);
+
+        order = order.filter(d => columnsSet.has(d.name));
+
+        if (order?.length) {
+          query += `
+            ORDER BY
+          `
+          order.forEach(({ dir, name }, index) => {
+            query += `
+              ${name} ${dir == 'asc' ? 'ASC' : 'DESC'}`;
+
+            if (index < order.length - 1)
+              query += ', ';
+          })
+        }
+
+        query += `
+          LIMIT ? OFFSET ?
+        `;
+        queryParams.push(length, start);
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        res(result);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
+  /**
+   * @param {import('datatables.net-dt').AjaxData} option 
+   * @param {number} usuario_id 
+   * @returns {Promise<COLUMNS[]>}
+   */
+  readInPartsCount(option, usuario_id) {
+    return new Promise(async (res, rej) => {
+      try {
+        let { search } = option;
+
+        let query = `
+          SELECT 
+            COUNT(v.id) AS cantidad
+          FROM
+            tb_ventas AS v
+          INNER 
+            JOIN tb_transacciones_ventas AS tv
+              ON v.transaccion_id = tv.id
+          INNER 
+            JOIN tb_clientes AS c
+              ON tv.cliente_id = c.id
+          INNER 
+            JOIN tb_productos AS p
+              ON v.producto_id = p.id
+          WHERE 
+            DATE(tv.creacion) = CURDATE()
+            AND tv.usuario_id = ?
+        `, queryParams = [usuario_id];
+
+        if (search.value) {
+          query += `
+            AND p.producto LIKE ?
+            OR v.cantidad LIKE ?
+            OR v.importe LIKE ?
+            OR v.descuento LIKE ?
+            OR tv.creacion LIKE ?
+          `;
+
+          queryParams.push(
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`,
+            `%${search.value}%`
+          );
+        }
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        res(result[0].cantidad);
+      } catch (e) {
+        rej(e);
+      }
+    })
   }
   /** 
    * @param {COLUMNS} data 
