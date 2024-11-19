@@ -136,21 +136,3 @@ class Precio_venta {
 }
 
 module.exports = Precio_venta;
-
-
-/* 
-
-return `
-  return (
-    (
-      ${funNet}([
-        (input - ${this.limit.min_compra}) 
-        / (${this.limit.max_compra} - ${this.limit.min_compra})
-      ])[0]
-    ) * (
-      ${this.limit.max_venta} - ${this.limit.min_venta}
-    )
-  ) + ${this.limit.min_venta};
-`.replace(/\.|\n/, '');
-
-*/

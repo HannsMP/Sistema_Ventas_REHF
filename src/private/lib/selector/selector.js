@@ -296,6 +296,16 @@ class OptionsServerside {
   }
 }
 
+/** 
+ * @extends {EventListener<{
+ *   input: string,
+ *   focusin: FocusEvent,
+ *   focusout: FocusEvent,
+ *   change: IndexSeleted,
+ *   deselected: IndexSeleted,
+ *   selected: IndexSeleted,
+ * }>} 
+ */
 class SelectorInput extends EventListener {
   /** @type {IndexSeleted[]} */
   selected = [];
@@ -303,7 +313,7 @@ class SelectorInput extends EventListener {
   /** 
    * @param {HTMLInputElement} inputElement 
    * @param {OptionsServerside} selectorClass  
-   * @param {{ autohide?: boolean, multi?: boolean }} options 
+   * @param {{ autohide?: boolean, multi?: boolean, justChange?: boolean }} options 
    */
   constructor(inputElement, selectorClass, options = {}) {
     if (!(inputElement instanceof HTMLInputElement)) throw new TypeError('El elemento no es un input.');
@@ -314,7 +324,8 @@ class SelectorInput extends EventListener {
     this.selectorClass = selectorClass;
     this.options = {
       multi: Boolean(options?.multi),
-      autoHide: Boolean(options?.autohide)
+      autoHide: Boolean(options?.autohide),
+      justChange: Boolean(options?.justChange),
     };
     this.isDisabled = inputElement.disabled;
 
@@ -325,8 +336,10 @@ class SelectorInput extends EventListener {
       selectorClass.event.on('click', (data) => this.#handleSelect(data), { persistence: true });
       selectorClass.event.on('close', (data) => this.#handleDeselect(data), { persistence: true });
 
+      inputElement.setAttribute('autocomplete', 'off')
+
       let timeoutId;
-      this.inputElement.addEventListener('input', e => {
+      inputElement.addEventListener('input', e => {
         clearTimeout(timeoutId);
         timeoutId = setTimeout(() => {
           this.emit('input', inputElement.value);
@@ -334,13 +347,13 @@ class SelectorInput extends EventListener {
         }, 300);
       });
 
-      this.inputElement.addEventListener('focusin', e => {
+      inputElement.addEventListener('focusin', e => {
         this.emit('focusin', e);
-        this.inputElement.parentNode.append(selectorClass.wrapperBox);
+        inputElement.parentNode.append(selectorClass.wrapperBox);
         selectorClass.search(inputElement.value);
       });
 
-      this.inputElement.addEventListener('focusout', e => {
+      inputElement.addEventListener('focusout', e => {
         this.emit('focusout', e);
         setTimeout(() => {
           selectorClass.wrapperBox.remove();
@@ -349,6 +362,7 @@ class SelectorInput extends EventListener {
     }
   }
 
+  /** @param {IndexSeleted} data  */
   #handleSelect(data) {
     if (this.selectorClass.wrapperBox.parentNode !== this.inputElement.parentNode) return;
 
@@ -356,7 +370,7 @@ class SelectorInput extends EventListener {
       let previousSelection = this.selected[0];
       if (previousSelection) {
         previousSelection.closeAnchor.click();
-        this.emit('change', previousSelection, data);
+        this.emit('change', previousSelection);
       }
       this.selected = [data];
     } else {
@@ -366,10 +380,16 @@ class SelectorInput extends EventListener {
     this.collectionBox.append(data.selectedBox);
     this.emit('selected', data);
 
-    if (this.options.autoHide) this.inputElement.style.display = 'none';
     this.inputElement.value = '';
+
+    if (this.options.autoHide)
+      this.inputElement.style.display = 'none';
+
+    if (this.options.justChange && !this.options.multi)
+      data.closeAnchor.remove();
   }
 
+  /** @param {IndexSeleted} data  */
   #handleDeselect(data) {
     if (data.selectedBox.closest('.selected-collection') !== this.collectionBox) return;
 
@@ -402,7 +422,11 @@ class SelectorInput extends EventListener {
     this.collectionBox.append(IndexSeleted.selectedBox);
     this.emit('selected', IndexSeleted);
 
-    if (this.options.autoHide) this.inputElement.style.display = 'none';
+    if (this.options.autoHide)
+      this.inputElement.style.display = 'none';
+
+    if (this.options.justChange && !this.options.multi)
+      IndexSeleted.closeAnchor.remove();
   }
 
   deselect(id) {

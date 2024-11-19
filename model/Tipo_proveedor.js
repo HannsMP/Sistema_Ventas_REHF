@@ -27,21 +27,110 @@ class Tipo_proveedor extends Table {
     ============================================== Selector ==============================================
     ====================================================================================================
   */
-  /** 
-   * @returns {Promise<Array.<{code: string, name: string}>>}
+  /**
+   * @param {SelectorRequest} option 
+   * @returns {Promise<COLUMNS[]>}
    */
-  selectorReadAll() {
+  SelectorInParts(option) {
     return new Promise(async (res, rej) => {
       try {
-        let [result] = await this.app.model.pool(`
+        let { order, start, length, search, byId, noInclude } = option;
+
+        let query = `
           SELECT 
             id,
             nombre AS name
           FROM
             tipo_proveedor
-        `)
+        `, queryParams = [];
+
+        let includeWhere = false;
+        if (search) {
+          if (byId) {
+            query += `
+              WHERE
+                id = ?
+            `;
+
+            includeWhere = true;
+            queryParams.push(search);
+          }
+          else {
+            query += `
+              WHERE
+                nombre LIKE ?
+            `;
+
+            includeWhere = true;
+            queryParams.push(`%${search}%`);
+          }
+        }
+
+        if (noInclude.length && noInclude.every(id => typeof id == 'number')) {
+          query += `
+            ${includeWhere ? 'AND' : 'WHERE'}
+              id NOT IN (${noInclude.map(_ => '?').join(',')})
+          `
+          queryParams.push(...noInclude);
+        }
+
+        if (order) {
+          query += `
+            ORDER BY
+              nombre ${order == 'asc' ? 'ASC' : 'DESC'}
+          `
+        }
+
+        query += `
+          LIMIT ? OFFSET ?
+        `;
+
+        queryParams.push(length, start);
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
 
         res(result);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
+  /**
+   * @param {SelectorRequest} option 
+   * @returns {Promise<number>}
+   */
+  SelectorInPartsCount(option) {
+    return new Promise(async (res, rej) => {
+      try {
+        let { search, noInclude } = option;
+
+        let query = `
+          SELECT 
+            COUNT(id) AS cantidad
+          FROM
+            tipo_proveedor
+        `, queryParams = [];
+
+        if (typeof search == 'string' && search != '') {
+          query += `
+            WHERE
+              nombre LIKE ?
+          `;
+
+          queryParams.push(`%${search}%`);
+        }
+
+        if (noInclude.length && noInclude.every(id => typeof id == 'number')) {
+          query += `
+            WHERE
+              id NOT IN (${noInclude.map(_ => '?').join(',')})
+          `
+          queryParams.push(...noInclude);
+        }
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        res(result[0].cantidad);
       } catch (e) {
         rej(e);
       }
@@ -55,21 +144,21 @@ class Tipo_proveedor extends Table {
   /** 
    * @returns {Promise<COLUMNS[]>}
    */
-  chartCountTypeClient() {
+  chartCountTypeProvider() {
     return new Promise(async (res, rej) => {
       try {
         let [result] = await this.app.model.pool(`
           SELECT 
             tp.nombre AS nombre,
-            COALESCE(COUNT(p.id), 0) AS cantidad_tipo_cliente
+            COALESCE(COUNT(p.id), 0) AS cantidad_tipo_proveedor
           FROM 
             tipo_proveedor AS tp
           LEFT JOIN 
             tb_proveedores AS p
             ON 
-              p.tipo_cliente_id = tp.id
+              p.tipo_proveedor_id = tp.id
           WHERE 
-            tp.id IN (1, 2, 3)
+            tp.id IN (1, 2, 3, 4)
             AND p.estado = 1
           GROUP BY 
             tp.nombre;
@@ -77,9 +166,9 @@ class Tipo_proveedor extends Table {
 
         let label = [], data = [];
 
-        result.forEach(({ nombre, cantidad_tipo_cliente }) => {
+        result.forEach(({ nombre, cantidad_tipo_proveedor }) => {
           label.push(nombre);
-          data.push(cantidad_tipo_cliente);
+          data.push(cantidad_tipo_proveedor);
         })
 
         res({ label, data });

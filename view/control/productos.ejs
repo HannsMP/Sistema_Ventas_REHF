@@ -3,6 +3,7 @@
 
   <!-- lib control -->
   <link href="/src/private/lib/selector/selector.min.css" rel="stylesheet">
+  <link href="/src/private/lib/inputRange/inputRange.min.css" rel="stylesheet">
   <link href="/src/private/lib/catalogue/catalogue.min.css" rel="stylesheet">
 
   <!-- layout -->
@@ -14,6 +15,7 @@
 
   <!-- lib control -->
   <script src="/src/private/lib/selector/selector.min.js"></script>
+  <script src="/src/private/lib/inputRange/inputRange.min.js"></script>
   <script src="/src/private/lib/catalogue/catalogue.min.js"></script>
 
   <!-- layout -->
@@ -58,17 +60,22 @@
                     <input class="selector" type="search" placeholder="Buscar categorias...">
                     <label for="categoria">Categoria:</label>
                   </div>
+                  <div class="input-box">
+                    <div class="wrapper" id="range-box"> </div>
+                    <label class="active" for="producto">Rango de precios:</label>
+                  </div>
                 </div>
               </div>
+              <div class="form-foot">
+                <a class="btn btn-success">Buscar</a>
+              </div>
             </form>
-            <div class="form-foot">
-              <a class="btn btn-success">Buscar</a>
-            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
+</div>
 </div>
 
 <script src="/src/private/routes/productos/index.js"></script>

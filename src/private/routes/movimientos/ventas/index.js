@@ -1,7 +1,7 @@
 $('.content-body').ready(async () => {
   try {
 
-    function textToHtml(text) {
+    function textToHtml(text = '') {
       let div = document.createElement('div')
       div.innerHTML = text;
       return div.children;
@@ -12,11 +12,6 @@ $('.content-body').ready(async () => {
       =================== QUERY DATA ===================
       ==================================================
     */
-
-    let resTransaccionesVentas = await query.post.cookie("/api/transacciones_ventas/profile/readAll");
-    /** @typedef {{agregar:number, editar:number, eliminar:number, exportar:number, ocultar:number, ver:number}} PERMISOS */
-    /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[], permisos: PERMISOS}} */
-    let { list: dataTransaccionesVentas } = await resTransaccionesVentas.json();
 
     /* 
       ==================================================
@@ -69,17 +64,20 @@ $('.content-body').ready(async () => {
           render: data => '<div>' + data + '</div>'
         },
         {
-          name: 'mp.nombre',
+          name: 'v.cantidad',
+          className: 'dt-type-numeric',
           targets: 2,
-          render: data => data?.toFixed(2)
+          render: data => data?.toFixed(0)
         },
         {
           name: 'tv.descuento',
+          className: 'dt-type-numeric',
           targets: 3,
           render: data => data?.toFixed(2)
         },
         {
           name: 'tv.importe_total',
+          className: 'dt-type-numeric',
           targets: 4,
           render: data => data?.toFixed(2)
         },
@@ -154,7 +152,7 @@ $('.content-body').ready(async () => {
 
     socket.on('/clientes/data/state', data => {
       if (data.estado)
-        dataSelectorClientes.set(data.id, data.nombres);
+        dataSelectorClientes.draw(true);
       else
         dataSelectorClientes.delete(data.id);
     })
@@ -204,12 +202,12 @@ $('.content-body').ready(async () => {
     let metodoPagoSelectorUnic = new SelectorInput(
       inputSelectorMetodoPago,
       dataSelectorMetodoPago,
-      { autohide: true }
+      { justChange: true }
     );
     let clientesSelectorUnic = new SelectorInput(
       inputSelectorCliente,
       dataSelectorClientes,
-      { autohide: true }
+      { justChange: true }
     );
 
     /* 
@@ -287,6 +285,7 @@ $('.content-body').ready(async () => {
         `)[0];
 
       let inputCount = inputBoxCount.querySelector('input');
+      inputBoxCount.inputElement = inputCount;
       let inputSelect = inputBoxSelect.querySelector('input');
 
       let selector = inputBoxSelect.Selector = new SelectorInput(
@@ -301,28 +300,25 @@ $('.content-body').ready(async () => {
       })
       row.tr.setAttribute('ignore', true)
 
-      let beforeChage;
-
+      let precioVenta = 0;
       selector.on('selected', async dataSelected => {
         let resProductos = await query.post.json.cookie("/api/productos/table/readPriceId", { id: dataSelected.id });
 
         /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
         let { list } = await resProductos.json();
-
-        let cloneCount = inputCount.cloneNode(true);
-        inputCount.replaceWith(cloneCount);
-        inputBoxCount.inputElement = cloneCount;
-
-        let change = beforeChage = _ => {
-          row.set.precio(list.venta);
-          row.set.total(list.venta * (Number(cloneCount.value) || 0));
-          refresh();
-        }
-
-        cloneCount.addEventListener('change', change);
-        change();
+        precioVenta = list.venta;
 
         row.tr.removeAttribute('ignore')
+        row.set.precio(precioVenta);
+        row.set.total((precioVenta * (Number(inputCount.value) || 0)).toFixed(2));
+        refresh();
+      })
+
+      inputCount.addEventListener('change', () => {
+        if (inputCount.value == 0)
+          return row.tr.setAttribute('ignore', true);
+        row.set.total((precioVenta * (Number(inputCount.value) || 0)).toFixed(2));
+        refresh();
       })
 
       selector.on('deselected', _ => {
@@ -382,7 +378,7 @@ $('.content-body').ready(async () => {
 
     /* 
       ==================================================
-      =================== CLICK CLEAR ===================
+      =================== CLICK SAVE ===================
       ==================================================
     */
 
@@ -433,38 +429,15 @@ $('.content-body').ready(async () => {
     */
 
     socket.on('/transacciones_ventas/data/insert', data => {
-      let row = $tableHistory.get('#' + data.id);
-      if (row) return;
-
-      $tableHistory.add({
-        id: data.id,
-        codigo: data.codigo,
-        descuento: data.descuento,
-        cliente_nombres: data.cliente_nombres,
-        metodo_pago_nombre: data.metodo_pago_nombre,
-        importe_total: data.importe_total,
-        hora: formatTime('hh:mm:ss TT')
-      });
+      $tableHistory.datatable.draw(data);
     })
 
     socket.on('/transacciones_ventas/data/updateId', (data) => {
-      let row = $tableHistory.get('#' + data.id);
-      if (!row) return;
-
-      $tableHistory.update({
-        cliente_id: data.cliente_id,
-        cliente_nombres: data.cliente_nombres,
-        metodo_pago_id: data.metodo_pago_id,
-        metodo_pago_nombre: data.metodo_pago_nombre,
-        descuento: data.descuento,
-        importe_total: data.importe_total
-      });
+      $tableHistory.datatable.draw(data);
     })
 
     socket.on('/transacciones_ventas/data/deleteId', data => {
-      let row = $tableHistory.get('#' + data.id);
-      if (!row) return;
-      $tableHistory.remove('#' + data.id);
+      $tableHistory.datatable.draw(data);
     })
 
   } catch ({ message, stack }) {

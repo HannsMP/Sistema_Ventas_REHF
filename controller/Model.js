@@ -13,10 +13,14 @@ const Tb_productos = require('../model/Tb_productos');
 const Tb_clientes = require('../model/Tb_clientes');
 const Tb_ventas = require('../model/Tb_ventas');
 const Tb_transacciones_ventas = require('../model/Tb_transacciones_ventas');
+const Tb_proveedores = require('../model/Tb_proveedores');
+const Tb_compras = require('../model/Tb_compras');
+const Tb_transacciones_compras = require('../model/Tb_transacciones_compras');
 const Tb_Yapes = require('../model/Tb_Yapes');
 
 const Tipo_rol = require('../model/Tipo_rol');
 const Tipo_cliente = require('../model/Tipo_cliente');
+const Tipo_proveedor = require('../model/Tipo_proveedor');
 const Tipo_documento = require('../model/Tipo_documento');
 const Tipo_metodo_pago = require('../model/Tipo_metodo_pago');
 
@@ -45,19 +49,20 @@ class Model {
     this.tb_clientes = new Tb_clientes(app);
     this.tb_ventas = new Tb_ventas(app);
     this.tb_transacciones_ventas = new Tb_transacciones_ventas(app);
+    this.tb_proveedores = new Tb_proveedores(app);
+    this.tb_compras = new Tb_compras(app);
+    this.tb_transacciones_compras = new Tb_transacciones_compras(app);
     this.tb_Yapes = new Tb_Yapes(app);
 
     this.tipo_rol = new Tipo_rol(app);
     this.tipo_cliente = new Tipo_cliente(app);
+    this.tipo_proveedor = new Tipo_proveedor(app);
     this.tipo_documento = new Tipo_documento(app);
     this.tipo_metodo_pago = new Tipo_metodo_pago(app);
 
     let cnfg = app.cache.configJSON.readJSON();
 
     this.poolQuery = mysql.createPool(cnfg.DATABASE.production);
-
-    // if (cnfg.DATABASE.autoRun)
-    //   this._run();
   }
   async _run() {
     try {

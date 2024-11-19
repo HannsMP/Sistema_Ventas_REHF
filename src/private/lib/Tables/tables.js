@@ -1,10 +1,11 @@
 class Tables {
+  /** @param {keyof HTMLElementTagNameMap | keyof SVGElementTagNameMap | keyof MathMLElementTagNameMap | keyof HTMLElementDeprecatedTagNameMap} id */
   constructor(id) {
     this.i = $(id);
     /** @type {HTMLTableElement} */
     this.table = this.i[0];
   }
-  /** @param {import('datatables.net-dt').Config} config  */
+  /** @param {import('datatables.net-dt').Config} config @param {boolean} urlSearch */
   init(config, urlSearch = true) {
 
     /** @type {import('datatables.net-dt').Config}  */
@@ -90,11 +91,23 @@ class Tables {
     if (config.columns) tableConfig.columns = config.columns;
     if (config.columnDefs) tableConfig.columnDefs = config.columnDefs;
     if (config.serverSide) tableConfig.serverSide = config.serverSide;
-    if (config.ajax) tableConfig.ajax = config.ajax;
 
+    if (config.ajax) {
+      if (typeof config.ajax == 'function') {
+        let ajax = config.ajax;
+
+        config.ajax = (req, end) => {
+          $('.dt-processing').css('display', 'flex')
+          ajax(req, res => {
+            end(res)
+            $('.dt-processing').css('display', 'none')
+          })
+        }
+      }
+      
+      tableConfig.ajax = config.ajax;
+    }
     this.datatable = this.i.DataTable(tableConfig);
-
-    this.datatable.on('preXhr.dt', () => $('.dt-processing').css('display', 'flex'));
 
     /** @type {import('datatables.net-dt').Config}  */
     this.config = tableConfig;
@@ -129,27 +142,34 @@ class Tables {
       }
     }
   }
+  /** @returns {number} */
   selected() {
     return this.datatable.row({ selected: true }).data()?.id;
   }
+  /** @returns {number[]} */
   selecteds() {
     return this.datatable.rows({ selected: true }).data().toArray().map(row => row.id);
   }
+  /** @param {{[column: string]: any}} data  */
   data(data) {
     this.datatable.clear();
     this.add(...data);
   }
+  /** @param {{[column: string]: any}[]} data  */
   add(...data) {
     data.forEach(d => this.datatable.row.add(d))
     this.datatable.draw();
   }
+  /** @param {...number} rowIds */
   remove(...rowIds) {
     rowIds.forEach(id => this.datatable.row(id).remove())
     this.datatable.draw(false);
   }
+  /** @param {number} rowId @param {string} className  */
   toggle(rowId, className) {
     this.datatable.row(rowId).nodes().to$().toggleClass(className);
   }
+  /** @param {number} rowId @param {{[column: string]: any}} rowData  */
   update(rowId, rowData) {
     let getRow = this.datatable.row(rowId);
     let data = getRow.data();
@@ -157,18 +177,23 @@ class Tables {
       .draw(false);
     return data
   }
+  /** @param {number} rowId  */
   get(rowId) {
     return this.datatable.row(rowId).data();
   }
+  /** @param {string} value @param {[regex?: boolean, smart?: boolean, caseInsen?: boolean]} option  */
   search(value, ...option) {
     this.datatable.search(value, ...option).draw();
   }
+  /** @param {keyof HTMLElementTagNameMap | keyof SVGElementTagNameMap | keyof MathMLElementTagNameMap | keyof HTMLElementDeprecatedTagNameMap} here */
   buttons(here = '.tables-utils .download') {
     this.datatable.buttons().container().appendTo(here);
   }
+  /** @param {number} index @param {boolean} state  */
   toggleColumn(index, state) {
     this.datatable.column(index).visible(state)
   }
+  /** @param {boolean} state @param {string} defaultStyle */
   toggleSelect(state, defaultStyle = this.config?.select?.style || 'single') {
     this.datatable.select.style(state ? defaultStyle : 'api');
     if (!state) this.datatable.rows().deselect()

@@ -190,11 +190,13 @@ $('.content-body').ready(async () => {
     );
     let editarSelectorUnicTipoCliente = new SelectorInput(
       inputEditarSelectorTipoCliente,
-      selectorOptionsTipoCliente
+      selectorOptionsTipoCliente,
+      { justChange: true }
     );
     let editarSelectorUnicTipoDocumento = new SelectorInput(
       inputEditarSelectorTipoDocumento,
-      selectorOptionsTipoDocumento
+      selectorOptionsTipoDocumento,
+      { justChange: true }
     );
 
     /* 

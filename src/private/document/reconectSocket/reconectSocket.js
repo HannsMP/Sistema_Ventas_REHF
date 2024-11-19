@@ -1,5 +1,10 @@
 /** @type {import('socket.io').Socket} */
 var socket = io();
+
+let CONNECT = new Promise(res => {
+  socket.on('connect', () => res());
+});
+
 (() => {
   function reconectSocket() {
     setTimeout(async _ => {
@@ -14,13 +19,9 @@ var socket = io();
     }, 1000)
   }
 
-  let CONNECT = new Promise(res => {
-    socket.on('connect', () => res());
-  }); 
-
   let CONNECTED = () => new Promise((res, rej) => {
     let timeoutId = setTimeout(_ => CONNECTED() && rej(), 200);
-    socket.emit('connected', _ => {
+    socket.emit('ready', _ => {
       alarm.success('Conexión establecida');
       clearTimeout(timeoutId);
       res();
@@ -28,7 +29,6 @@ var socket = io();
   })
 
   document.addEventListener('DOMContentLoaded', async () => {
-
     socket.on('disconnect', () => {
       alarm.error('Desconectado...');
       reconectSocket();
@@ -49,7 +49,7 @@ var socket = io();
       reconectSocket();
     });
 
-    socket.on('reconnect_error', (error) => {
+    socket.on('reconnect_error', () => {
       alarm.error('Error de reconexión... ');
       reconectSocket();
     });

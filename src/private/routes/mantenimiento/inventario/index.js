@@ -221,7 +221,7 @@ $('.content-body').ready(async () => {
     let editarSelectorUnic = new SelectorInput(
       inputEditarSelector,
       selectorOptionsCategorias,
-      { autohide: true }
+      { justChange: true }
     );
 
     /* 

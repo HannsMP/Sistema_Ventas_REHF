@@ -6,8 +6,7 @@ const columns = {
   transaccion_id: { name: 'transaccion_id', null: false, type: 'Integer', limit: 11 },
   producto_id: { name: 'producto_id', null: false, type: 'Integer', limit: 11 },
   cantidad: { name: 'cantidad', null: false, type: 'Integer', limit: 10 },
-  importe: { name: 'importe ', null: false, type: 'Number', limit: 10 },
-  descuento: { name: 'descuento ', null: false, type: 'Number', limit: 10 }
+  importe: { name: 'importe ', null: false, type: 'Number', limit: 10 }
 }
 
 /** 
@@ -463,31 +462,18 @@ class tb_ventas extends Table {
           tv.codigo AS transaccion_codigo,
           p.id AS producto_id,
           p.producto AS producto_nombre,
-          p.codigo AS producto_codigo,
-          p.compra AS precio_compra,
-          p.venta AS precio_venta,
-          c.nombre AS categoria_nombre,
           v.cantidad,
           v.importe,
           v.descuento,
           DATE_FORMAT(tv.creacion, '%r') AS transaccion_hora
         FROM
-          tb_transacciones_ventas AS tv
+          tb_ventas AS v
         INNER 
-          JOIN 
-            tb_ventas AS v
-          ON 
-            v.transaccion_id = tv.id
+          JOIN tb_transacciones_ventas AS tv
+            ON v.transaccion_id = tv.id
         INNER 
-          JOIN
-            tb_productos AS p
-          ON 
-            v.producto_id = p.id
-        INNER 
-          JOIN
-            tb_categorias AS c
-          ON 
-            p.categoria_id = c.id
+          JOIN tb_productos AS p
+            ON v.producto_id = p.id
         WHERE
           tv.id = ?
       `, [

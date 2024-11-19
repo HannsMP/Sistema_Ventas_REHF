@@ -536,60 +536,77 @@ class Tb_productos extends Table {
   catalogueInParts(option) {
     return new Promise(async (res, rej) => {
       try {
-        let { start, length, filter } = option;
-        let query = `
-        SELECT
-          p.id,
-          p.codigo,
-          p.producto,
-          p.descripcion,
-          p.venta,
-          p.cantidad,
-          p.categoria_id,
-          c.nombre AS categoria_nombre,
-          f.src AS src
-        FROM
-          tb_productos AS p
-        LEFT 
-          JOIN 
-            tb_categorias AS c 
-          ON 
-            c.id = p.categoria_id
-        LEFT 
-          JOIN 
-            tb_fotos AS f 
-          ON 
-            f.id = p.foto_id
-        WHERE
-          p.estado = 1
-      `, queryParams = [];
+        let { order, start, length, filter } = option;
 
-        if (filter.value) {
-          query += ` AND p.producto LIKE ? `;
-          queryParams.push(`%${filter.value}%`);
-        }
+        let query = `
+          SELECT
+            p.id,
+            p.codigo,
+            p.producto,
+            p.descripcion,
+            p.venta,
+            p.cantidad,
+            p.categoria_id,
+            c.nombre AS categoria_nombre,
+            f.src AS src
+          FROM
+            tb_productos AS p
+          LEFT 
+            JOIN 
+              tb_categorias AS c 
+            ON 
+              c.id = p.categoria_id
+          LEFT 
+            JOIN 
+              tb_fotos AS f 
+            ON 
+              f.id = p.foto_id
+          WHERE
+            p.estado = 1
+        `, queryParams = [];
+
         if (filter.code) {
-          query += ` AND p.codigo = ? `;
+          query += ` 
+            AND p.codigo = ? 
+          `;
           queryParams.push(filter.code);
         }
-        if (filter.rangeMin !== undefined) {
-          query += ` AND p.venta >= ? `;
-          queryParams.push(filter.rangeMin);
-        }
-        if (filter.rangeMax !== undefined) {
-          query += ` AND p.venta <= ? `;
-          queryParams.push(filter.rangeMax);
-        }
-        if (filter.nameTags?.length) {
-          query += ` AND p.categoria_id IN (${filter.nameTags.map(() => '?').join(', ')}) `;
-          queryParams.push(...filter.nameTags);
-        }
-        if (filter.order) {
-          query += ` ORDER BY p.producto ${filter.order === 'asc' ? 'ASC' : 'DESC'} `;
+        else {
+          if (filter.value) {
+            query += ` 
+              AND p.producto LIKE ? 
+            `;
+            queryParams.push(`%${filter.value}%`);
+          }
+          if (typeof filter.rangeMin == 'number' && 0 <= filter.rangeMin) {
+            query += ` 
+              AND p.venta >= ? 
+            `;
+            queryParams.push(filter.rangeMin);
+          }
+          if (typeof filter.rangeMax == 'number' && 0 <= filter.rangeMax) {
+            query += ` 
+              AND p.venta <= ? 
+            `;
+            queryParams.push(filter.rangeMax);
+          }
+          if (filter.nameTags?.length) {
+            query += ` 
+              AND p.categoria_id IN (${filter.nameTags.map(() => '?').join(', ')}) 
+            `;
+            queryParams.push(...filter.nameTags);
+          }
         }
 
+        query += ` 
+          ORDER BY
+            p.producto ${order == 'asc' ? 'ASC' : 'DESC'}
+        `;
+
         // Paginación
-        query += ` LIMIT ? OFFSET ? `;
+        query += `
+          LIMIT ? OFFSET ?
+        `;
         queryParams.push(length, start);
 
         let [result] = await this.app.model.poolValues(query, queryParams);
@@ -826,50 +843,6 @@ class Tb_productos extends Table {
   }
   /* 
     ====================================================================================================
-    ============================================== Cliente ==============================================
-    ====================================================================================================
-  */
-  /**
-   * @returns {Promise<COLUMNS[]>}
-   */
-  readAllJoinPaginator() {
-    return new Promise(async (res, rej) => {
-      try {
-        let [result] = await this.app.model.pool(`
-          SELECT
-            p.id,
-            p.codigo,
-            p.producto,
-            p.descripcion,
-            p.venta,
-            p.cantidad,
-            p.categoria_id,
-            c.nombre AS categoria_nombre,
-            f.src AS src
-          FROM
-            tb_productos AS p
-          LEFT
-            JOIN 
-              tb_categorias AS c
-            ON
-              c.id = p.categoria_id
-          LEFT
-            JOIN 
-              tb_fotos AS f
-            ON
-              f.id = p.foto_id
-          WHERE
-            p.estado = 1
-        `);
-
-        res(result);
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
-  /* 
-    ====================================================================================================
     ============================================ Transaccion ============================================
     ====================================================================================================
   */
@@ -1063,34 +1036,6 @@ class Tb_productos extends Table {
         let [result] = await this.app.model.poolValues(query, queryParams);
 
         res(result[0].cantidad);
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
-  /** 
-   * @returns {Promise<Array.<{code: string, name: string}>>}
-   */
-  selectorReadAll() {
-    return new Promise(async (res, rej) => {
-      try {
-        let [result] = await this.app.model.pool(`
-          SELECT
-            p.id,
-            CONCAT(p.codigo, ' - ', p.producto) AS name,
-            f.src_small AS src
-          FROM
-            tb_productos AS p
-          LEFT
-            JOIN
-              tb_fotos AS f
-            ON
-              f.id = p.foto_id
-          WHERE
-            p.estado = 1
-        `)
-
-        res(result);
       } catch (e) {
         rej(e);
       }

@@ -133,26 +133,6 @@ class Tipo_documento extends Table {
       }
     })
   }
-  /** 
-   * @returns {Promise<Array.<{code: string, name: string}>>}
-   */
-  selectorReadAll() {
-    return new Promise(async (res, rej) => {
-      try {
-        let [result] = await this.app.model.pool(`
-          SELECT 
-            id,
-            nombre AS name
-          FROM
-            tipo_documento
-        `)
-
-        res(result);
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
   /* 
     ====================================================================================================
     ============================================== Grafico ==============================================

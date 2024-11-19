@@ -157,35 +157,6 @@ class Tb_roles extends Table {
       }
     })
   }
-  /** 
-   * @returns {Promise<Array.<{code: string, name: string}>>}
-   */
-  selectorReadAll(rol_id) {
-    return new Promise(async (res, rej) => {
-      try {
-        let [result] = rol_id == 1
-          ? await this.app.model.pool(`
-              SELECT 
-                id,
-                nombre AS name
-              FROM
-                tipo_rol
-            `)
-          : await this.app.model.poolValues(`
-              SELECT 
-                id,
-                nombre AS name
-              FROM
-                tipo_rol
-              WHERE ? < id
-            `, [rol_id])
-
-        res(result);
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
   /* 
     ====================================================================================================
     ============================================== Grafico ==============================================

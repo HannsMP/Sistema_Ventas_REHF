@@ -169,13 +169,14 @@ $('.content-body').ready(async () => {
     */
 
     let nuevoSelectorUnic = new SelectorInput(
-      inputNuevoSelector, 
+      inputNuevoSelector,
       dataSelectorRoles,
       { autohide: true }
     );
     let editarSelectorUnic = new SelectorInput(
-      inputEditarSelector, 
-      dataSelectorRoles
+      inputEditarSelector,
+      dataSelectorRoles,
+      { justChange: true }
     );
 
     /* 

@@ -8,6 +8,7 @@ const columns = {
   proveedor_id: { name: 'proveedor_id', null: false, type: 'Integer', limit: 11 },
   usuario_id: { name: 'usuario_id', null: false, type: 'Integer', limit: 11 },
   importe_total: { name: 'importe_total ', null: false, type: 'Number', limit: 10, decimal: 2 },
+  metodo_pago_id: { name: 'metodo_pago_id', null: false, type: 'Integer', limit: 11 },
   serie: { name: 'serie', null: true, type: 'String', limit: 20 },
   creacion: { name: 'creacion', null: false, type: 'String', limit: 25 }
 }

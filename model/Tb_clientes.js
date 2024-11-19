@@ -590,26 +590,6 @@ class Tb_clientes extends Table {
       }
     })
   }
-  /** 
-   * @returns {Promise<Array.<{code: string, name: string}>>}
-   */
-  selectorReadAll() {
-    return new Promise(async (res, rej) => {
-      try {
-        let [result] = await this.app.model.pool(`
-          SELECT 
-            id,
-            nombres AS name
-          FROM
-            tb_clientes
-        `)
-
-        res(result);
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
   /* 
     ====================================================================================================
     ============================================== Cards ==============================================

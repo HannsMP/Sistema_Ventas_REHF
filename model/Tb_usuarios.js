@@ -1000,26 +1000,6 @@ class Tb_usuarios extends Table {
       }
     })
   }
-  /** 
-   * @returns {Promise<Array.<{code: string, name: string}>>}
-   */
-  selectorReadAll() {
-    return new Promise(async (res, rej) => {
-      try {
-        let [result] = await this.app.model.pool(`
-          SELECT 
-            id,
-            usuario AS name
-          FROM
-            tb_usuarios
-        `)
-
-        res(result);
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
   /* 
     ====================================================================================================
     ============================================== Unicos ==============================================

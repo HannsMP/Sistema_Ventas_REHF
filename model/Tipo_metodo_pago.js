@@ -172,26 +172,6 @@ class Tipo_metodo_pago extends Table {
       }
     })
   }
-  /** 
-   * @returns {Promise<Array.<{code: string, name: string}>>}
-   */
-  selectorReadAll() {
-    return new Promise(async (res, rej) => {
-      try {
-        let [result] = await this.app.model.pool(`
-          SELECT 
-            id,
-            nombre AS name
-          FROM
-            tipo_metodo_pago
-        `)
-
-        res(result);
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
 }
 
 module.exports = Tipo_metodo_pago;

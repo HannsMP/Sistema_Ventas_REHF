@@ -271,11 +271,6 @@ class Tb_transacciones_ventas extends Table {
           _ => this.readJoinId(result.insertId)
         )
 
-        this.app.model.tb_ventas.io.tagsName.get(`usr:${usuario_id}`)?.emit(
-          '/transacciones_ventas/data/insert',
-          _ => this.readJoinId(result.insertId)
-        )
-
         res(result)
       } catch (e) {
         rej(e);
@@ -353,12 +348,12 @@ class Tb_transacciones_ventas extends Table {
           SELECT 
             tv.id,
             tv.metodo_pago_id, 
-            mp.nombre AS metodo_pago_nombre,
-            tv.cliente_id,
-            c.nombres AS cliente_nombres,
             tv.codigo,
             tv.importe_total,
             tv.descuento,
+            mp.nombre AS metodo_pago_nombre,
+            tv.cliente_id,
+            c.nombres AS cliente_nombres,
             DATE_FORMAT(tv.creacion, '%r') AS hora
           FROM 
             tb_transacciones_ventas AS tv
@@ -508,7 +503,7 @@ class Tb_transacciones_ventas extends Table {
       try {
         this.constraint('id', id);
 
-        let [resultVentas] = await this.app.model.poolValues(`
+        await this.app.model.poolValues(`
           DELETE FROM 
             tb_ventas 
           WHERE 
@@ -518,9 +513,9 @@ class Tb_transacciones_ventas extends Table {
         ]);
 
         let [result] = await this.app.model.poolValues(`
-          DELETE FROM 
-            tb_transacciones_ventas 
-          WHERE 
+          DELETE FROM
+            tb_transacciones_ventas
+          WHERE
             id = ?
        `, [
           id
@@ -531,11 +526,9 @@ class Tb_transacciones_ventas extends Table {
           { id }
         )
 
-        let dataEmit = await this.readJoinId(id);
-
-        this.app.model.tb_ventas.io.tagsName.get(`usr:${dataEmit.usuario_id}`)?.emit(
+        this.app.model.tb_ventas.io.sockets.emit(
           '/transacciones_ventas/data/deleteId',
-          dataEmit
+          { id }
         )
 
         res(result)

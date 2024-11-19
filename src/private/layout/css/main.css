@@ -468,6 +468,7 @@ html[theme=green] .theme-green,
       gap: .6rem;
 
       div {
+        color: rgb(var(--primary));
         text-align: right;
         width: fit-content;
       }

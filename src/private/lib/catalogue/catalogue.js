@@ -4,6 +4,20 @@
   ----------------------------------------------------
 */
 
+/**
+ * @typedef {{
+ *   id:number,
+ *   src:string,
+ *   cantidad: number,
+ *   producto:string,
+ *   categoria_id:number,
+ *   categoria_nombre:string,
+ *   descripcion: string,
+ *   codigo:string,
+ *   venta: string
+ * }} Item 
+ */
+
 /** 
  * @typedef {{
  *   value?: string,
@@ -11,15 +25,15 @@
  *   rangeMin?: number,
  *   rangeMax?: number,
  *   nameTags?: number[]
- *   order?: 'asc'|'desc'
  * }} CatalogueFilter
  */
 
 /** 
  * @typedef {{
  *   filter: CatalogueFilter,
+ *   order: 'asc'|'desc',
  *   start: number,
- *   length: number,
+ *   length: number
  * }} CatalogueRequest
  */
 
@@ -31,7 +45,6 @@
  * })=>void} CatalogueEnd
  */
 
-/** @template {T} */
 class Catalogue {
   /** 
    * @type {EventListener<{
@@ -44,12 +57,12 @@ class Catalogue {
   #chunkSize = 0;
   #chunkCurrent = 0;
   #totalItems = 0;
+  #order = 'asc';
   #searchParams = {};
-
   /**
    * @param {HTMLDivElement} catalogoBox - Elemento donde se va a renderizar el catálogo
    * @param {(req: CatalogueRequest, end: CatalogueEnd)=>void} fetchCallback - Callback para solicitar los productos al servidor
-   * @param {(item: T)=>string} factoryCallback - Callback para generar el HTML de los productos
+   * @param {(item: Item)=>string} factoryCallback - Callback para generar el HTML de los productos
    * @param {number} length - Número de productos por página
    */
   constructor(catalogoBox, fetchCallback, factoryCallback, length = 20) {
@@ -83,12 +96,11 @@ class Catalogue {
     this.fetchCallback(
       {
         filter: this.#searchParams,
+        order: this.#order,
         start: this.#chunkSize * pageIndex,
         length: this.#chunkSize
       },
       (response) => {
-        console.log(response);
-        
         this.#totalItems = response.recordsTotal || 0;
         this.#renderProducts(response.data);
         this.#renderPaginator();

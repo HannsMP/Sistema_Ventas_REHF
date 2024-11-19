@@ -83,7 +83,6 @@
       z-index: 100;
     }
 
-
     input:-webkit-autofill,
     input:focus,
     input:active,
@@ -123,7 +122,8 @@
     input[type=text]:valid~label,
     input[type=email]:valid~label,
     input[type=password]:valid~label,
-    input[disabled=default]~label {
+    input[disabled=default]~label,
+    label.active {
       color: rgb(var(--color-8));
       top: 2px;
     }

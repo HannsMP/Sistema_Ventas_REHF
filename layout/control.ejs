@@ -94,20 +94,20 @@
             </a>
           </div>
           <div class="menu">
-            <div class="nav-item" <% if(!userLayout['/control/movimientos/compras']?.ver){ %> style="display: none" <% } %>>
-              <div class="nav-icon">
-                <i class='bx bx-cart-add'></i>
-                <a class="nav-link" href="/control/movimientos/compras">
-                  <span> Compras </span>
-                </a>
-              </div>
-            </div>
-
             <div class="nav-item" <% if(!userLayout['/control/movimientos/ventas']?.ver){ %> style="display: none" <% } %>>
               <div class="nav-icon">
                 <i class="bx bx-cart-download"></i>
                 <a class="nav-link" href="/control/movimientos/ventas">
                   <span> Ventas </span>
+                </a>
+              </div>
+            </div>
+
+            <div class="nav-item" <% if(!userLayout['/control/movimientos/compras']?.ver){ %> style="display: none" <% } %>>
+              <div class="nav-icon">
+                <i class='bx bx-cart-add'></i>
+                <a class="nav-link" href="/control/movimientos/compras">
+                  <span> Compras </span>
                 </a>
               </div>
             </div>
@@ -140,6 +140,15 @@
               </div>
             </div>
 
+            <div class="nav-item" <% if(!userLayout['/control/mantenimiento/proveedor']?.ver){ %> style="display: none" <% } %>>
+              <div class="nav-icon">
+                <i class="bx bxs-group"></i>
+                <a class="nav-link" href="/control/mantenimiento/proveedor">
+                  <span> Proveedor </span>
+                </a>
+              </div>
+            </div>
+
             <div class="nav-item" <% if(!userLayout['/control/mantenimiento/inventario']?.ver){ %> style="display: none" <% } %>>
               <div class="nav-icon">
                 <i class="bx bx-store"></i>
@@ -164,6 +173,15 @@
                 <i class='bx bxs-cart-download'></i>
                 <a class="nav-link" href="/control/reportes/ventas">
                   <span> Ventas </span>
+                </a>
+              </div>
+            </div>
+
+            <div class="nav-item" <% if(!userLayout['/control/reportes/compras']?.ver){ %> style="display: none" <% } %>>
+              <div class="nav-icon">
+                <i class='bx bxs-cart-add'></i>
+                <a class="nav-link" href="/control/reportes/compras">
+                  <span> Compras </span>
                 </a>
               </div>
             </div>

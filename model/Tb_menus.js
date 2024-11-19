@@ -176,60 +176,6 @@ class Tb_menus extends Table {
       }
     })
   }
-  /** 
-   * @returns {Promise<string>} */
-  cardCountBot() {
-    return new Promise(async (res, rej) => {
-      try {
-        let [result] = await this.app.model.pool(`
-            SELECT 
-              COALESCE(COUNT(id), 0) AS cantidad_menus
-            FROM 
-              tb_menus
-            WHERE
-              principal = 'bot';
-          `)
-
-        res(result[0].cantidad_menus);
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
-  /* 
-    ====================================================================================================
-    ============================================== Grafico ==============================================
-    ====================================================================================================
-  */
-  /** 
-   * @returns {Promise<{label: string[], data: number[]}>}
-   */
-  chartMainPath() {
-    return new Promise(async (res, rej) => {
-      try {
-        let [result] = await this.app.model.pool(`
-          SELECT 
-            principal,
-            ruta
-          FROM 
-            tb_menus
-          WHERE
-            principal = 'bot';
-        `)
-
-        let label = [], data = [];
-
-        result.forEach(({ ruta, principal }) => {
-          label.push(ruta);
-          data.push(principal);
-        })
-
-        res({ label, data });
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
 }
 
 module.exports = Tb_menus;

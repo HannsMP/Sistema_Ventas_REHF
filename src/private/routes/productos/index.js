@@ -1,19 +1,4 @@
 $('.content-body').ready(async () => {
-
-  /**
-   * @typedef {{
-  *   id:number,
-  *   src:string,
-  *   cantidad: number,
-  *   producto:string,
-  *   categoria_id:number,
-  *   categoria_nombre:string,
-  *   descripcion: string,
-  *   codigo:string,
-  *   venta: string
-  * }} Item 
-  */
-
   try {
     /* 
       ==================================================
@@ -36,11 +21,23 @@ $('.content-body').ready(async () => {
     let filtroCodigo = tableNuevo.querySelector('input[name=codigo]');
     let filtroProducto = tableNuevo.querySelector('input[name=producto]');
     let filtroSelector = tableNuevo.querySelector('input.selector');
+    let filtroRange = tableNuevo.querySelector('#range-box');
     let btnFiltro = tableNuevo.querySelector('.btn');
 
     /* 
       ==================================================
-      ================== SELECTOR MULTI ==================
+      =================== RANGE INPUT ===================
+      ==================================================
+    */
+
+    let filtroPriceRange = new InputRange(
+      filtroRange,
+      { min: 0, max: 500, step: 5, gap: 10 }
+    );
+
+    /* 
+      ==================================================
+      ================= SELECTOR MULTI =================
       ==================================================
     */
 
@@ -58,7 +55,6 @@ $('.content-body').ready(async () => {
 
     let catalogoBox = document.getElementById('catalogo');
 
-    /** @type {Catalogue<Item>} */
     let catalogo = new Catalogue(
       catalogoBox,
       (req, end) => socket.emit('/read/catalogue', req, res => end(res)),
@@ -79,7 +75,7 @@ $('.content-body').ready(async () => {
           </div>
         </div>
       `,
-      5
+      20
     );
 
     /* 
@@ -140,28 +136,9 @@ $('.content-body').ready(async () => {
         value: findProducto,
         code: findCodigo,
         nameTags: findSelected,
-        order: 'asc',
-        rangeMax: null,
-        rangeMin: null
+        rangeMax: filtroPriceRange.max,
+        rangeMin: filtroPriceRange.min
       });
-      // data => {
-
-      //   /** @type {{ producto:string, codigo:string, categoria_id:number }} */
-      //   let { producto, codigo, categoria_id } = data,
-      //     is = false;
-      //   if (findCodigo && findCodigo != '')
-      //     is = is || codigo.startsWith(findCodigo);
-      //   else
-      //     is = true;
-
-      //   if (findProducto && findProducto != '')
-      //     is = is && producto.toLowerCase().includes(findProducto.toLowerCase());
-
-      //   if (findSelected.size)
-      //     is = is && findSelected.has(categoria_id);
-
-      //   return is;
-      // }
     }
 
     btnFiltro.addEventListener('click', () => search());
@@ -285,6 +262,25 @@ $('.content-body').ready(async () => {
     })
 
   } catch ({ message, stack }) {
-    socket.emit('err_client', { message, stack, url: window.location.href })
+    socket.emit('/err/client', { message, stack, url: window.location.href })
   }
 })
+
+// data => {
+
+//   /** @type {{ producto:string, codigo:string, categoria_id:number }} */
+//   let { producto, codigo, categoria_id } = data,
+//     is = false;
+//   if (findCodigo && findCodigo != '')
+//     is = is || codigo.startsWith(findCodigo);
+//   else
+//     is = true;
+
+//   if (findProducto && findProducto != '')
+//     is = is && producto.toLowerCase().includes(findProducto.toLowerCase());
+
+//   if (findSelected.size)
+//     is = is && findSelected.has(categoria_id);
+
+//   return is;
+// }

@@ -42,7 +42,8 @@ module.exports = {
     last: true,
   },
   nodeRoute: function (node) {
-
+    
+    /** @param {import('datatables.net-dt').AjaxData} tableReq @param {(res:import('datatables.net-dt').AjaxResponse)=>void} res */
     let readTable = async (tableReq, res) => {
       let result = {
         draw: tableReq.draw,

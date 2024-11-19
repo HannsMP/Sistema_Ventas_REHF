@@ -173,7 +173,7 @@ class SocketNode {
    * @param {SocketClient} socket 
    * @param {string[]} tags 
   */
-  async addSocket(path, socket, tags) {
+  addSocket(path, socket, tags) {
     let routes = this.#decomposePath(path);
     let currentNode = this;
 
@@ -211,12 +211,10 @@ class SocketNode {
     }
 
     currentNode.sockets.set(socket.id, socket);
+    currentNode.ev.emit('connected', socket);
 
     socket.on('disconnect', _ => this.removeSocket(path, socket.id));
-    socket.on('connected', res => {
-      res(); socket.emit('connected');
-      currentNode.ev.emit('connected', socket);
-    });
+    socket.on('ready', res => res() && currentNode.ev.emit('ready', socket));
 
     socket.join(tags);
   }
@@ -225,7 +223,7 @@ class SocketNode {
    * @param {string} path 
    * @param {string} socketId 
    */
-  async removeSocket(path, socketId) {
+  removeSocket(path, socketId) {
     let routes = this.#decomposePath(path);
     let currentNode = this;
 

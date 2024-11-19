@@ -62,6 +62,11 @@ module.exports = {
 
         await this.model.tb_ventas.inserts(...listVentas);
 
+        this.model.tb_ventas.io.tagsName.get(`usr:${usuario_id}`)?.emit(
+          '/transacciones_ventas/data/insert',
+          _ => listVentas
+        )
+
         res.status(200).json({ data: { id: transaccion_id, codigo, descuento } })
       } catch (e) {
         this.responseErrorApi(req, res, next, e)

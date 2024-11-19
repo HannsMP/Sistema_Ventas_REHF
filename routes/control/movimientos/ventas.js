@@ -39,11 +39,13 @@ module.exports = {
     },
   ],
   nodeOption: {
-    last: true,
+    last: true
   },
   nodeRoute: function (node) {
+    node.option.tagsName = true;
 
-    let readTable = async (tableReq, res) => {
+    /** @param {import('datatables.net-dt').AjaxData} tableReq @param {(res:import('datatables.net-dt').AjaxResponse)=>void} res */
+    let readTable = async (myId, tableReq, res) => {
       let result = {
         draw: tableReq.draw,
         recordsTotal: 0,
@@ -52,8 +54,8 @@ module.exports = {
       }
 
       try {
-        let data = this.model.tb_ventas.readInParts(tableReq);
-        let recordsFiltered = this.model.tb_ventas.readInPartsCount(tableReq);
+        let data = this.model.tb_ventas.readInParts(tableReq, myId);
+        let recordsFiltered = this.model.tb_ventas.readInPartsCount(tableReq, myId);
         let recordsTotal = this.model.tb_ventas.readCount();
 
         result.data = await data;
@@ -136,7 +138,9 @@ module.exports = {
     }
 
     node.ev.on('connected', socket => {
-      socket.on('/read/table', readTable)
+      let myId = socket.session.usuario_id;
+
+      socket.on('/read/table', readTable.bind(null, myId))
       socket.on('/selector/producto', selectorProducto)
       socket.on('/selector/metodoPago', selectorMetodoPago)
       socket.on('/selector/cliente', selectorCliente)

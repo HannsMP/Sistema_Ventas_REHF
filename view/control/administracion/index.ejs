@@ -26,11 +26,14 @@
     <div class="cards">
       <% if(userLayout['/control/administracion/acceso']?.ver){ %>
       <div class="f-col">
-        <a class="card" href="/control/administracion/acceso">
+        <div class="card">
           <div class="card-head">
             <h3 class="card-tittle">Acceso</h3>
+            <form action="/control/administracion/acceso" method="get">
+              <input class="card-search" type="search" name="tb_search" placeholder="Buscar Acceso">
+            </form>
           </div>
-          <div class="card-data">
+          <a class="card-data" href="/control/administracion/acceso">
             <div class="card-icon">
               <i class="bx bx-paint-roll"></i>
             </div>
@@ -44,8 +47,8 @@
                 <small class="data"></small>
               </div>
             </div>
-          </div>
-        </a>
+          </a>
+        </div>
         <div class="card">
           <div class="card-head">
             <h3 class="card-tittle">Grafico Acceso vs Permisos</h3>
@@ -59,11 +62,14 @@
 
       <% if(userLayout['/control/administracion/usuarios']?.ver){ %>
       <div class="f-col">
-        <a class="card" href="/control/administracion/usuarios">
+        <div class="card">
           <div class="card-head">
             <h3 class="card-tittle">Usuarios</h3>
+            <form action="/control/administracion/usuarios" method="get">
+              <input class="card-search" type="search" name="tb_search" placeholder="Buscar Usuario ">
+            </form>
           </div>
-          <div class="card-data">
+          <a class="card-data" href="/control/administracion/usuarios">
             <div class="card-icon">
               <i class="bx bxs-user-account"></i>
             </div>
@@ -78,8 +84,8 @@
                 <small class="data"></small>
               </div>
             </div>
-          </div>
-        </a>
+          </a>
+        </div>
         <div class="card">
           <div class="card-head">
             <h3 class="card-tittle">Grafico Usuarios vs Roles</h3>

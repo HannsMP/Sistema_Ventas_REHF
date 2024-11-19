@@ -123,8 +123,8 @@ $('.content-body').ready(async () => {
     */
 
     $tableVentas.init({
-      select: true,
       pageLength: 10,
+      select: true,
       order: [[7, 'asc']],
       columnDefs: [
         {
@@ -205,21 +205,23 @@ $('.content-body').ready(async () => {
 
     let productosNuevoSelectorUnic = new SelectorInput(
       inputNuevoSelectorProductos,
-      dataSelectorProductos
+      dataSelectorProductos,
+      { autohide: true }
     );
     let productosEditarSelectorUnic = new SelectorInput(
       inputEditarSelectorProductos,
-      dataSelectorProductos
+      dataSelectorProductos,
+      { justChange: true }
     );
     let metodoTransaccionSelectorUnic = new SelectorInput(
       inputSelectorMetodoPago,
       dataSelectorMetodoPago,
-      { autohide: true }
+      { justChange: true }
     );
     let usuarioSelectorUnic = new SelectorInput(
       inputSelectorVendedor,
       dataSelectorUsuario,
-      { autohide: true }
+      { justChange: true }
     );
 
     /* 
@@ -298,7 +300,6 @@ $('.content-body').ready(async () => {
     */
 
     $tableMain.datatable.on('select', async (e, dt, type, indexes) => {
-      $tableTableVentas.addClass('load-spinner');
       toggleTable(true);
       let { id, codigo, metodo_pago_id, usuario_id, importe_total } = $tableMain.datatable
         .rows(indexes).data().toArray()[0];
@@ -320,8 +321,6 @@ $('.content-body').ready(async () => {
         metodoTransaccionSelectorUnic.select(metodo_pago_id);
         usuarioSelectorUnic.select(usuario_id);
       }
-
-      $tableTableVentas.removeClass('load-spinner');
     })
 
     $tableVentas.datatable.on('select', async (e, dt, type, indexes) => {
@@ -553,40 +552,17 @@ $('.content-body').ready(async () => {
     */
 
     socket.on('/transacciones_ventas/data/insert', data => {
-      $tableMain.add({
-        id: data.id,
-        codigo: data.codigo,
-        usuario_id: data.usuario_id,
-        usuario: data.usuario,
-        metodo_pago_id: data.metodo_pago_id,
-        metodo_pago_nombre: data.metodo_pago_nombre,
-        descuento: data.descuento,
-        importe_total: data.importe_total,
-        creacion: formatTime('YYYY-MM-DD hh:mm:ss')
-      });
+      $tableMain.datatable.draw();
     })
 
     socket.on('/transacciones_ventas/data/updateId', data => {
-      $tableMain.update('#' + data.id, {
-        usuario_id: data.usuario_id,
-        usuario: data.usuario,
-        metodo_pago_id: data.metodo_pago_id,
-        metodo_pago_nombre: data.metodo_pago_nombre,
-        importe_total: data.importe_total
-      });
-
-      let id = $tableMain.selected();
-      if (data.id != id) return;
-      $tableMain.datatable.rows().deselect();
-      $tableMain.datatable.rows('#' + id).select();
+      $tableMain.datatable.draw();
     })
 
     socket.on('/transacciones_ventas/data/deleteId', data => {
-      let row = $tableMain.get('#' + data.id);
-      if (!row) return;
-      $tableMain.remove('#' + data.id);
-
+      $tableMain.datatable.draw();
       let id = $tableMain.selected();
+
       if (data.id != id) return;
       toggleTable(false);
       toggleCardEditar(false);
