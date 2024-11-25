@@ -3,7 +3,7 @@
 
   <!-- lib control -->
   <link href="/src/private/lib/dataTables/datatables.min.css" rel="stylesheet">
-  <link href="/src/private/lib/witgetTable/witgetTable.css" rel="stylesheet">
+  <link href="/src/private/lib/witgetTable/witgetTable.min.css" rel="stylesheet">
   <link href="/src/private/lib/selector/selector.min.css" rel="stylesheet">
   <link href="/src/private/lib/imagen/imagen.min.css" rel="stylesheet">
   <link href="/src/private/lib/formError/formError.min.css" rel="stylesheet">
@@ -39,7 +39,7 @@
 
 <div class="content-body">
   <div class="menu-body">
-    <div class="card">
+    <div class="card" <% if(!session.permiso.agregar){ %> style="display: none" <% } %>>
       <div class="card-head">
         <h3 class="card-tittle">Reporte de Ventas</h3>
         <a class="btn btn-danger" id="clear">Limpiar</a>
@@ -51,54 +51,54 @@
               <div class="form-body">
                 <div class="form-col">
                   <div class="input-box">
-                    <input class="selector" type="search" id="selector-metodo-pago" placeholder="Buscar tipo pago...">
+                    <input id="selector-metodo-pago" class="selector" type="search" placeholder="Buscar tipo pago...">
                     <label for="Transaccion">Transaccion:</label>
                   </div>
                   <div class="input-box">
-                    <input name="igv" type="text" id="importe-igv" disabled>
+                    <input id="importe-igv" name="igv" type="text" disabled>
                     <label for="igv">IGV:</label>
                   </div>
                 </div>
                 <div class="form-col">
                   <div class="input-box ">
-                    <input class="selector" type="search" id="selector-cliente" placeholder="Buscar Cliente...">
+                    <input id="selector-cliente" class="selector" type="search" placeholder="Buscar Cliente...">
                     <label for="cliente">Cliente:</label>
                   </div>
                   <div class="input-box">
-                    <input name="serie" type="text" id="numero-serie" oninput="inputCapitalize(this, 20)" required>
+                    <input id="numero-serie" name="serie" type="text" oninput="inputCapitalize(this, 20)" required>
                     <label for="serie">Numero de Serie:</label>
                   </div>
                 </div>
                 <div class="form-col">
                   <div class="input-box">
-                    <textarea name="comentario" id="comentario" class="scroll-y" oninput="autoHeight(this); inputParagraphCase(this, 250);" required></textarea>
+                    <textarea id="comentario" name="comentario" class="scroll-y" oninput="autoHeight(this); inputParagraphCase(this, 250);" required></textarea>
                     <label for="comentario">Comentario (250):</label>
                   </div>
                 </div>
               </div>
-              <table id="table-main" style="width: 100%;">
+              <table id="table-main">
                 <thead>
                   <tr>
-                    <th>Cantidad</th>
                     <th>Producto</th>
-                    <th>Precio Unitario</th>
-                    <th>Total</th>
+                    <th>Cantidad</th>
+                    <th>Precio</th>
+                    <th>Total Venta</th>
                   </tr>
                 </thead>
               </table>
               <div class="form-foot">
-                <a class="btn btn-info" style="width: 100%;" id="add-row">
+                <a id="add-row" class="btn btn-info" style="width: 100%;">
                   <i class="bx bx-plus-circle"></i>
                 </a>
               </div>
               <div class="form-foot">
                 <div class="f-row">
                   <div class="input-box">
-                    <input name="venta" type="text" id="importe-total" value="0" oninput="inputFloat(this, 10, 2);" style="text-align: center;" required>
+                    <input id="importe-total" name="venta" type="text" value="0" oninput="inputFloat(this, 10, 2);" style="text-align: center;" required>
                     <label for="venta">Importe Total:</label>
                   </div>
                 </div>
-                <a class="btn btn-success" id="save">guardar</a>
+                <a id="save" class="btn btn-success">guardar</a>
               </div>
             </form>
           </div>

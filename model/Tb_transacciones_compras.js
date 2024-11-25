@@ -22,12 +22,12 @@ const columns = {
  *   importe_total: number,
  *   serie: string,
  *   creacion: string
- * }} COLUMNS
+ * }} COLUMNS_TRANSACCIONES_COMPRAS
  */
 
-/** @extends {Table<COLUMNS>} */
+/** @extends {Table<COLUMNS_TRANSACCIONES_COMPRAS>} */
 class Tb_transacciones_compras extends Table {
-  id = new Id('S        ', { letters: true, numeric: true });
+  id = new Id('B        ', { letters: true, numeric: true });
 
   /** @param {import('../app')} app */
   constructor(app) {
@@ -44,7 +44,7 @@ class Tb_transacciones_compras extends Table {
   */
   /**
    * @param {import('datatables.net-dt').AjaxData} option 
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<COLUMNS_TRANSACCIONES_COMPRAS[]>}
    */
   readInParts(option) {
     return new Promise(async (res, rej) => {
@@ -57,7 +57,7 @@ class Tb_transacciones_compras extends Table {
             tc.usuario_id,
             u.usuario,
             tc.proveedor_id,
-            p.nombres,
+            p.titular,
             tc.codigo,
             tc.importe_total,
             tc.creacion
@@ -130,7 +130,7 @@ class Tb_transacciones_compras extends Table {
   }
   /**
    * @param {import('datatables.net-dt').AjaxData} option 
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<COLUMNS_TRANSACCIONES_COMPRAS[]>}
    */
   readInPartsCount(option) {
     return new Promise(async (res, rej) => {
@@ -182,7 +182,7 @@ class Tb_transacciones_compras extends Table {
     })
   }
   /** 
-   * @param {COLUMNS} data 
+   * @param {COLUMNS_TRANSACCIONES_COMPRAS} data 
    * @returns {Promise<import('mysql').OkPacket>}
    */
   insert(data) {
@@ -190,57 +190,47 @@ class Tb_transacciones_compras extends Table {
       try {
         let {
           codigo,
-          cliente_id,
+          proveedor_id,
           usuario_id,
           importe_total,
           metodo_pago_id,
-          descuento,
-          serie = '',
-          comentario = ''
+          serie = ''
         } = data;
 
         this.constraint('codigo', codigo);
-        this.constraint('cliente_id', cliente_id);
+        this.constraint('proveedor_id', proveedor_id);
         this.constraint('usuario_id', usuario_id);
         this.constraint('importe_total', importe_total);
         this.constraint('metodo_pago_id', metodo_pago_id);
-        this.constraint('descuento', descuento);
         this.constraint('serie', serie);
-        this.constraint('comentario', comentario);
 
         let values = [
           codigo,
-          cliente_id,
+          proveedor_id,
           usuario_id,
           importe_total,
           metodo_pago_id,
-          descuento,
         ]
 
         if (serie) values.push(serie);
-        if (comentario) values.push(comentario);
 
         let [result] = await this.app.model.poolValues(`
           INSERT INTO
             tb_transacciones_compras (
               codigo,
-              cliente_id,
+              proveedor_id,
               usuario_id,
               importe_total,
-              metodo_pago_id,
-              descuento
+              metodo_pago_id
               ${serie ? ',serie' : ''}
-              ${comentario ? ',comentario' : ''}
             )
           VALUES (
             ?,
             ?,
             ?,
             ?,
-            ?,
             ?
             ${serie ? ',?' : ''}
-            ${comentario ? ',?' : ''}
           )
           `,
           values
@@ -248,12 +238,12 @@ class Tb_transacciones_compras extends Table {
 
 
         this.io.sockets.emit(
-          '/transacciones_ventas/data/insert',
+          '/transacciones_compras/data/insert',
           _ => this.readJoinId(result.insertId)
         )
 
         this.app.model.tb_ventas.io.tagsName.get(`usr:${usuario_id}`)?.emit(
-          '/transacciones_ventas/data/insert',
+          '/transacciones_compras/data/insert',
           _ => this.readJoinId(result.insertId)
         )
 
@@ -286,8 +276,8 @@ class Tb_transacciones_compras extends Table {
             u.usuario,
             tc.metodo_pago_id, 
             mp.nombre AS metodo_pago_nombre,
-            tc.cliente_id,
-            c.nombres,
+            tc.proveedor_id,
+            p.titular,
             tc.codigo,
             tc.importe_total,
             tc.descuento,
@@ -303,9 +293,9 @@ class Tb_transacciones_compras extends Table {
               ON
                 tc.metodo_pago_id = mp.id
           INNER 
-            JOIN tb_clientes AS c
+            JOIN tb_proveedores AS p
               ON
-                tc.cliente_id = c.id
+                tc.proveedor_id = p.id
          `);
 
         res(result);
@@ -335,8 +325,8 @@ class Tb_transacciones_compras extends Table {
             tc.id,
             tc.metodo_pago_id, 
             mp.nombre AS metodo_pago_nombre,
-            tc.cliente_id,
-            c.nombres AS cliente_nombres,
+            tc.proveedor_id,
+            p.titular AS proveedor_nombres,
             tc.codigo,
             tc.importe_total,
             tc.descuento,
@@ -348,9 +338,9 @@ class Tb_transacciones_compras extends Table {
               ON
                 tc.metodo_pago_id = mp.id
           INNER 
-            JOIN tb_clientes AS c
+            JOIN tb_proveedores AS p
               ON
-                tc.cliente_id = c.id
+                tc.proveedor_id = p.id
           WHERE 
             DATE(tc.creacion) = CURDATE()
             AND tc.usuario_id = ?;
@@ -416,7 +406,7 @@ class Tb_transacciones_compras extends Table {
   }
   /**
    * @param {number} id 
-   * @param {COLUMNS} data 
+   * @param {COLUMNS_TRANSACCIONES_COMPRAS} data 
    * @returns {Promise<import('mysql').OkPacket>}
    */
   updateId(id, data) {
@@ -455,13 +445,13 @@ class Tb_transacciones_compras extends Table {
         let dataEmitAfter = await this.readJoinId(id);
 
         this.io.sockets.emit(
-          '/transacciones_ventas/data/updateId',
+          '/transacciones_compras/data/updateId',
           dataEmitAfter
         )
 
         if (dataEmitBefore.usuario_id == dataEmitAfter.usuario_id) {
           this.app.model.tb_ventas.io.tagsName.get(`usr:${dataEmitBefore.usuario_id}`)?.emit(
-            '/transacciones_ventas/data/deleteId',
+            '/transacciones_compras/data/deleteId',
             {
               before: dataEmitBefore,
               after: dataEmitAfter,
@@ -469,7 +459,7 @@ class Tb_transacciones_compras extends Table {
             }
           )
           this.app.model.tb_ventas.io.tagsName.get(`usr:${dataEmitAfter.usuario_id}`)?.emit(
-            '/transacciones_ventas/data/updateId',
+            '/transacciones_compras/data/updateId',
             dataEmitAfter
           )
         }
@@ -508,14 +498,14 @@ class Tb_transacciones_compras extends Table {
         ]);
 
         this.io.sockets.emit(
-          '/transacciones_ventas/data/deleteId',
+          '/transacciones_compras/data/deleteId',
           { id }
         )
 
         let dataEmit = await this.readJoinId(id);
 
         this.app.model.tb_ventas.io.tagsName.get(`usr:${dataEmit.usuario_id}`)?.emit(
-          '/transacciones_ventas/data/deleteId',
+          '/transacciones_compras/data/deleteId',
           dataEmit
         )
 
@@ -581,8 +571,8 @@ class Tb_transacciones_compras extends Table {
             tc.id,
             tc.usuario_id,
             u.usuario,
-            tc.cliente_id,
-            c.nombres AS cliente_nombres,
+            tc.proveedor_id,
+            p.titular AS proveedor_nombres,
             tc.metodo_pago_id, 
             mp.nombre AS metodo_pago_nombre,
             tc.codigo,
@@ -592,9 +582,9 @@ class Tb_transacciones_compras extends Table {
           FROM 
             tb_transacciones_compras AS tc
           INNER 
-            JOIN tb_clientes AS c
+            JOIN tb_proveedores AS p
               ON 
-                tc.cliente_id = c.id
+                tc.proveedor_id = p.id
           INNER 
             JOIN tb_usuarios AS u
               ON 
@@ -748,7 +738,7 @@ class Tb_transacciones_compras extends Table {
         ]);
 
         this.io.sockets.emit(
-          '/transacciones_ventas/data/refreshId',
+          '/transacciones_compras/data/refreshId',
           { id, descuento }
         )
 
@@ -759,25 +749,23 @@ class Tb_transacciones_compras extends Table {
     })
   }
   /**
-   * @param {{producto_id:number, cantidad:number}[]} productos 
+   * @param {{producto_id:number, cantidad:number, precio_compra:number, precio_venta:number}[]} productos 
    * @param {number} metodo_pago_id 
    * @param {number} importe_total 
    * @returns {Promise<{
-   *   codigo: string,
-   *   descuento: number,  
-   *   importe_total: number,
-   *   totalVentaReal: number,
+   *   codigo: string, 
+   *   importeReal: number,
    *   totalCompraReal: number,
-   *   descuentoUnitario: number,  
-   *   listVentas: {
+   *   listCompras: {
    *     producto_id: number,
-   *     descuento: number,
+   *     precio_venta:number,
    *     cantidad: number,
+   *     precio_compra:number, 
    *     importe: number
    *   }[]
    * }>}
    */
-  computerBusiness(productos, metodo_pago_id, importe_total) {
+  computedBusiness(productos, metodo_pago_id) {
     return new Promise(async (res, rej) => {
       try {
         if (productos?.constructor.name != 'Array') return;
@@ -786,37 +774,24 @@ class Tb_transacciones_compras extends Table {
         let { igv } = await this.app.model.tipo_metodo_pago.readId(metodo_pago_id);
 
         let totalCompraReal = 0;
-        let totalVentaReal = 0;
 
         for (let producto of productos) {
-          let { cantidad, producto_id } = producto;
-          producto_id = producto.producto_id = Number(producto_id);
-          let { compra, venta } = await this.app.model.tb_productos.readPriceId(producto_id);
+          let { cantidad, precio_compra } = producto;
 
-          let importe = producto.importe = cantidad * venta;
+          let importe = producto.importe = cantidad * precio_compra;
 
-          totalCompraReal += (cantidad * compra);
-          totalVentaReal += importe;
+          totalCompraReal += importe;
         }
 
-        let importeReal = totalVentaReal + (totalVentaReal * igv);
-
-        let descuento = importeReal - importe_total;
-
-        let descuentoUnitario = descuento / productos.length;
-
-        productos.forEach(d => d.descuento = descuentoUnitario);
+        let importeReal = totalCompraReal + (totalCompraReal * igv);
 
         let codigo = await this.getCodigo();
 
         res({
           codigo,
-          descuento,
-          importe_total: importeReal,
-          totalVentaReal,
+          importeReal,
           totalCompraReal,
-          descuentoUnitario,
-          listVentas: productos,
+          listCompras: productos,
         })
       } catch (e) {
         rej(e);

@@ -54,6 +54,8 @@ class Catalogue {
    * }>} 
    */
   ev = new EventListener;
+  /** @type {Map<number, {data:Item, productHTML:HTMLDivElement}>} */
+  #data = new Map;
   #chunkSize = 0;
   #chunkCurrent = 0;
   #totalItems = 0;
@@ -82,6 +84,24 @@ class Catalogue {
     this.draw();
   }
 
+  /** @param {Item | (data:Item)=>void} data */
+  set(id, data, about = true) {
+    if (!this.#data.has(id)) return;
+    let d = this.#data.get(id);
+    if (typeof data == 'function')
+      data(d.data)
+    else if (about)
+      d.data = { ...d.data, ...data };
+    d.productHTML.innerHTML = this.factoryCallback(d.data);
+  }
+
+  delete(id) {
+    if (!this.#data.has(id)) return;
+    let d = this.#data.get(id);
+    d.productHTML.remove();
+    this.#data.delete(id)
+  }
+
   /** @param {CatalogueFilter} searchParams */
   filter(searchParams) {
     this.#searchParams = searchParams;
@@ -108,8 +128,10 @@ class Catalogue {
     );
   }
 
+  /** @param {Item[]} items  */
   #renderProducts(items) {
     let visibles = 0;
+    this.#data.clear()
     items?.forEach(data => {
       let productHTML = document.createElement('div');
       productHTML.classList.add('product-box');
@@ -117,6 +139,7 @@ class Catalogue {
       productHTML.innerHTML = this.factoryCallback(data);
       this.catalogoGrid.append(productHTML);
       visibles++;
+      this.#data.set(data.id, { data, productHTML });
     });
 
     let start = this.#chunkSize * this.#chunkCurrent;

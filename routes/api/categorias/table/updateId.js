@@ -17,7 +17,7 @@
 * }} 
 */
 module.exports = {
-  load: true,
+  load: false,
   route: "/api/categorias/table/updateId",
   post: [
     async function (req, res, next) {

@@ -27,10 +27,10 @@ const columns = {
  *   serie: string,
  *   comentario: string,
  *   creacion: string
- * }} COLUMNS
+ * }} COLUMNS_TRANSACCIONES_VENTAS
  */
 
-/** @extends {Table<COLUMNS>} */
+/** @extends {Table<COLUMNS_TRANSACCIONES_VENTAS>} */
 class Tb_transacciones_ventas extends Table {
   id = new Id('S        ', { letters: true, numeric: true });
 
@@ -49,7 +49,7 @@ class Tb_transacciones_ventas extends Table {
   */
   /**
    * @param {import('datatables.net-dt').AjaxData} option 
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<COLUMNS_TRANSACCIONES_VENTAS[]>}
    */
   readInParts(option) {
     return new Promise(async (res, rej) => {
@@ -145,7 +145,7 @@ class Tb_transacciones_ventas extends Table {
   }
   /**
    * @param {import('datatables.net-dt').AjaxData} option 
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<COLUMNS_TRANSACCIONES_VENTAS[]>}
    */
   readInPartsCount(option) {
     return new Promise(async (res, rej) => {
@@ -201,7 +201,7 @@ class Tb_transacciones_ventas extends Table {
     })
   }
   /** 
-   * @param {COLUMNS} data 
+   * @param {COLUMNS_TRANSACCIONES_VENTAS} data 
    * @returns {Promise<import('mysql').OkPacket>}
    */
   insert(data) {
@@ -430,7 +430,7 @@ class Tb_transacciones_ventas extends Table {
   }
   /**
    * @param {number} id 
-   * @param {COLUMNS} data 
+   * @param {COLUMNS_TRANSACCIONES_VENTAS} data 
    * @returns {Promise<import('mysql').OkPacket>}
    */
   updateId(id, data) {
@@ -783,13 +783,13 @@ class Tb_transacciones_ventas extends Table {
    *   descuentoUnitario: number,  
    *   listVentas: {
    *     producto_id: number,
-   *     descuento: number,
    *     cantidad: number,
+   *     descuento: number,
    *     importe: number
    *   }[]
    * }>}
    */
-  computerBusiness(productos, metodo_pago_id, importe_total) {
+  computedBusiness(productos, metodo_pago_id, importe_total) {
     return new Promise(async (res, rej) => {
       try {
         if (productos?.constructor.name != 'Array') return;
@@ -797,17 +797,19 @@ class Tb_transacciones_ventas extends Table {
 
         let { igv } = await this.app.model.tipo_metodo_pago.readId(metodo_pago_id);
 
-        let totalCompraReal = 0;
         let totalVentaReal = 0;
 
-        for (let producto of productos) {
-          let { cantidad, producto_id } = producto;
-          producto_id = producto.producto_id = Number(producto_id);
-          let { compra, venta } = await this.app.model.tb_productos.readPriceId(producto_id);
+        let precios = productos.map(p => {
+          let producto_id = p.producto_id = Number(p.producto_id);
+          return this.app.model.tb_productos.readPriceId(producto_id);
+        })
 
-          let importe = producto.importe = cantidad * venta;
+        for (let index in productos) {
+          let producto = productos[index];
+          let { venta } = await precios[index];
 
-          totalCompraReal += (cantidad * compra);
+          let importe = producto.importe = producto.cantidad * venta;
+
           totalVentaReal += importe;
         }
 
@@ -826,7 +828,6 @@ class Tb_transacciones_ventas extends Table {
           descuento,
           importe_total: importeReal,
           totalVentaReal,
-          totalCompraReal,
           descuentoUnitario,
           listVentas: productos,
         })

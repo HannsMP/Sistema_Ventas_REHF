@@ -7,9 +7,9 @@ const columns = {
   codigo: { name: 'codigo', null: false, type: 'String', limit: 20, unic: true },
   producto: { name: 'nombre', null: false, type: 'String', limit: 50 },
   descripcion: { name: 'descripcion', null: true, type: 'String', limit: 250 },
-  compra: { name: 'compra', null: false, type: 'Number', limit: 10, decimal: 2 },
   venta: { name: 'venta', null: false, type: 'Number', limit: 10, decimal: 2 },
-  cantidad: { name: 'cantidad', null: false, type: 'Integer', limit: 10 },
+  stock_disponible: { name: 'stock_disponible', null: false, type: 'Integer', limit: 10 },
+  stock_reservado: { name: 'stock_reservado', null: false, type: 'Integer', limit: 10 },
   categoria_id: { name: 'categoria_id', null: false, type: 'Integer', limit: 11 },
   foto_id: { name: 'foto_id', null: true, type: 'Integer', limit: 11 },
   creacion: { name: 'creacion', null: false, type: 'String', limit: 25 },
@@ -22,17 +22,17 @@ const columns = {
  *   codigo: string,
  *   producto: string,
  *   descripcion: string,
- *   compra: number,
  *   venta: number,
- *   cantidad: number,
+ *   stock_disponible: number,
+ *   stock_reservado: number,
  *   categoria_id: number,
  *   foto_id: number,
  *   creacion: string,
  *   estado: number,
- * }} COLUMNS
+ * }} COLUMNS_PRODUCTOS
  */
 
-/** @extends {Table<COLUMNS>} */
+/** @extends {Table<COLUMNS_PRODUCTOS>} */
 class Tb_productos extends Table {
   id = new Id('I        ', { letters: { upper: true } });
 
@@ -55,7 +55,7 @@ class Tb_productos extends Table {
   */
   /**
    * @param {import('datatables.net-dt').AjaxData} option 
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<COLUMNS_PRODUCTOS[]>}
    */
   readInParts(option) {
     return new Promise(async (res, rej) => {
@@ -68,9 +68,8 @@ class Tb_productos extends Table {
             p.codigo,
             p.producto,
             p.descripcion,
-            p.compra,
+            p.stock_disponible,
             p.venta,
-            p.cantidad,
             p.categoria_id,
             c.nombre AS categoria_nombre,
             p.foto_id,
@@ -157,19 +156,19 @@ class Tb_productos extends Table {
         let { search } = option;
 
         let query = `
-          SELECT 
+          SELECT
             COUNT(p.id) AS cantidad
           FROM
             tb_productos AS p
-          LEFT 
-            JOIN 
+          LEFT
+            JOIN
               tb_categorias AS c
-            ON 
+            ON
               c.id = p.categoria_id
-          LEFT 
-            JOIN 
+          LEFT
+            JOIN
               tb_fotos AS f
-            ON 
+            ON
               f.id = p.foto_id
           WHERE
             p.estado in (1, 0)
@@ -202,7 +201,7 @@ class Tb_productos extends Table {
     })
   }
   /** 
-   * @param {COLUMNS} data 
+   * @param {COLUMNS_PRODUCTOS} data 
    * @returns {Promise<import('mysql').OkPacket>}
    */
   insert(data) {
@@ -212,7 +211,6 @@ class Tb_productos extends Table {
           codigo,
           producto,
           descripcion,
-          compra,
           foto_id,
           venta,
           categoria_id,
@@ -222,7 +220,6 @@ class Tb_productos extends Table {
         this.constraint('codigo', codigo);
         this.constraint('producto', producto);
         this.constraint('descripcion', descripcion);
-        this.constraint('compra', compra);
         this.constraint('venta', venta);
         this.constraint('categoria_id', categoria_id);
         this.constraint('estado', estado);
@@ -233,7 +230,6 @@ class Tb_productos extends Table {
               codigo,
               producto,
               descripcion,
-              compra,
               venta,
               categoria_id,
               estado,
@@ -253,7 +249,6 @@ class Tb_productos extends Table {
           codigo,
           producto,
           descripcion,
-          compra.toFixed(2),
           venta.toFixed(2),
           categoria_id,
           estado,
@@ -273,7 +268,7 @@ class Tb_productos extends Table {
   }
   /** 
    * @param {number} id 
-   * @param {COLUMNS} data 
+   * @param {COLUMNS_PRODUCTOS} data 
    * @returns {Promise<import('mysql').OkPacket>}
    */
   updateId(id, data) {
@@ -283,7 +278,6 @@ class Tb_productos extends Table {
           producto,
           descripcion,
           categoria_id,
-          compra,
           venta,
           foto_id
         } = data;
@@ -292,14 +286,12 @@ class Tb_productos extends Table {
         this.constraint('producto', producto);
         this.constraint('descripcion', descripcion);
         this.constraint('categoria_id', categoria_id);
-        this.constraint('compra', compra);
         this.constraint('venta', venta);
 
         let values = [
           producto,
           descripcion,
           categoria_id,
-          compra.toFixed(2),
           venta.toFixed(2)
         ]
 
@@ -314,7 +306,6 @@ class Tb_productos extends Table {
             producto = ?,
             descripcion = ?,
             categoria_id = ?,
-            compra = ?,
             venta = ?
             ${foto_id ? ', foto_id = ?' : ''}
           WHERE
@@ -330,6 +321,65 @@ class Tb_productos extends Table {
         this.io.emitSocket(
           '/productos/data/updateId',
           _ => this.readIdJoin(id)
+        )
+
+        res(result)
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
+  /** 
+   * @param {number} id 
+   * @param {{
+   *   stock_disponible?: number,
+   *   venta?: number
+   * }} data 
+   * @returns {Promise<import('mysql').OkPacket>}
+   */
+  updateIdBussines(id, data) {
+    return new Promise(async (res, rej) => {
+      try {
+        let {
+          stock_disponible,
+          venta
+        } = data;
+
+        let query = `
+          UPDATE 
+            tb_productos
+          SET
+            ${stock_disponible ? `stock_disponible = stock_disponible ${stock_disponible > 0 ? '+' : '-'} ?` : ''}
+            ${stock_disponible && venta ? ',' : ''}
+            ${venta ? 'venta = ?' : ''}
+          WHERE
+            id = ?
+            AND (
+              estado = 1
+              OR estado = 0
+            )
+        `, queryParams = [];
+
+        if (stock_disponible) {
+          this.constraint('stock_disponible', stock_disponible);
+          queryParams.push(Math.abs(stock_disponible));
+        }
+        if (venta) {
+          this.constraint('venta', venta);
+          queryParams.push(venta.toFixed(2));
+        }
+
+        queryParams.push(id);
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        this.io.emitSocket(
+          '/productos/data/updateIdBussines',
+          {
+            id,
+            stock_disponible,
+            venta
+          }
         )
 
         res(result)
@@ -412,7 +462,7 @@ class Tb_productos extends Table {
     })
   }
   /**
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<COLUMNS_PRODUCTOS[]>}
    */
   readAllJoin() {
     return new Promise(async (res, rej) => {
@@ -423,9 +473,7 @@ class Tb_productos extends Table {
             p.codigo,
             p.producto,
             p.descripcion,
-            p.compra,
             p.venta,
-            p.cantidad,
             p.categoria_id,
             c.nombre AS categoria_nombre,
             p.foto_id,
@@ -461,9 +509,7 @@ class Tb_productos extends Table {
    *   codigo:string,
    *   producto:string,
    *   descripcion:string,
-   *   compra:number,
    *   venta:number,
-   *   cantidad:number,
    *   categoria_id:number,
    *   categoria_nombre:string,
    *   foto_id:number,
@@ -484,9 +530,7 @@ class Tb_productos extends Table {
             p.codigo,
             p.producto,
             p.descripcion,
-            p.compra,
             p.venta,
-            p.cantidad,
             p.categoria_id,
             c.nombre AS categoria_nombre,
             p.foto_id,
@@ -545,7 +589,7 @@ class Tb_productos extends Table {
             p.producto,
             p.descripcion,
             p.venta,
-            p.cantidad,
+            p.stock_disponible,
             p.categoria_id,
             c.nombre AS categoria_nombre,
             f.src AS src
@@ -680,69 +724,6 @@ class Tb_productos extends Table {
   }
   /**
    * @param {number} categoria_id 
-   * @returns {Promise<{
-   * id: number,
-   * codigo: string,
-   * producto: string,
-   * descripcion: string,
-   * compra: number,
-   * venta: number,
-   * cantidad: number,
-   * categoria_id: number,
-   * categoria_nombre: string,
-   * foto_id: number,
-   * foto_src: string,
-   * creacion: string,
-   * estado: number
-   * }[]>}
-   */
-  readCategoriaIdJoin(categoria_id) {
-    return new Promise(async (res, rej) => {
-      try {
-
-        this.app.model.tb_categorias.constraint('id', categoria_id);
-
-        let [result] = await this.app.model.poolValues(`
-          SELECT 
-            p.id,
-            p.codigo,
-            p.producto,
-            p.descripcion,
-            p.compra,
-            p.venta,
-            p.cantidad,
-            p.categoria_id,
-            c.nombre AS categoria_nombre,
-            p.foto_id,
-            f.src AS foto_src,
-            p.creacion,
-            p.estado
-          FROM
-            tb_productos AS p
-          LEFT 
-            JOIN 
-              tb_categorias AS c
-            ON 
-              c.id = p.categoria_id
-          LEFT 
-            JOIN 
-              tb_fotos AS f
-            ON 
-              f.id = p.foto_id
-          WHERE
-            p.categoria_id = ?
-        `, [
-          categoria_id
-        ]);
-
-        res(result);
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
-  /**
-   * @param {number} categoria_id 
    * @returns {Promise<{id:number}[]>}
    */
   readCategoriaId(categoria_id) {
@@ -827,10 +808,10 @@ class Tb_productos extends Table {
         this.io.emitSocket(
           '/productos/categorias/state',
           async () => {
-            let data = estado
-              ? await this.readCategoriaIdJoin(categoria_id)
-              : await this.readCategoriaId(categoria_id);
+            if (estado)
+              return { estado }
 
+            let data = await this.readCategoriaId(categoria_id);
             return { estado, data };
           }
         )
@@ -847,7 +828,7 @@ class Tb_productos extends Table {
     ====================================================================================================
   */
   /** 
-   * @returns {Promise<{compra:number, venta:number}[]>}
+   * @returns {Promise<{venta:number}[]>}
    */
   readPriceUnic() {
     return new Promise(async (res, rej) => {
@@ -855,14 +836,9 @@ class Tb_productos extends Table {
 
         let [result] = await this.app.model.pool(`
           SELECT 
-            compra, 
             MAX(venta) as venta
           FROM 
             tb_productos
-          GROUP BY 
-            compra
-          ORDER BY 
-            compra
         `);
 
         res(result);
@@ -873,7 +849,7 @@ class Tb_productos extends Table {
   }
   /** 
    * @param {number} id 
-   * @returns {Promise<{compra:number, venta:number}>}
+   * @returns {Promise<{venta:number}>}
    */
   readPriceId(id) {
     return new Promise(async (res, rej) => {
@@ -882,7 +858,6 @@ class Tb_productos extends Table {
 
         let [result] = await this.app.model.poolValues(`
           SELECT
-            compra,
             venta
           FROM
             tb_productos
@@ -900,7 +875,7 @@ class Tb_productos extends Table {
   }
   /** 
    * @param {number[]} ids 
-   * @returns {Promise<{compra:number, venta:number}[]>}
+   * @returns {Promise<{venta:number}[]>}
    */
   readPriceIds(...ids) {
     return new Promise(async (res, rej) => {
@@ -909,7 +884,6 @@ class Tb_productos extends Table {
 
         let [result] = await this.app.model.poolValues(`
           SELECT
-            compra,
             venta
           FROM
             tb_productos
@@ -932,7 +906,7 @@ class Tb_productos extends Table {
   */
   /**
    * @param {SelectorRequest} option 
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<COLUMNS_PRODUCTOS[]>}
    */
   SelectorInParts(option) {
     return new Promise(async (res, rej) => {
@@ -1126,7 +1100,7 @@ class Tb_productos extends Table {
     ====================================================================================================
   */
   /** 
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<{label:string[], data:number[]}>}
    */
   chartCountProducs() {
     return new Promise(async (res, rej) => {

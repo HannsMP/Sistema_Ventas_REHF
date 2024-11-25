@@ -21,16 +21,24 @@ $('.content-body').ready(async () => {
     let $tableNuevo = $('#table-nuevo');
     let tableNuevo = $tableNuevo[0];
     let inputNuevoText = tableNuevo.querySelectorAll('input[type=text], textarea');
-    let inputNuevoNombre = inputNuevoText[0];
-    let inputNuevoCheckbox = tableNuevo.querySelector('input[type=checkbox]');
+    /** @type {HTMLInputElement & {except?: string}} */
+    let inputNuevoNombre = document.getElementById('nuevo-nombre');
+    /** @type {HTMLInputElement} */
+    let inputNuevoDescripcion = document.getElementById('nuevo-descripcion');
+    /** @type {HTMLInputElement} */
+    let checkboxNuevoEstado = document.getElementById('nuevo-estado');
+    /** @type {HTMLAnchorElement} */
     let btnNuevo = tableNuevo.querySelector('.btn');
 
+    let currentEditarId = 0;
     let $tableEditar = $('#table-editar');
     let tableEditar = $tableEditar[0];
-    let inputEditarHidden = tableEditar.querySelector('input[type=hidden]');
     let inputEditarText = tableEditar.querySelectorAll('input[type=text], textarea');
-    let inputEditarNombre = inputEditarText[0];
-    let inputEditarDescripcion = inputEditarText[1];
+    /** @type {HTMLInputElement} */
+    let inputEditarNombre = document.getElementById('editar-nombre');
+    /** @type {HTMLInputElement} */
+    let inputEditarDescripcion = document.getElementById('editar-descripcion');
+    /** @type {HTMLAnchorElement} */
     let btnEditar = tableEditar.querySelector('.btn');
 
     let calendarioBox = document.querySelector('.calendario');
@@ -47,23 +55,19 @@ $('.content-body').ready(async () => {
     async function updateIdState({ id, nombre }) {
       this.disabled = true;
       let estado = this.checked;
-      let resEstado = await query.post.json.cookie("/api/categorias/table/updateIdState", { id, estado });
+      socket.emit('/stateId/table', id, estado, err => {
+        if (err) {
+          this.checked = !estado;
+          return alarm.error(err);
+        }
 
-      /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-      let { err } = await resEstado.json();
+        if (estado)
+          alarm.success(`${nombre} activado`);
+        else
+          alarm.success(`${nombre} desactivado`);
 
-      if (estado)
-        alarm.success(`${nombre} activado`);
-      else
-        alarm.success(`${nombre} desactivado`);
-
-      if (err) {
-        this.checked = !estado;
-        alarm.error(`${nombre} inaccesible`);
-        return
-      }
-
-      this.disabled = false;
+        this.disabled = false;
+      })
     }
 
     /* 
@@ -163,6 +167,7 @@ $('.content-body').ready(async () => {
         sideContent.scrollTop = tableEditar.offsetTop - sideContent.offsetTop - 100;
       },
       close() {
+        currentEditarId = 0;
         this.emptyNuevo();
         this.emptyEditar();
         this.now = 'table';
@@ -271,25 +276,23 @@ $('.content-body').ready(async () => {
 
       let jsonData = {};
 
-      inputNuevoText.forEach(i => {
-        let column = i.getAttribute('name');
-        let value = i.value;
-        if (!value) return formError(`Se requiere un valor para ${column}`, i.parentNode);
-        jsonData[column] = value;
+      let nombreValue = inputNuevoNombre.value;
+      if (!nombreValue) return formError(`Se require un nombre!.`, inputNuevoProducto.parentNode);
+      jsonData.nombre = nombreValue;
+
+      let descripcionValue = inputNuevoDescripcion.value;
+      jsonData.descripcion = descripcionValue;
+
+      let estado = checkboxNuevoEstado.checked ? 1 : 0;
+      jsonData.estado = estado;
+
+      socket.emit('/insert/table', jsonData, err => {
+        if (err)
+          return alarm.warn(err)
+
+        alarm.success(`Fila Agregada`);
+        toggleMenu.close();
       })
-
-      jsonData.estado = inputNuevoCheckbox.checked ? 1 : 0;
-
-      let resUsuarios = await query.post.json.cookie("/api/categorias/table/insert", jsonData);
-
-      /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-      let { err } = await resUsuarios.json();
-
-      if (err)
-        return alarm.warn('No se pudo agregar')
-
-      alarm.success(`Fila Agregada`);
-      toggleMenu.close();
     })
 
 
@@ -304,28 +307,58 @@ $('.content-body').ready(async () => {
 
     /* 
       ==================================================
+      ================ VALID CHANGE DATA ================
+      ==================================================
+    */
+
+    let validChangeData = () => {
+      let valid = false;
+      valid ||= inputEditarNombre.value != inputEditarNombre.currentValue;
+      valid ||= inputEditarDescripcion.value != inputEditarDescripcion.currentValue;
+
+      valid
+        ? btnEditar.classList.remove('disabled')
+        : btnEditar.classList.add('disabled');
+    }
+
+    inputEditarNombre.addEventListener('input', validChangeData);
+    inputEditarDescripcion.addEventListener('input', validChangeData);
+
+    /* 
+      ==================================================
       =================== OPEN EDITAR ===================
       ==================================================
     */
+
+    let defaultEditar = data => {
+      inputEditarNombre.currentValue
+        = inputEditarNombre.placeholder
+        = data.nombre;
+
+      inputEditarDescripcion.currentValue
+        = inputEditarDescripcion.placeholder
+        = data.descripcion;
+    }
+
+    let setterEditar = data => {
+      currentEditarId = data.id;
+
+      inputEditarNombre.value
+        = data.nombre;
+
+      inputEditarDescripcion.value
+        = data.descripcion;
+
+      defaultEditar(data);
+      btnEditar.classList.add('disabled');
+    }
 
     tblEditar.forEach(btn => btn.addEventListener('click', async () => {
       let id = $table.selected();
       if (!id) return alarm.warn('Selecciona una fila');
 
       toggleMenu.editar();
-      let row = $table.get('#' + id);
-
-      inputEditarNombre.placeholder
-        = inputEditarNombre.beforeValue
-        = inputEditarNombre.value
-        = row.nombre;
-
-      inputEditarDescripcion.placeholder
-        = inputEditarDescripcion.beforeValue
-        = inputEditarDescripcion.value
-        = row.descripcion;
-
-      inputEditarHidden.value = row.id;
+      socket.emit('/readId/table', id, setterEditar);
     }))
 
     /* 
@@ -336,10 +369,9 @@ $('.content-body').ready(async () => {
 
     inputEditarNombre.addEventListener('input', () => {
       let value = inputEditarNombre.value;
-      let id = inputEditarHidden.value;
       socket.emit(
         '/read/unic',
-        { column: 'nombre', value, id },
+        { column: 'nombre', value, currentEditarId },
         res => {
           if (res)
             return inputEditarNombre.except = null;
@@ -361,27 +393,23 @@ $('.content-body').ready(async () => {
 
       let jsonData = {};
 
-      let id = inputEditarHidden.value;
-      jsonData.id = id;
+      jsonData.id = currentEditarId;
 
-      inputEditarText.forEach(i => {
-        let column = i.getAttribute('name');
-        let value = i.value;
-        if (!value) return formError(`Se requiere un valor para ${column}`, i.parentNode);
-        jsonData[column] = value;
+      let nombreValue = inputEditarNombre.value;
+      if (!nombreValue) return formError(`Se require un nombre!.`, inputEditarProducto.parentNode);
+      jsonData.nombre = nombreValue;
+
+      let descripcionValue = inputEditarDescripcion.value;
+      jsonData.descripcion = descripcionValue;
+
+      socket.emit('/updateId/table', jsonData, err => {
+        if (err)
+          return alarm.warn(err)
+
+        alarm.success(`Fila Agregada`);
+        toggleMenu.close();
+        $table.datatable.rows().deselect();
       })
-
-      let resUsuarios = await query.post.json.cookie("/api/categorias/table/updateId", jsonData);
-
-      /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-      let { err } = await resUsuarios.json();
-
-      if (err)
-        return alarm.warn('No se pudo Editar');
-
-      alarm.success(`Fila actualizada`);
-      toggleMenu.close();
-      $table.datatable.rows().deselect();
     })
 
 
@@ -416,17 +444,11 @@ $('.content-body').ready(async () => {
         color: 'rgb(255, 255, 255)',
       })
         .then(async (result) => {
-          if (result.isConfirmed) {
-            let resCategorias = await query.post.json.cookie("/api/categorias/table/deleteId", { id });
-
-            /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-            let { err } = await resCategorias.json();
-
-            if (err)
-              return alarm.error(`Fila no Eliminada`);
-
-            alarm.success(`Fila eliminada`);
-          }
+          if (result.isConfirmed)
+            socket.emit('/deleteId/table', id, err => {
+              if (err) return alarm.error(err);
+              alarm.success(`Fila eliminada`);
+            })
         });
     }))
 
@@ -436,48 +458,26 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    socket.on('/categorias/data/insert', data => {
-      let row = $table.get('#' + data.id);
-      if (row) return;
-
-      $table.add({
-        id: data.id,
-        estado: data.estado,
-        nombre: data.nombre,
-        codigo: data.codigo,
-        descripcion: data.descripcion,
-        creacion: formatTime('YYYY-MM-DD hh:mm:ss'),
-        producto_cantidad: 0
-      });
+    socket.on('/categorias/data/insert', () => {
+      $table.datatable.draw();
     })
 
-    socket.on('/categorias/data/updateId', data => {
-      let row = $table.get('#' + data.id);
-      if (!row) return;
-
-      $table.update('#' + data.id, {
-        nombre: data.nombre,
-        descripcion: data.descripcion
-      });
-
-      let menuEditarid = $table.selected();
-      if (menuEditarid && menuEditarid == data.id)
-        tblEditar?.[0]?.click();
+    socket.on('/categorias/data/updateId', async data => {
+      if (currentEditarId == data.id) {
+        defaultEditar(data);
+        validChangeData()
+      }
+      $table.datatable.draw();
     })
 
-    socket.on('/categorias/data/state', data => {
-      let row = $table.get('#' + data.id);
-      if (!row) return;
-
-      $table.update('#' + data.id, {
-        estado: data.estado,
-      });
+    socket.on('/categorias/data/state', () => {
+      $table.datatable.draw();
     })
 
     socket.on('/categorias/data/deleteId', data => {
-      let row = $table.get('#' + data.id);
-      if (!row) return;
-      $table.remove('#' + data.id);
+      if (currentEditarId == data.id)
+        toggleMenu.close()
+      $table.datatable.draw();
     })
 
     socket.on('/session/acceso/state', data => {

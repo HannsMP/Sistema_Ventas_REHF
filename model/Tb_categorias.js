@@ -19,10 +19,10 @@ const columns = {
  *   descripcion: string,
  *   creacion: string,
  *   estado: number
- * }} COLUMNS
+ * }} COLUMNS_CATEGORIAS
  */
 
-/** @extends {Table<COLUMNS>} */
+/** @extends {Table<COLUMNS_CATEGORIAS>} */
 class Tb_categorias extends Table {
   id = new Id('T    ', { letters: true, numeric: true });
 
@@ -45,7 +45,7 @@ class Tb_categorias extends Table {
   */
   /**
    * @param {import('datatables.net-dt').AjaxData} option 
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<COLUMNS_CATEGORIAS[]>}
    */
   readInParts(option) {
     return new Promise(async (res, rej) => {
@@ -167,7 +167,7 @@ class Tb_categorias extends Table {
     })
   }
   /** 
-   * @param {COLUMNS} data 
+   * @param {COLUMNS_CATEGORIAS} data 
    * @returns {Promise<import('mysql').OkPacket>}
    */
   insert(data) {
@@ -309,7 +309,7 @@ class Tb_categorias extends Table {
   }
   /** 
    * @param {number} id 
-   * @param {COLUMNS} data 
+   * @param {COLUMNS_CATEGORIAS} data 
    * @returns {Promise<import('mysql').OkPacket>}
    */
   updateId(id, data) {
@@ -465,7 +465,7 @@ class Tb_categorias extends Table {
   */
   /**
    * @param {SelectorRequest} option 
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<COLUMNS_CATEGORIAS[]>}
    */
   SelectorInParts(option) {
     return new Promise(async (res, rej) => {
@@ -657,7 +657,7 @@ class Tb_categorias extends Table {
     ====================================================================================================
   */
   /** 
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<{label:string[], data:number[]}>}
    */
   chartCountCategory() {
     return new Promise(async (res, rej) => {

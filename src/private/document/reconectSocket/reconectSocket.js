@@ -19,8 +19,8 @@ let CONNECT = new Promise(res => {
     }, 1000)
   }
 
-  let CONNECTED = () => new Promise((res, rej) => {
-    let timeoutId = setTimeout(_ => CONNECTED() && rej(), 200);
+  let CONNECTED = () => new Promise(res => {
+    let timeoutId = setTimeout(_ => CONNECTED(), 200);
     socket.emit('ready', _ => {
       alarm.success('Conexión establecida');
       clearTimeout(timeoutId);

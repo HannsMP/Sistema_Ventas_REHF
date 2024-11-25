@@ -6,7 +6,8 @@ const columns = {
   transaccion_id: { name: 'transaccion_id', null: false, type: 'Integer', limit: 11 },
   producto_id: { name: 'producto_id', null: false, type: 'Integer', limit: 11 },
   cantidad: { name: 'cantidad', null: false, type: 'Integer', limit: 10 },
-  importe: { name: 'importe ', null: false, type: 'Number', limit: 10 }
+  compra: { name: 'compra ', null: false, type: 'Number', limit: 10, decima: 2 },
+  venta: { name: 'venta ', null: false, type: 'Number', limit: 10, decima: 2 },
 }
 
 /** 
@@ -15,12 +16,12 @@ const columns = {
  *   transaccion_id: number,
  *   producto_id: number,
  *   cantidad: number,
- *   importe: number,
- *   descuento: number
- * }} COLUMNS
+ *   compra: number,
+ *   venta: number
+ * }} COLUMNS_COMPRAS
  */
 
-/** @extends {Table<COLUMNS>} */
+/** @extends {Table<COLUMNS_COMPRAS>} */
 class tb_ventas extends Table {
   /** @param {import('../app')} app */
   constructor(app) {
@@ -28,7 +29,7 @@ class tb_ventas extends Table {
     this.columns = columns;
     this.app = app;
 
-    this.io = app.socket.node.selectNode('/control/movimientos/ventas', true);
+    this.io = app.socket.node.selectNode('/control/movimientos/compras', true);
   }
   /* 
     ====================================================================================================
@@ -57,38 +58,44 @@ class tb_ventas extends Table {
 
         let query = `
           SELECT 
-            v.id,
-            tv.id AS transaccion_id,
-            tv.codigo AS transaccion_codigo,
+            c.id,
+            tc.id AS transaccion_id,
+            tc.codigo AS transaccion_codigo,
+            pv.id AS proveedor_id,
+            pv.titular AS proveedor_titular,
             p.id AS producto_id,
             p.producto AS producto_nombre,
-            v.cantidad,
-            v.importe,
-            v.descuento,
-            DATE_FORMAT(tv.creacion, '%r') AS transaccion_hora
+            c.cantidad,
+            c.compra,
+            DATE_FORMAT(tc.creacion, '%r') AS transaccion_hora
           FROM
-            tb_ventas AS v
+            tb_compras AS c
           INNER 
-            JOIN tb_transacciones_ventas AS tv
-              ON v.transaccion_id = tv.id
+            JOIN tb_transacciones_compras AS tc
+              ON c.transaccion_id = tc.id
           INNER 
             JOIN tb_productos AS p
-              ON v.producto_id = p.id
+              ON c.producto_id = p.id
+          INNER 
+            JOIN tb_proveedores AS pv
+              ON tc.proveedor_id = pv.id
           WHERE 
-            DATE(tv.creacion) = CURDATE()
-            AND tv.usuario_id = ?
+            DATE(tc.creacion) = CURDATE()
+            AND tc.usuario_id = ?
         `, queryParams = [usuario_id];
 
         if (search.value) {
           query += `
-            AND p.producto LIKE ?
-            OR v.cantidad LIKE ?
-            OR v.importe LIKE ?
-            OR v.descuento LIKE ?
-            OR tv.creacion LIKE ?
+            AND tc.codigo LIKE ?
+            OR pv.titular LIKE ?
+            OR p.producto LIKE ?
+            OR c.cantidad LIKE ?
+            OR c.compra LIKE ?
+            OR tc.creacion LIKE ?
           `;
 
           queryParams.push(
+            `%${search.value}%`,
             `%${search.value}%`,
             `%${search.value}%`,
             `%${search.value}%`,
@@ -98,11 +105,12 @@ class tb_ventas extends Table {
         }
 
         let columnsSet = new Set([
+          'tc.codigo',
+          'pv.titular',
           'p.producto',
-          'v.cantidad',
-          'v.importe',
-          'v.descuento',
-          'tv.creacion'
+          'c.cantidad',
+          'c.compra',
+          'tc.creacion'
         ]);
 
         order = order.filter(d => columnsSet.has(d.name));
@@ -136,7 +144,7 @@ class tb_ventas extends Table {
   /**
    * @param {import('datatables.net-dt').AjaxData} option 
    * @param {number} usuario_id 
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<COLUMNS_COMPRAS[]>}
    */
   readInPartsCount(option, usuario_id) {
     return new Promise(async (res, rej) => {
@@ -145,33 +153,35 @@ class tb_ventas extends Table {
 
         let query = `
           SELECT 
-            COUNT(v.id) AS cantidad
+            COUNT(c.id) AS cantidad
           FROM
-            tb_ventas AS v
+            tb_compras AS c
           INNER 
-            JOIN tb_transacciones_ventas AS tv
-              ON v.transaccion_id = tv.id
-          INNER 
-            JOIN tb_clientes AS c
-              ON tv.cliente_id = c.id
+            JOIN tb_transacciones_compras AS tc
+              ON c.transaccion_id = tc.id
           INNER 
             JOIN tb_productos AS p
-              ON v.producto_id = p.id
+              ON c.producto_id = p.id
+          INNER 
+            JOIN tb_proveedores AS pv
+              ON tc.proveedor_id = pv.id
           WHERE 
-            DATE(tv.creacion) = CURDATE()
-            AND tv.usuario_id = ?
+            DATE(tc.creacion) = CURDATE()
+            AND tc.usuario_id = ?
         `, queryParams = [usuario_id];
 
         if (search.value) {
           query += `
-            AND p.producto LIKE ?
-            OR v.cantidad LIKE ?
-            OR v.importe LIKE ?
-            OR v.descuento LIKE ?
-            OR tv.creacion LIKE ?
+            AND tc.codigo LIKE ?
+            OR pv.titular LIKE ?
+            OR p.producto LIKE ?
+            OR c.cantidad LIKE ?
+            OR c.compra LIKE ?
+            OR tc.creacion LIKE ?
           `;
 
           queryParams.push(
+            `%${search.value}%`,
             `%${search.value}%`,
             `%${search.value}%`,
             `%${search.value}%`,
@@ -189,7 +199,7 @@ class tb_ventas extends Table {
     })
   }
   /** 
-   * @param {COLUMNS} data 
+   * @param {COLUMNS_COMPRAS} data 
    * @returns {Promise<import('mysql').OkPacket>}
    */
   insert(data) {
@@ -240,7 +250,7 @@ class tb_ventas extends Table {
     })
   }
   /** 
-   * @param {...COLUMNS} datas 
+   * @param {...COLUMNS_COMPRAS} datas 
    * @returns {Promise<import('mysql').OkPacket>}
    */
   inserts(...datas) {
@@ -251,30 +261,27 @@ class tb_ventas extends Table {
             producto_id,
             transaccion_id,
             cantidad,
-            importe,
-            descuento
+            precio_compra
           } = data;
 
           this.constraint('producto_id', producto_id);
           this.constraint('transaccion_id', transaccion_id);
           this.constraint('cantidad', cantidad);
-          this.constraint('importe', importe);
-          this.constraint('descuento', descuento);
+          this.constraint('compra', precio_compra);
         })
 
         let values = datas
-          .map(({ producto_id, transaccion_id, cantidad, importe, descuento }) => [
-            producto_id, transaccion_id, cantidad, importe, descuento
+          .map(({ producto_id, transaccion_id, cantidad, precio_compra }) => [
+            producto_id, transaccion_id, cantidad, precio_compra
           ])
 
         let [result] = await this.app.model.poolValues(`
           INSERT INTO
-            tb_ventas ( 
+            tb_compras ( 
               producto_id,
               transaccion_id,
               cantidad,
-              importe,
-              descuento
+              compra
             )
           VALUES ?
         `, [
@@ -485,7 +492,7 @@ class tb_ventas extends Table {
   }
   /**
    * @param {number} id 
-   * @param {COLUMNS} data 
+   * @param {COLUMNS_COMPRAS} data 
    * @returns {Promise<import('mysql').OkPacket>}
    */
   updateId(id, data) {

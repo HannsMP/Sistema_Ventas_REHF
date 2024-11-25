@@ -71,7 +71,6 @@ module.exports = {
         let {
           producto,
           descripcion,
-          compra,
           venta,
           categoria_id,
           estado
@@ -125,7 +124,6 @@ module.exports = {
           codigo,
           producto,
           descripcion,
-          compra: Number(compra),
           venta: Number(venta),
           categoria_id: categoria_id,
           estado: Number(estado),

@@ -31,7 +31,7 @@ const QueryError = require('../utils/error/Query');
 
 /** @typedef {string | number} values */
 /** @typedef {{[column: string]: values}} columns */
-/** @typedef {columns[]} result */
+/** @typedef {columns[] & import('mysql').OkPacket} result */
 
 class Model {
   estado = false;

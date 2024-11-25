@@ -5,8 +5,8 @@ class Tables {
     /** @type {HTMLTableElement} */
     this.table = this.i[0];
   }
-  /** @param {import('datatables.net-dt').Config} config @param {boolean} urlSearch */
-  init(config, urlSearch = true) {
+  /** @param {import('datatables.net-dt').Config} config @param {string|boolean} searchParam */
+  init(config, searchParam = 'tb_search') {
 
     /** @type {import('datatables.net-dt').Config}  */
     let tableConfig = {
@@ -104,7 +104,7 @@ class Tables {
           })
         }
       }
-      
+
       tableConfig.ajax = config.ajax;
     }
     this.datatable = this.i.DataTable(tableConfig);
@@ -112,7 +112,7 @@ class Tables {
     /** @type {import('datatables.net-dt').Config}  */
     this.config = tableConfig;
 
-    if (urlSearch) {
+    if (searchParam) {
       let timeoutId;
       this.datatable.on('search', (_, arg) => {
         clearTimeout(timeoutId);
@@ -121,13 +121,13 @@ class Tables {
           let value = arg?.oPreviousSearch?.search;
 
           if (value) {
-            if (url.searchParams.has('tb_search'))
-              url.searchParams.set('tb_search', value);
+            if (url.searchParams.has(searchParam))
+              url.searchParams.set(searchParam, value);
             else
-              url.searchParams.append('tb_search', value);
+              url.searchParams.append(searchParam, value);
           }
           else
-            url.searchParams.delete('tb_search')
+            url.searchParams.delete(searchParam)
 
           history.pushState({}, '', url.toString())
         }, 200)
@@ -136,8 +136,8 @@ class Tables {
       })
 
       let url = new URL(window.location.href);
-      if (url.searchParams.has('tb_search')) {
-        let search = url.searchParams.get('tb_search');
+      if (url.searchParams.has(searchParam)) {
+        let search = url.searchParams.get(searchParam);
         this.datatable.search(search).draw();
       }
     }

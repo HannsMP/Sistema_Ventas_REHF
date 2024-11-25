@@ -1,56 +1,74 @@
 $('.content-body').ready(async () => {
+  try {
 
-  /* 
-    ==================================================
-    ================ CARDS INVENTARIO ================
-    ==================================================
-  */
+    /* 
+      ==================================================
+      ================== VARIABLES DOM ==================
+      ==================================================
+    */
 
-  let resProductos = await query.post.cookie("/api/productos/chart/read");
+    /** @type {HTMLElement} */
+    let cardCantidad = document.querySelector('#inventario-cantidad small');
+    /** @type {HTMLElement[]} */
+    let [cardFecha, cardHora] = document.querySelectorAll('#inventario-fecha small');
+    /** @type {HTMLCanvasElement} */
+    let canvas = document.getElementById("chart-inventario").getContext("2d");
 
-  /** @type {{err: string, OkPacket: import('mysql').OkPacket, usuarios_chart: {[column:string]: string|number}[]}} */
-  let { card: cardProductos, chart: chartProductos } = await resProductos.json();
+    let chart = new Chart(canvas, {
+      type: "line",
+      data: {
+        labels: [],
+        datasets: [{
+          label: "Promedio",
+          fill: false,
+          backgroundColor: "rgba(255, 140, 0, .7)",
+          data: []
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: { y: { min: 0 } }
+      }
+    });
 
-  let { max_creacion: max_creacion_productos, cantidad_productos } = cardProductos;
+    /* 
+      ==================================================
+      ====================== CARDS ======================
+      ==================================================
+    */
 
-  let productosCantidad = document.querySelector('#inventario-cantidad small');
-  productosCantidad.textContent = cantidad_productos;
-
-  let [productosInsercionFecha, productosInsercionHora] = document.querySelectorAll('#inventario-fecha small');
-  productosInsercionFecha.textContent = formatTime('YYYY / MM / DD', new Date(max_creacion_productos));
-  productosInsercionHora.textContent = formatTime('hh : mm tt', new Date(max_creacion_productos));
-
-  /* 
-    ==================================================
-    ============== GRAFICOS INVENTARIO  ==============
-    ==================================================
-  */
-
-  /** @type {HTMLCanvasElement} */
-  let canvasInventario = document.getElementById("chart-inventario")
-    .getContext("2d");
-
-  let { label: labelUxR, data: dataUxR } = chartProductos;
-
-  let inventarioChart = new Chart(canvasInventario, {
-    type: "line",
-    data: {
-      labels: labelUxR,
-      datasets: [{
-        label: "Promedio",
-        backgroundColor: [
-          "rgba(255, 140, 0, .7)",
-          "rgba(255, 140, 0, .6)",
-          "rgba(255, 140, 0, .5)",
-          "rgba(255, 140, 0, .4)",
-          "rgba(255, 140, 0, .3)"
-        ],
-        data: dataUxR
-      }]
-    },
-    options: {
-      responsive: true,
-      scales: { y: { min: 0 } }
+    /** @param {number} cantidad_clientes @param {string} max_creacion */
+    let renderCard = (cantidad_clientes, max_creacion) => {
+      cardCantidad.textContent = cantidad_clientes;
+      cardFecha.textContent = formatTime('YYYY / MM / DD', new Date(max_creacion));
+      cardHora.textContent = formatTime('hh : mm tt', new Date(max_creacion));
     }
-  });
+
+    /* 
+      ==================================================
+      ==================== GRAFICOS ====================
+      ==================================================
+    */
+
+    /** @param {any[]} labels @param {any[]} datasets */
+    let renderChart = (labels, datasets) => {
+      chart.data.labels = labels;
+      datasets.forEach((data, i) => chart.data.datasets[i].data = data);
+      chart.update();
+    }
+
+    /* 
+      ==================================================
+      ===================== SOCKET =====================
+      ==================================================
+    */
+
+    socket.emit('/dash/productos', (cantidad, max_creacion, labels, datasets) => {
+      renderCard(cantidad, max_creacion);
+      renderChart(labels, datasets);
+    })
+
+  } catch (e) {
+    socket.emit('/err/client', { message, stack, url: window.location.href })
+  }
 })

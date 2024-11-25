@@ -1,0 +1,140 @@
+<div class="content-header">
+  <!---------------------- CSS ---------------------->
+
+  <!-- lib control -->
+  <link href="/src/private/lib/dataTables/datatables.min.css" rel="stylesheet">
+  <link href="/src/private/lib/calendar/calendar.min.css" rel="stylesheet">
+
+  <!-- layout -->
+  <link href="/src/private/layout/css/input.css" rel="stylesheet">
+  <link href="/src/private/layout/css/btn.css" rel="stylesheet">
+
+  <!---------------------- JS ---------------------->
+
+  <!-- lib control -->
+  <script src="/src/private/lib/dataTables/datatables.min.js"></script>
+  <script src="/src/private/lib/formatTime/formatTime.min.js"></script>
+  <script src="/src/private/lib/calendar/calendar.min.js"></script>
+
+  <!-- layout -->
+  <script src="/src/private/lib/Tables/tables.min.js"></script>
+
+  <!---------------------- BODY ---------------------->
+
+  <div class="content-tittle">Asistencia</div>
+  <div class="content-path">
+    <a href="/control">/control</a>
+    <a href="/control/reportes">/reportes</a>
+    <a href="/control/reportes/asistencia">/asistencia</a>
+  </div>
+</div>
+<div class="content-body">
+  <div class="menu-body">
+    <div class="card" id="card-metodo-pago">
+      <div class="card-head">
+        <h3 class="card-tittle">Tipo Metodo Pago</h3>
+      </div>
+      <div class="card-body">
+        <div class="table-box">
+          <table id="table-metodo-pago" style="width: auto;">
+            <thead>
+              <tr>
+                <th>Id</th>
+                <th>Nombre</th>
+                <th>Igv</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="card-cliente">
+      <div class="card-head">
+        <h3 class="card-tittle">Tipo Cliente</h3>
+      </div>
+      <div class="card-body">
+        <div class="table-box">
+          <table id="table-cliente" style="width: auto;">
+            <thead>
+              <tr>
+                <th>Id</th>
+                <th>Nombre</th>
+                <th>Descripcion</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="card-proveedor">
+      <div class="card-head">
+        <h3 class="card-tittle">Tipo Proveedor</h3>
+      </div>
+      <div class="card-body">
+        <div class="table-box">
+          <table id="table-proveedor" style="width: auto;">
+            <thead>
+              <tr>
+                <th>Id</th>
+                <th>Nombre</th>
+                <th>Descripcion</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="card-documento">
+      <div class="card-head">
+        <h3 class="card-tittle">Tipo Documento</h3>
+      </div>
+      <div class="card-body">
+        <div class="table-box">
+          <table id="table-documento" style="width: auto;">
+            <thead>
+              <tr>
+                <th>Id</th>
+                <th>Nombre</th>
+                <th>Descripcion</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="card-roles">
+      <div class="card-head">
+        <h3 class="card-tittle">Tipo Roles</h3>
+      </div>
+      <div class="card-body">
+        <div class="table-box">
+          <table id="table-roles" style="width: auto;">
+            <thead>
+              <tr>
+                <th>Id</th>
+                <th>Nombre</th>
+                <th>Descripcion</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/src/private/routes/administracion/tipos/index.js"></script>

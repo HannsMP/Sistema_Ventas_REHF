@@ -17,7 +17,7 @@
 * }} 
 */
 module.exports = {
-  load: true,
+  load: false,
   route: "/api/clientes/chart/read",
   post: [
     async function (req, res, next) {

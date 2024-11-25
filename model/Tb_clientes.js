@@ -23,10 +23,10 @@ const columns = {
  *   tipo_documento_id: number,
  *   num_documento: string,
  *   estado: number
- * }} COLUMNS
+ * }} COLUMNS_CLIENTES
  */
 
-/** @extends {Table<COLUMNS>} */
+/** @extends {Table<COLUMNS_CLIENTES>} */
 class Tb_clientes extends Table {
   /** @param {import('../app')} app */  constructor(app) {
     super(name);
@@ -45,7 +45,7 @@ class Tb_clientes extends Table {
   */
   /**
    * @param {import('datatables.net-dt').AjaxData} option 
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<COLUMNS_CLIENTES[]>}
    */
   readInParts(option) {
     return new Promise(async (res, rej) => {
@@ -194,7 +194,7 @@ class Tb_clientes extends Table {
     })
   }
   /** 
-   * @param {COLUMNS} data 
+   * @param {COLUMNS_CLIENTES} data 
    * @returns {Promise<import('mysql').OkPacket>}
    */
   insert(data) {
@@ -249,7 +249,16 @@ class Tb_clientes extends Table {
 
         this.io.emitSocket(
           '/clientes/data/insert',
-          _ => this.readIdJoin(result.insertId)
+          {
+            id : result.insertId,
+            nombres,
+            telefono,
+            direccion,
+            tipo_cliente_id,
+            tipo_documento_id,
+            num_documento,
+            estado
+          }
         )
 
         res(result)
@@ -259,7 +268,7 @@ class Tb_clientes extends Table {
     })
   }
   /**
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<COLUMNS_CLIENTES[]>}
    */
   readAllJoin() {
     return new Promise(async (res, rej) => {
@@ -359,7 +368,7 @@ class Tb_clientes extends Table {
   }
   /** 
    * @param {number} id 
-   * @param {COLUMNS} data 
+   * @param {COLUMNS_CLIENTES} data 
    * @returns {Promise<import('mysql').OkPacket>}
    */
   updateId(id, data) {
@@ -406,7 +415,15 @@ class Tb_clientes extends Table {
 
         this.io.emitSocket(
           '/clientes/data/updateId',
-          _ => this.readIdJoin(id)
+          {
+            id,
+            nombres,
+            telefono,
+            direccion,
+            tipo_cliente_id,
+            tipo_documento_id,
+            num_documento
+          }
         )
 
         res(result)
@@ -440,9 +457,7 @@ class Tb_clientes extends Table {
 
         this.io.emitSocket(
           '/clientes/data/state',
-          estado
-            ? _ => this.readIdJoin(id)
-            : { id, estado }
+          { id, estado }
         )
 
         res(result)
@@ -469,7 +484,7 @@ class Tb_clientes extends Table {
           id
         ]);
 
-        this.io.emit(
+        this.io.emitSocket(
           '/clientes/data/deleteId',
           { id }
         )
@@ -487,7 +502,7 @@ class Tb_clientes extends Table {
   */
   /**
    * @param {SelectorRequest} option 
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<COLUMNS_CLIENTES[]>}
    */
   SelectorInParts(option) {
     return new Promise(async (res, rej) => {

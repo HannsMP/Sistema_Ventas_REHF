@@ -21,22 +21,40 @@ $('.content-body').ready(async () => {
     let $tableNuevo = $('#table-nuevo');
     let tableNuevo = $tableNuevo[0];
     let inputNuevoText = tableNuevo.querySelectorAll('input[type=text]');
-    let inputNuevoTelefono = inputNuevoText[1];
-    let [inputNuevoSelectorTipoCliente, inputNuevoSelectorTipoDocumento]
-      = tableNuevo.querySelectorAll('input.selector');
-    let inputNuevoCheckbox = tableNuevo.querySelector('input[type=checkbox]');
+    /** @type {HTMLInputElement} */
+    let inputNuevoNombre = document.getElementById('nuevo-nombre');
+    /** @type {HTMLInputElement} */
+    let inputNuevoSelectorTipoCliente = document.getElementById('nuevo-tipo-cliente');
+    /** @type {HTMLInputElement & {except?: string}} */
+    let inputNuevoTelefono = document.getElementById('nuevo-telefono');
+    /** @type {HTMLInputElement} */
+    let inputNuevoDireccion = document.getElementById('nuevo-direccion');
+    /** @type {HTMLInputElement} */
+    let inputNuevoSelectorTipoDocumento = document.getElementById('nuevo-tipo-documento');
+    /** @type {HTMLInputElement & {except?: string}} */
+    let inputNuevoNumDocumento = document.getElementById('nuevo-num-documento');
+    /** @type {HTMLInputElement} */
+    let checkboxNuevoEstado = document.getElementById('nuevo-estado');
+    /** @type {HTMLAnchorElement} */
     let btnNuevo = tableNuevo.querySelector('.btn');
 
+    let currentEditarId = 0;
     let $tableEditar = $('#table-editar');
     let tableEditar = $tableEditar[0];
-    let inputEditarHidden = tableEditar.querySelector('input[type=hidden]');
     let inputEditarText = tableEditar.querySelectorAll('input[type=text]');
-    let inputEditarNombre = inputEditarText[0];
-    let inputEditarTelefono = inputEditarText[1];
-    let inputEditarDireccion = inputEditarText[2];
-    let inputEditarNumDocumento = inputEditarText[3];
-    let [inputEditarSelectorTipoCliente, inputEditarSelectorTipoDocumento]
-      = tableEditar.querySelectorAll('input.selector');
+    /** @type {HTMLInputElement} */
+    let inputEditarNombre = document.getElementById('editar-nombre');
+    /** @type {HTMLInputElement} */
+    let inputEditarSelectorTipoCliente = document.getElementById('editar-tipo-cliente');
+    /** @type {HTMLInputElement & {except?: string}} */
+    let inputEditarTelefono = document.getElementById('editar-telefono');
+    /** @type {HTMLInputElement} */
+    let inputEditarDireccion = document.getElementById('editar-direccion');
+    /** @type {HTMLInputElement} */
+    let inputEditarSelectorTipoDocumento = document.getElementById('editar-tipo-documento');
+    /** @type {HTMLInputElement & {except?: string}} */
+    let inputEditarNumDocumento = document.getElementById('editar-num-documento');
+    /** @type {HTMLAnchorElement} */
     let btnEditar = tableEditar.querySelector('.btn');
 
     let calendarioBox = document.querySelector('.calendario');
@@ -53,23 +71,19 @@ $('.content-body').ready(async () => {
     async function updateIdState({ id, nombres }) {
       this.disabled = true;
       let estado = this.checked;
-      let resEstado = await query.post.json.cookie("/api/clientes/table/updateIdState", { id, estado });
+      socket.emit('/stateId/table', id, estado, err => {
+        if (err) {
+          this.checked = !estado;
+          return alarm.error(err);
+        }
 
-      /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-      let { err } = await resEstado.json();
+        if (estado)
+          alarm.success(`${nombres} activado`);
+        else
+          alarm.success(`${nombres} desactivado`);
 
-      if (estado)
-        alarm.success(`${nombres} activado`);
-      else
-        alarm.success(`${nombres} desactivado`);
-
-      if (err) {
-        this.checked = !estado;
-        alarm.error(`${nombres} inaccesible`);
-        return
-      }
-
-      this.disabled = false;
+        this.disabled = false;
+      })
     }
 
     /* 
@@ -178,22 +192,22 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    let nuevoSelectorUnicTipoCliente = new SelectorInput(
+    let selectorNuevoTipoCliente = new SelectorInput(
       inputNuevoSelectorTipoCliente,
       selectorOptionsTipoCliente,
       { autohide: true }
     );
-    let nuevoSelectorUnicTipoDocumento = new SelectorInput(
+    let selectorNuevoTipoDocumento = new SelectorInput(
       inputNuevoSelectorTipoDocumento,
       selectorOptionsTipoDocumento,
       { autohide: true }
     );
-    let editarSelectorUnicTipoCliente = new SelectorInput(
+    let selectorEditarTipoCliente = new SelectorInput(
       inputEditarSelectorTipoCliente,
       selectorOptionsTipoCliente,
       { justChange: true }
     );
-    let editarSelectorUnicTipoDocumento = new SelectorInput(
+    let selectorEditarTipoDocumento = new SelectorInput(
       inputEditarSelectorTipoDocumento,
       selectorOptionsTipoDocumento,
       { justChange: true }
@@ -222,6 +236,7 @@ $('.content-body').ready(async () => {
         sideContent.scrollTop = tableEditar.offsetTop - sideContent.offsetTop - 100;
       },
       close() {
+        currentEditarId = 0;
         this.emptyNuevo();
         this.emptyEditar();
         this.now = 'table';
@@ -237,14 +252,14 @@ $('.content-body').ready(async () => {
       emptyNuevo() {
         if (this.now != 'nuevo') return;
         inputNuevoText.forEach(i => i.value = '');
-        nuevoSelectorUnicTipoCliente.empty();
-        nuevoSelectorUnicTipoDocumento.empty();
+        selectorNuevoTipoCliente.empty();
+        selectorNuevoTipoDocumento.empty();
       },
       emptyEditar() {
         if (this.now != 'editar') return;
         inputEditarText.forEach(i => i.value = '');
-        editarSelectorUnicTipoCliente.empty();
-        editarSelectorUnicTipoDocumento.empty();
+        selectorEditarTipoCliente.empty();
+        selectorEditarTipoDocumento.empty();
       },
     }
 
@@ -314,6 +329,20 @@ $('.content-body').ready(async () => {
       )
     })
 
+    inputNuevoNumDocumento.addEventListener('input', () => {
+      let value = inputNuevoNumDocumento.value;
+      socket.emit(
+        '/read/unic',
+        { column: 'num_documento', value },
+        res => {
+          if (res)
+            return inputNuevoNumDocumento.except = null;
+          inputNuevoNumDocumento.except = `El numero de documento '${value}' ya existe.`;
+          formError(inputNuevoNumDocumento.except, inputNuevoNumDocumento.parentNode);
+        }
+      )
+    })
+
     /* 
       ==================================================
       =================== OPEN NUEVO ===================
@@ -331,36 +360,45 @@ $('.content-body').ready(async () => {
     btnNuevo.addEventListener('click', async () => {
       if (inputNuevoTelefono.except)
         return formError(inputNuevoTelefono.except, inputNuevoTelefono.parentNode);
+      if (inputNuevoNumDocumento.except)
+        return formError(inputNuevoNumDocumento.except, inputNuevoNumDocumento.parentNode);
 
       let jsonData = {};
-      inputNuevoText.forEach(i => {
-        let column = i.getAttribute('name');
-        let value = i.value;
-        if (!value) return formError(`Se requiere un valor para ${column}`, i.parentNode);
-        jsonData[column] = value;
-      })
 
-      let selectTipoCliente = nuevoSelectorUnicTipoCliente.selected[0];
-      if (!selectTipoCliente) return formError(`Selecciona un Rol`, inputNuevoSelectorTipoCliente.parentNode);
+      let nombresValue = inputNuevoNombre.value;
+      if (!nombresValue) return formError(`Se require un nombre!.`, inputNuevoNombre.parentNode);
+      jsonData.nombres = nombresValue;
+
+      let selectTipoCliente = selectorNuevoTipoCliente.selected[0];
+      if (!selectTipoCliente) return formError(`Selecciona un tipo de cliente`, inputNuevoSelectorTipoCliente.parentNode);
       jsonData.tipo_cliente_id = Number(selectTipoCliente.id);
 
+      let telefonoValue = inputNuevoTelefono.value;
+      if (!telefonoValue) return formError(`Se require un telefono!.`, inputNuevoTelefono.parentNode);
+      jsonData.telefono = telefonoValue;
 
-      let selectTipoDocumento = nuevoSelectorUnicTipoDocumento.selected[0];
-      if (!selectTipoDocumento) return formError(`Selecciona un Rol`, inputNuevoSelectorTipoDocumento.parentNode);
+      let direccionValue = inputNuevoDireccion.value;
+      if (!direccionValue) return formError(`Se require una direccion!.`, inputNuevoDireccion.parentNode);
+      jsonData.direccion = direccionValue;
+
+      let selectTipoDocumento = selectorNuevoTipoDocumento.selected[0];
+      if (!selectTipoDocumento) return formError(`Selecciona un tipo de documento`, inputNuevoSelectorTipoDocumento.parentNode);
       jsonData.tipo_documento_id = Number(selectTipoDocumento.id);
 
-      jsonData.estado = inputNuevoCheckbox.checked ? 1 : 0;
+      let numDocumentoValue = inputNuevoNumDocumento.value;
+      if (!numDocumentoValue) return formError(`Se require un num de documento!.`, inputNuevoNumDocumento.parentNode);
+      jsonData.num_documento = numDocumentoValue;
 
-      let resCliente = await query.post.json.cookie("/api/clientes/table/insert", jsonData);
+      let estado = checkboxNuevoEstado.checked ? 1 : 0;
+      jsonData.estado = estado;
 
-      /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-      let { err } = await resCliente.json();
+      socket.emit('/insert/table', jsonData, err => {
+        if (err)
+          return alarm.warn(err)
 
-      if (err)
-        return alarm.warn('No se pudo agregar')
-
-      alarm.success(`Fila Agregada`);
-      toggleMenu.close();
+        alarm.success(`Fila Agregada`);
+        toggleMenu.close();
+      })
     })
 
     /* 
@@ -373,41 +411,89 @@ $('.content-body').ready(async () => {
 
     /* 
       ==================================================
+      ================ VALID CHANGE DATA ================
+      ==================================================
+    */
+
+    let validChangeData = () => {
+      let valid = false;
+      valid ||= inputEditarNombre.value != inputEditarNombre.currentValue;
+      valid ||= selectorEditarTipoCliente?.selected[0]?.id != selectorEditarTipoCliente.currentValue;
+      valid ||= inputEditarTelefono.value != inputEditarTelefono.currentValue;
+      valid ||= inputEditarDireccion.value != inputEditarDireccion.currentValue;
+      valid ||= selectorEditarTipoDocumento?.selected[0]?.id != selectorEditarTipoDocumento.currentValue;
+      valid ||= inputEditarNumDocumento.value != inputEditarNumDocumento.currentValue;
+
+      valid
+        ? btnEditar.classList.remove('disabled')
+        : btnEditar.classList.add('disabled');
+    }
+
+    inputEditarNombre.addEventListener('input', validChangeData);
+    selectorEditarTipoCliente.on('change', validChangeData)
+    inputEditarTelefono.addEventListener('input', validChangeData);
+    inputEditarDireccion.addEventListener('input', validChangeData);
+    selectorEditarTipoDocumento.on('change', validChangeData)
+    inputEditarNumDocumento.addEventListener('input', validChangeData);
+
+    /* 
+      ==================================================
       =================== OPEN EDITAR ===================
       ==================================================
     */
+
+    let defaultEditar = async data => {
+      inputEditarNombre.currentValue
+        = inputEditarNombre.placeholder
+        = data.nombres;
+
+      let asyncTipoCliente = selectorEditarTipoCliente.select(data.tipo_cliente_id);
+      selectorEditarTipoCliente.currentValue = data.tipo_cliente_id;
+
+      inputEditarTelefono.currentValue
+        = inputEditarTelefono.placeholder
+        = data.telefono;
+
+      inputEditarDireccion.currentValue
+        = inputEditarDireccion.placeholder
+        = data.direccion;
+
+      let asyncTipoDocumento = selectorEditarTipoDocumento.select(data.tipo_documento_id);
+      selectorEditarTipoDocumento.currentValue = data.tipo_documento_id;
+
+      inputEditarNumDocumento.currentValue
+        = inputEditarNumDocumento.placeholder
+        = data.num_documento;
+
+      await asyncTipoCliente;
+      await asyncTipoDocumento;
+    }
+
+    let setterEditar = data => {
+      currentEditarId = data.id;
+
+      inputEditarNombre.value
+        = data.nombres;
+
+      inputEditarTelefono.value
+        = data.telefono;
+
+      inputEditarDireccion.value
+        = data.direccion;
+
+      inputEditarNumDocumento.value
+        = data.num_documento;
+
+      defaultEditar(data);
+      btnEditar.classList.add('disabled');
+    }
 
     tblEditar.forEach(btn => btn.addEventListener('click', async () => {
       let id = $table.selected();
       if (!id) return alarm.warn('Selecciona una fila');
 
       toggleMenu.editar();
-      let row = $table.get('#' + id);
-
-      inputEditarNombre.placeholder
-        = inputEditarNombre.value
-        = row.nombre;
-
-      inputEditarTelefono.placeholder
-        = inputEditarTelefono.beforeValue
-        = inputEditarTelefono.value
-        = row.telefono;
-
-      inputEditarDireccion.placeholder
-        = inputEditarDireccion.value
-        = row.direccion;
-
-      inputEditarNumDocumento.placeholder
-        = inputEditarNumDocumento.value
-        = row.num_documento;
-
-      editarSelectorUnicTipoCliente.select(row.tipo_cliente_id);
-      editarSelectorUnicTipoCliente.beforeValue = row.tipo_cliente_id;
-
-      editarSelectorUnicTipoDocumento.select(row.tipo_documento_id);
-      editarSelectorUnicTipoDocumento.beforeValue = row.tipo_documento_id;
-
-      inputEditarHidden.value = id;
+      socket.emit('/readId/table', id, setterEditar);
     }))
 
     /* 
@@ -430,6 +516,20 @@ $('.content-body').ready(async () => {
       )
     })
 
+    inputEditarNumDocumento.addEventListener('input', () => {
+      let value = inputEditarNumDocumento.value;
+      socket.emit(
+        '/read/unic',
+        { column: 'num_documento', value },
+        res => {
+          if (res)
+            return inputEditarNumDocumento.except = null;
+          inputEditarNumDocumento.except = `El numero de documento '${value}' ya existe.`;
+          formError(inputEditarNumDocumento.except, inputEditarNumDocumento.parentNode);
+        }
+      )
+    })
+
     /* 
       ==================================================
       =================== EDITAR DATA ===================
@@ -439,38 +539,45 @@ $('.content-body').ready(async () => {
     btnEditar.addEventListener('click', async () => {
       if (inputEditarTelefono.except)
         return formError(inputEditarTelefono.except, inputEditarTelefono.parentNode);
+      if (inputEditarNumDocumento.except)
+        return formError(inputEditarNumDocumento.except, inputEditarNumDocumento.parentNode);
 
       let jsonData = {};
 
-      let id = inputEditarHidden.value;
-      jsonData.id = id;
+      jsonData.id = currentEditarId;
 
-      inputEditarText.forEach(i => {
-        let column = i.getAttribute('name');
-        let value = i.value;
-        if (!value) return formError(`Se requiere un valor para ${column}`, i.parentNode);
-        jsonData[column] = value;
+      let nombresValue = inputEditarNombre.value;
+      if (!nombresValue) return formError(`Se require un nombre!.`, inputEditarNombre.parentNode);
+      jsonData.nombres = nombresValue;
+
+      let selectTipoCliente = selectorEditarTipoCliente.selected[0];
+      if (!selectTipoCliente) return formError(`Selecciona un tipo de cliente`, inputNuevoSelectorTipoCliente.parentNode);
+      jsonData.tipo_cliente_id = Number(selectTipoCliente.id || selectorEditarTipoCliente.currentValue);
+
+      let telefonoValue = inputEditarTelefono.value;
+      if (!telefonoValue) return formError(`Se require un telefono!.`, inputEditarTelefono.parentNode);
+      jsonData.telefono = telefonoValue;
+
+      let direccionValue = inputEditarDireccion.value;
+      if (!direccionValue) return formError(`Se require una direccion!.`, inputEditarDireccion.parentNode);
+      jsonData.direccion = direccionValue;
+
+      let selectTipoDocumento = selectorEditarTipoDocumento.selected[0];
+      if (!selectTipoDocumento) return formError(`Selecciona un tipo documento`, inputNuevoSelectorTipoDocumento.parentNode);
+      jsonData.tipo_documento_id = Number(selectTipoDocumento.id || selectorEditarTipoDocumento.currentValue);
+
+      let numDocumentoValue = inputEditarNumDocumento.value;
+      if (!numDocumentoValue) return formError(`Se require un num de documento!.`, inputEditarNumDocumento.parentNode);
+      jsonData.num_documento = numDocumentoValue;
+
+      socket.emit('/updateId/table', jsonData, err => {
+        if (err)
+          return alarm.warn(err)
+
+        alarm.success(`Fila Agregada`);
+        toggleMenu.close();
+        $table.datatable.rows().deselect();
       })
-
-      let selectTipoCliente = editarSelectorUnicTipoCliente.selected[0];
-      if (!selectTipoCliente) return formError(`Selecciona un Rol`, inputNuevoSelectorTipoCliente.parentNode);
-      jsonData.tipo_cliente_id = Number(selectTipoCliente.id);
-
-      let selectTipoDocumento = editarSelectorUnicTipoDocumento.selected[0];
-      if (!selectTipoDocumento) return formError(`Selecciona un Rol`, inputNuevoSelectorTipoDocumento.parentNode);
-      jsonData.tipo_documento_id = Number(selectTipoDocumento.id);
-
-      let resCliente = await query.post.json.cookie("/api/clientes/table/updateId", jsonData);
-
-      /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-      let { err } = await resCliente.json();
-
-      if (err)
-        return alarm.warn('No se pudo Editar');
-
-      alarm.success(`Fila actualizada`);
-      toggleMenu.close();
-      $table.datatable.rows().deselect();
     })
 
     /* 
@@ -496,17 +603,11 @@ $('.content-body').ready(async () => {
         color: 'rgb(255, 255, 255)',
       })
         .then(async (result) => {
-          if (result.isConfirmed) {
-            let resClientes = await query.post.json.cookie("/api/clientes/table/deleteId", { id });
-
-            /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-            let { err } = await resClientes.json();
-
-            if (err)
-              return alarm.error(`Fila no Eliminada`);
-
-            alarm.success(`Fila eliminada`);
-          }
+          if (result.isConfirmed)
+            socket.emit('/deleteId/table', id, err => {
+              if (err) return alarm.error(err);
+              alarm.success(`Fila eliminada`);
+            })
         });
     }))
 
@@ -517,59 +618,26 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    socket.on('/clientes/data/insert', data => {
-      let row = $table.get('#' + data.id);
-      if (row) return;
-
-      $table.add({
-        id: data.id,
-        estado: data.estado,
-        nombres: data.nombres,
-        telefono: data.telefono,
-        direccion: data.direccion,
-        tipo_cliente_id: data.tipo_cliente_id,
-        tipo_cliente_nombre: data.tipo_cliente_nombre,
-        tipo_documento_id: data.tipo_documento_id,
-        tipo_documento_nombre: data.tipo_documento_nombre,
-        num_documento: data.num_documento,
-        creacion: formatTime('YYYY-MM-DD hh:mm:ss')
-      });
+    socket.on('/clientes/data/insert', () => {
+      $table.datatable.draw();
     })
 
-    socket.on('/clientes/data/updateId', data => {
-      let row = $table.get('#' + data.id);
-      if (!row) return;
-
-      $table.update('#' + data.id, {
-        id: data.id,
-        nombres: data.nombres,
-        telefono: data.telefono,
-        direccion: data.direccion,
-        tipo_cliente_id: data.tipo_cliente_id,
-        tipo_cliente_nombre: data.tipo_cliente_nombre,
-        tipo_documento_id: data.tipo_documento_id,
-        tipo_documento_nombre: data.tipo_documento_nombre,
-        num_documento: data.num_documento
-      });
-
-      let menuEditarid = $table.selected();
-      if (menuEditarid && menuEditarid == data.id)
-        tblEditar?.[0]?.click();
+    socket.on('/clientes/data/updateId', async data => {
+      if (currentEditarId == data.id) {
+        await defaultEditar(data);
+        validChangeData()
+      }
+      $table.datatable.draw();
     })
 
-    socket.on('/clientes/data/state', data => {
-      let row = $table.get('#' + data.id);
-      if (!row) return;
-
-      $table.update('#' + data.id, {
-        estado: data.estado,
-      });
+    socket.on('/clientes/data/state', () => {
+      $table.datatable.draw();
     })
 
     socket.on('/clientes/data/deleteId', data => {
-      let row = $table.get('#' + data.id);
-      if (!row) return;
-      $table.remove('#' + data.id);
+      if (currentEditarId == data.id)
+        toggleMenu.close()
+      $table.datatable.draw();
     })
 
     socket.on('/session/acceso/state', data => {

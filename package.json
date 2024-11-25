@@ -32,6 +32,7 @@
     "whatsapp-web.js": "1.25.0"
   },
   "devDependencies": {
+    "@types/chart.js": "^2.9.41",
     "@types/express": "5.0.0",
     "@types/express-session": "1.18.0",
     "@types/jquery": "3.5.31",

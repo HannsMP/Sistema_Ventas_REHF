@@ -14,10 +14,10 @@ const columns = {
  *   usuario_id: number,
  *   creacion: string,
  *   desconeccion: string
- * }} COLUMNS
+ * }} COLUMNS_ASISTENCIAS
  */
 
-/** @extends {Table<COLUMNS>} */
+/** @extends {Table<COLUMNS_ASISTENCIAS>} */
 class Tb_asistencias extends Table {
   /** @param {import('../app')} app */
   constructor(app) {
@@ -34,7 +34,7 @@ class Tb_asistencias extends Table {
   */
   /**
    * @param {import('datatables.net-dt').AjaxData} option 
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<COLUMNS_ASISTENCIAS[]>}
    */
   readInParts(option) {
     return new Promise(async (res, rej) => {
@@ -353,7 +353,7 @@ class Tb_asistencias extends Table {
   }
   /**
    * @param {number} usuario_id 
-   * @returns {Promise<COLUMNS>}
+   * @returns {Promise<COLUMNS_ASISTENCIAS>}
    */
   readTodayUser(usuario_id) {
     return new Promise(async (res, rej) => {

@@ -195,9 +195,11 @@ class Table {
     if (!typeFun) return false;
     return typeFun(value, column);
   }
+  /** @param {keyof T} column_name */
   isColumn(column_name) {
     return this.columns.hasOwnProperty(column_name)
   }
+  /** @param {keyof T} column_name */
   isColumnUnic(column_name) {
     return this.isColumn(column_name)
       && Boolean(this.columns[column_name].unic);

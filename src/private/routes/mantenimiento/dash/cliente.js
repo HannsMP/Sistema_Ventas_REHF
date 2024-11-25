@@ -1,51 +1,79 @@
 $('.content-body').ready(async () => {
+  try {
 
-  /* 
-    ==================================================
-    ================= CARD CATEGORIAS =================
-    ==================================================
-  */
+    /* 
+      ==================================================
+      ================== VARIABLES DOM ==================
+      ==================================================
+    */
 
-  let resCategorias = await query.post.cookie("/api/categorias/chart/read");
+    /** @type {HTMLElement} */
+    let cardCantidad = document.querySelector('#clientes-cantidad small');
+    /** @type {HTMLElement[]} */
+    let [cardFecha, cardHora] = document.querySelectorAll('#clientes-fecha small');
+    /** @type {HTMLCanvasElement} */
+    let canvas = document.getElementById("chart-clientes").getContext("2d");
 
-  /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-  let { card: cardCategorias, chart: chartCategorias } = await resCategorias.json();
+    let chart = new Chart(canvas, {
+      type: "line",
+      data: {
+        labels: [],
+        datasets: [{
+          label: "Cantidad",
+          backgroundColor: [
+            "rgba(255, 140, 0, .7)",
+            "rgba(255, 140, 0, .6)",
+            "rgba(255, 140, 0, .5)",
+            "rgba(255, 140, 0, .4)",
+            "rgba(255, 140, 0, .3)"
+          ],
+          data: []
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: { y: { min: 0 } }
+      }
+    });
 
-  let { max_creacion: max_creacion_categorias, cantidad_categorias } = cardCategorias;
+    /* 
+      ==================================================
+      ====================== CARDS ======================
+      ==================================================
+    */
 
-  let categoriasCantidad = document.querySelector('#categorias-cantidad small');
-  categoriasCantidad.textContent = cantidad_categorias;
-
-  let [categoriasInsercionFecha, categoriasInsercionHora] = document.querySelectorAll('#categorias-fecha small');
-  categoriasInsercionFecha.textContent = formatTime('YYYY / MM / DD', new Date(max_creacion_categorias));
-  categoriasInsercionHora.textContent = formatTime('hh : mm tt', new Date(max_creacion_categorias));
-
-  /* 
-    ==================================================
-    =============== GRAFICO CATEGORIAS  ===============
-    ==================================================
-  */
-
-  /** @type {HTMLCanvasElement} */
-  let canvasCategorias = document.getElementById("chart-categorias")
-    .getContext("2d");
-
-  let { label: labesCategorias, data: dataCategorias } = chartCategorias
-
-  let categoriasChart = new Chart(canvasCategorias, {
-    type: "line",
-    data: {
-      labels: labesCategorias,
-      datasets: [{
-        label: "Cantidad",
-        fill: false,
-        backgroundColor: "rgba(255, 140, 0, .7)",
-        data: dataCategorias
-      }]
-    },
-    options: {
-      responsive: true,
-      scales: { y: { min: 0 } }
+    /** @param {number} cantidad_clientes @param {string} max_creacion */
+    let renderCard = (cantidad_clientes, max_creacion) => {
+      cardCantidad.textContent = cantidad_clientes;
+      cardFecha.textContent = formatTime('YYYY / MM / DD', new Date(max_creacion));
+      cardHora.textContent = formatTime('hh : mm tt', new Date(max_creacion));
     }
-  });
+
+    /* 
+      ==================================================
+      ==================== GRAFICOS ====================
+      ==================================================
+    */
+
+    /** @param {any[]} labels @param {any[]} datasets */
+    let renderChart = (labels, datasets) => {
+      chart.data.labels = labels;
+      datasets.forEach((data, i) => chart.data.datasets[i].data = data);
+      chart.update();
+    }
+
+    /* 
+      ==================================================
+      ===================== SOCKET =====================
+      ==================================================
+    */
+
+    socket.emit('/dash/clientes', (cantidad, max_creacion, labels, datasets) => {
+      renderCard(cantidad, max_creacion);
+      renderChart(labels, datasets);
+    })
+
+  } catch (e) {
+    socket.emit('/err/client', { message, stack, url: window.location.href })
+  }
 })

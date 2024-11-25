@@ -73,7 +73,6 @@ module.exports = {
           producto,
           descripcion,
           categoria_id,
-          compra,
           venta
         } = req.body,
           foto_id,
@@ -122,7 +121,6 @@ module.exports = {
           producto,
           descripcion,
           categoria_id: Number(categoria_id),
-          compra: Number(compra),
           venta: Number(venta),
           foto_id
         });

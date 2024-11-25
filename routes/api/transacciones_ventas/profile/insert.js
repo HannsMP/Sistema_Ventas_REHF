@@ -17,7 +17,7 @@
 * }} 
 */
 module.exports = {
-  load: true,
+  load: false,
   route: "/api/transacciones_ventas/profile/insert",
   post: [
     async function (req, res, next) {
@@ -44,7 +44,7 @@ module.exports = {
         let usuario_id = usuario.id;
 
         let { codigo, descuento, listVentas } = await this.model.tb_transacciones_ventas
-          .computerBusiness(productos, metodo_pago_id, importe_total);
+          .computedBusiness(productos, metodo_pago_id, importe_total);
 
         let { insertId: transaccion_id } = await this.model.tb_transacciones_ventas
           .insert({

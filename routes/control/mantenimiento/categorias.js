@@ -67,13 +67,109 @@ module.exports = {
       res(result);
     }
 
-    /**
-     * @param {{column: string, value: any, id?: number}} req
-     * @param {()=>void} res
-     */
+    /** @param {number} id @param {()=>void} res */
+    let readIdTable = async (id, res) => {
+      try {
+        let data = await this.model.tb_categorias.readIdAll(id);
+        res(data)
+      } catch (e) {
+        this.logError.writeStart(e.message, e.stack)
+      }
+    }
+
+    /** @param {number} myId @param {()=>void} res */
+    let insertTable = async (myId, data, res) => {
+      try {
+        let permiso = await this.model.tb_permisos.userPathDelete(myId, module.exports.route);
+        if (!permiso) return res('No tienes Permisos para controlar la creacion de las categoiras.');
+
+        let {
+          nombre,
+          descripcion,
+          estado
+        } = data;
+
+        let codigo = await this.model.tb_categorias.getCodigo()
+
+        let result = await this.model.tb_categorias.insert({
+          nombre,
+          descripcion,
+          codigo,
+          estado: estado ? 1 : 0
+        });
+        if (result.affectedRows) res();
+      } catch (e) {
+        this.logError.writeStart(e.message, e.stack)
+        res('Ocurrio un error, ponte en contacto con el administrador.');
+      }
+    }
+
+    /** @param {number} myId @param {()=>void} res */
+    let updateIdTable = async (myId, data, res) => {
+      try {
+        let permiso = await this.model.tb_permisos.userPathDelete(myId, module.exports.route);
+        if (!permiso) return res('No tienes Permisos para controlar la edicion de las categorias.');
+
+        let {
+          id,
+          nombre,
+          descripcion
+        } = data;
+
+        let result = await this.model.tb_categorias.updateId(Number(id), {
+          nombre,
+          descripcion
+        });
+        if (result.affectedRows) res();
+      } catch (e) {
+        this.logError.writeStart(e.message, e.stack)
+        res('Ocurrio un error, ponte en contacto con el administrador.');
+      }
+    }
+
+    /** @param {number} myId @param {number} id @param {()=>void} res */
+    let stateIdTable = async (myId, id, estado, res) => {
+      try {
+        let permiso = await this.model.tb_permisos.userPathHide(myId, module.exports.route);
+        if (!permiso) return res('No tienes Permisos para controlar el estado de los categorias.');
+
+        let result = await this.model.tb_categorias.updateIdState(id, estado ? 1 : 0);
+        this.model.tb_productos.updateStateCategoriaId(Number(id), Number(estado));
+        if (result.affectedRows) res();
+      } catch (e) {
+        this.logError.writeStart(e.message, e.stack)
+        res('Ocurrio un error, ponte en contacto con el administrador.');
+      }
+    }
+
+    /** @param {number} myId @param {number} id @param {()=>void} res */
+    let deleteIdTable = async (myId, id, res) => {
+      try {
+        let permiso = await this.model.tb_permisos.userPathDelete(myId, module.exports.route);
+        if (!permiso) return res('No tienes Permisos para controlar la eliminacion de los categorias.');
+
+        let result
+        let count = await this.model.tb_categorias.readIdCount(Number(id))
+        if (!count?.producto_cantidad)
+          result = await this.model.tb_categorias.deleteId(Number(id))
+        else if (!count?.estado)
+          result = await this.model.tb_categorias.deleteAllId(Number(id))
+        else
+          return res('La categoria esta activa y aun tiene productos vinculados.');
+
+        if (result.affectedRows) res();
+      } catch (e) {
+        this.logError.writeStart(e.message, e.stack)
+        res('Ocurrio un error, ponte en contacto con el administrador.');
+      }
+    }
+
+    let unicColumns = new Set(['nombre'])
+    /** @param {{column: string, value: any, id?: number}} req @param {()=>void} res */
     let readUnic = async (req, res) => {
       try {
         let { column, value, id } = req;
+        if (!unicColumns.has(column)) return;
         if (!this.model.tb_categorias.isColumnUnic(column)) return;
 
         let result = await this.model.tb_categorias.isUnic(column, value, id);
@@ -84,7 +180,14 @@ module.exports = {
     }
 
     node.ev.on('connected', socket => {
+      let myId = socket.session.usuario_id;
+
       socket.on('/read/table', readTable)
+      socket.on('/readId/table', readIdTable)
+      socket.on('/insert/table', insertTable.bind(null, myId))
+      socket.on('/updateId/table', updateIdTable.bind(null, myId))
+      socket.on('/stateId/table', stateIdTable.bind(null, myId))
+      socket.on('/deleteId/table', deleteIdTable.bind(null, myId))
       socket.on('/read/unic', readUnic)
     })
   }

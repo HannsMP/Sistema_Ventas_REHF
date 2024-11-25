@@ -131,6 +131,15 @@
               </div>
             </div>
 
+            <div class="nav-item" <% if(!userLayout['/control/mantenimiento/inventario']?.ver){ %> style="display: none" <% } %>>
+              <div class="nav-icon">
+                <i class="bx bx-store"></i>
+                <a class="nav-link" href="/control/mantenimiento/inventario">
+                  <span> Inventario </span>
+                </a>
+              </div>
+            </div>
+
             <div class="nav-item" <% if(!userLayout['/control/mantenimiento/clientes']?.ver){ %> style="display: none" <% } %>>
               <div class="nav-icon">
                 <i class="bx bx-group"></i>
@@ -140,20 +149,11 @@
               </div>
             </div>
 
-            <div class="nav-item" <% if(!userLayout['/control/mantenimiento/proveedor']?.ver){ %> style="display: none" <% } %>>
+            <div class="nav-item" <% if(!userLayout['/control/mantenimiento/proveedores']?.ver){ %> style="display: none" <% } %>>
               <div class="nav-icon">
                 <i class="bx bxs-group"></i>
-                <a class="nav-link" href="/control/mantenimiento/proveedor">
-                  <span> Proveedor </span>
-                </a>
-              </div>
-            </div>
-
-            <div class="nav-item" <% if(!userLayout['/control/mantenimiento/inventario']?.ver){ %> style="display: none" <% } %>>
-              <div class="nav-icon">
-                <i class="bx bx-store"></i>
-                <a class="nav-link" href="/control/mantenimiento/inventario">
-                  <span> Inventario </span>
+                <a class="nav-link" href="/control/mantenimiento/proveedores">
+                  <span> Proveedores </span>
                 </a>
               </div>
             </div>
@@ -228,6 +228,15 @@
                 <i class="bx bx-paint-roll"></i>
                 <a class="nav-link" href="/control/administracion/acceso">
                   <span> Acceso </span>
+                </a>
+              </div>
+            </div>
+
+            <div class="nav-item" <% if(!userLayout['/control/administracion/tipos']?.ver){ %> style="display: none" <% } %>>
+              <div class="nav-icon">
+                <i class="bx bxs-paint-roll"></i>
+                <a class="nav-link" href="/control/administracion/tipos">
+                  <span> Tipos </span>
                 </a>
               </div>
             </div>

@@ -8,7 +8,29 @@ $('.content-body').ready(async () => {
 
     let dataSelectorCategorias = new OptionsServerside(
       (req, end) => socket.emit('/selector/categorias', req, res => end(res)),
-      { showIndex: false, order: 'asc', noInclude: true });
+      { showIndex: false, order: 'asc', noInclude: true }
+    );
+
+    /* ===================== SOCKET ===================== */
+
+    socket.on('/categorias/data/insert', data => {
+      dataSelectorCategorias.set(data.id, data.nombre);
+    })
+
+    socket.on('/categorias/data/updateId', data => {
+      dataSelectorCategorias.set(data.id, { name: data.nombre });
+    })
+
+    socket.on('/categorias/data/state', async data => {
+      if (data.estado)
+        dataSelectorCategorias.draw(true);
+      else
+        dataSelectorCategorias.delete(data.id);
+    })
+
+    socket.on('/categorias/data/deleteId', data => {
+      dataSelectorCategorias.delete(data.id);
+    })
 
     /* 
       ==================================================
@@ -62,7 +84,7 @@ $('.content-body').ready(async () => {
         <div class="product">
           <div class="product-imagen">
             <img src="${data.src}" class="imagen">
-            <span class="product-counter">${data.cantidad}</span>
+            <span class="product-counter">${data.stock_disponible}</span>
           </div>
           <div class="product-details">
             <span class="detail-name">${data.producto}</span>
@@ -171,19 +193,8 @@ $('.content-body').ready(async () => {
 
     /* ===================== SOCKET ===================== */
 
-    socket.on('/productos/data/insert', data => {
-      catalogo.set(data.id, {
-        id: data.id,
-        codigo: data.codigo,
-        producto: data.producto,
-        descripcion: data.descripcion,
-        venta: data.venta,
-        cantidad: data.cantidad,
-        categoria_id: data.categoria_id,
-        categoria_nombre: data.categoria_nombre,
-        src: data.foto_src
-      });
-      search(false);
+    socket.on('/productos/data/insert', () => {
+      catalogo.draw();
     })
 
     socket.on('/productos/data/updateId', data => {
@@ -192,95 +203,40 @@ $('.content-body').ready(async () => {
         producto: data.producto,
         descripcion: data.descripcion,
         venta: data.venta,
-        cantidad: data.cantidad,
+        stock_disponible: data.stock_disponible,
         categoria_id: data.categoria_id,
         categoria_nombre: data.categoria_nombre,
         src: data.foto_src
-      });
-      search(false);
+      })
+    })
+
+    socket.on('/productos/data/updateIdBussines', data => {
+      catalogo.set(data.id, d => {
+        if (0 < data.stock_disponible)
+          d.venta = data.venta
+        d.stock_disponible += data.stock_disponible;
+      })
     })
 
     socket.on('/productos/data/state', data => {
-      if (data.estado) {
-        catalogo.set(data.id, {
-          id: data.id,
-          codigo: data.codigo,
-          producto: data.producto,
-          descripcion: data.descripcion,
-          venta: data.venta,
-          cantidad: data.cantidad,
-          categoria_id: data.categoria_id,
-          categoria_nombre: data.categoria_nombre,
-          src: data.foto_src
-        });
-      }
+      if (data.estado)
+        catalogo.draw();
       else
         catalogo.delete(data.id);
-      search(false);
     })
 
     socket.on('/productos/data/deleteId', data => {
       catalogo.delete(data.id);
-      search(false);
     })
 
     socket.on('/productos/categorias/state', data => {
       if (data.estado)
-        data.data.forEach(d => catalogo.set(d.id, {
-          id: d.id,
-          codigo: d.codigo,
-          producto: d.producto,
-          descripcion: d.descripcion,
-          venta: d.venta,
-          cantidad: d.cantidad,
-          categoria_id: d.categoria_id,
-          categoria_nombre: d.categoria_nombre,
-          src: d.foto_src
-        }))
+        catalogo.draw();
       else
         data.data.forEach(d => catalogo.delete(d.id))
-      search(false);
-    })
-
-    socket.on('/categorias/data/insert', data => {
-      dataSelectorCategorias.set(data.id, data.nombre);
-    })
-
-    socket.on('/categorias/data/updateId', data => {
-      dataSelectorCategorias.set(data.id, { name: data.nombre });
-    })
-
-    socket.on('/categorias/data/state', async data => {
-      if (data.estado)
-        dataSelectorCategorias.draw(true);
-      else
-        dataSelectorCategorias.delete(data.id);
-    })
-
-    socket.on('/categorias/data/deleteId', data => {
-      dataSelectorCategorias.delete(data.id);
     })
 
   } catch ({ message, stack }) {
     socket.emit('/err/client', { message, stack, url: window.location.href })
   }
 })
-
-// data => {
-
-//   /** @type {{ producto:string, codigo:string, categoria_id:number }} */
-//   let { producto, codigo, categoria_id } = data,
-//     is = false;
-//   if (findCodigo && findCodigo != '')
-//     is = is || codigo.startsWith(findCodigo);
-//   else
-//     is = true;
-
-//   if (findProducto && findProducto != '')
-//     is = is && producto.toLowerCase().includes(findProducto.toLowerCase());
-
-//   if (findSelected.size)
-//     is = is && findSelected.has(categoria_id);
-
-//   return is;
-// }

@@ -62,44 +62,6 @@
       <script src="/src/private/routes/mantenimiento/dash/categoria.js"></script>
       <% } %>
 
-      <% if(userLayout['/control/mantenimiento/clientes']?.ver){ %>
-      <div class="f-col">
-        <div class="card">
-          <div class="card-head">
-            <h3 class="card-tittle">Clientes</h3>
-            <form action="/control/mantenimiento/clientes" method="get">
-              <input class="card-search" type="search" name="tb_search" placeholder="Buscar Cliente">
-            </form>
-          </div>
-          <a class="card-data" href="/control/mantenimiento/clientes">
-            <div class="card-icon">
-              <i class="bx bx-group"></i>
-            </div>
-            <div class="card-col">
-              <div class="data-box" id="clientes-cantidad">
-                <span class="data-tittle">Cantidad:</span>
-                <small class="data"></small>
-              </div>
-              <div class="data-box" id="clientes-fecha">
-                <span class="data-tittle">Ultima Insersion:</span>
-                <small class="data"></small>
-                <small class="data"></small>
-              </div>
-            </div>
-          </a>
-        </div>
-        <div class="card">
-          <div class="card-head">
-            <h3 class="card-tittle">Grafico Usuarios vs Roles</h3>
-          </div>
-          <div class="card-data">
-            <canvas id="chart-clientes"></canvas>
-          </div>
-        </div>
-      </div>
-      <script src="/src/private/routes/mantenimiento/dash/cliente.js"></script>
-      <% } %>
-
       <% if(userLayout['/control/mantenimiento/inventario']?.ver){ %>
       <div class="f-col">
         <div class="card">
@@ -138,6 +100,83 @@
       <script src="/src/private/routes/mantenimiento/dash/inventario.js"></script>
       <% } %>
     </div>
+    <div class="cards">
+
+      <% if(userLayout['/control/mantenimiento/clientes']?.ver){ %>
+      <div class="f-col">
+        <div class="card">
+          <div class="card-head">
+            <h3 class="card-tittle">Clientes</h3>
+            <form action="/control/mantenimiento/clientes" method="get">
+              <input class="card-search" type="search" name="tb_search" placeholder="Buscar Cliente">
+            </form>
+          </div>
+          <a class="card-data" href="/control/mantenimiento/clientes">
+            <div class="card-icon">
+              <i class="bx bx-group"></i>
+            </div>
+            <div class="card-col">
+              <div class="data-box" id="clientes-cantidad">
+                <span class="data-tittle">Cantidad:</span>
+                <small class="data"></small>
+              </div>
+              <div class="data-box" id="clientes-fecha">
+                <span class="data-tittle">Ultima Insersion:</span>
+                <small class="data"></small>
+                <small class="data"></small>
+              </div>
+            </div>
+          </a>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <h3 class="card-tittle">Grafico Usuarios vs Roles</h3>
+          </div>
+          <div class="card-data">
+            <canvas id="chart-clientes"></canvas>
+          </div>
+        </div>
+      </div>
+      <script src="/src/private/routes/mantenimiento/dash/cliente.js"></script>
+      <% } %>
+
+      <% if(userLayout['/control/mantenimiento/proveedores']?.ver){ %>
+      <div class="f-col">
+        <div class="card">
+          <div class="card-head">
+            <h3 class="card-tittle">Proveedores</h3>
+            <form action="/control/mantenimiento/proveedores" method="get">
+              <input class="card-search" type="search" name="tb_search" placeholder="Buscar proveedor">
+            </form>
+          </div>
+          <a class="card-data" href="/control/mantenimiento/proveedores">
+            <div class="card-icon">
+              <i class="bx bx-group"></i>
+            </div>
+            <div class="card-col">
+              <div class="data-box" id="proveedores-cantidad">
+                <span class="data-tittle">Cantidad:</span>
+                <small class="data"></small>
+              </div>
+              <div class="data-box" id="proveedores-fecha">
+                <span class="data-tittle">Ultima Insersion:</span>
+                <small class="data"></small>
+                <small class="data"></small>
+              </div>
+            </div>
+          </a>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <h3 class="card-tittle">Grafico Usuarios vs Roles</h3>
+          </div>
+          <div class="card-data">
+            <canvas id="chart-proveedores"></canvas>
+          </div>
+        </div>
+      </div>
+      <script src="/src/private/routes/mantenimiento/dash/proveedores.js"></script>
+      <% } %>
+    </div>
   </div>
 </div>
-<script src="/src/private/routes/mantenimiento/index.js"></script>

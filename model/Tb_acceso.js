@@ -16,10 +16,10 @@ const columns = {
  *   rol_id: number,
  *   permiso_id: number,
  *   disabled_id: number
- * }} COLUMNS
+ * }} COLUMNS_ACCESOS
  */
 
-/** @extends {Table<COLUMNS>} */
+/** @extends {Table<COLUMNS_ACCESOS>} */
 class Tb_acceso extends Table {
   /** @param {import('../app')} app */
   constructor(app) {
@@ -36,7 +36,7 @@ class Tb_acceso extends Table {
   */
   /**
    * @param {import('datatables.net-dt').AjaxData} option 
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<COLUMNS_ACCESOS[]>}
    */
   readInParts(option) {
     return new Promise(async (res, rej) => {
@@ -609,7 +609,7 @@ class Tb_acceso extends Table {
     })
   }
   /** 
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<COLUMNS_ACCESOS[]>}
    */
   readJoinMenuById(id) {
     return new Promise(async (res, rej) => {
@@ -747,7 +747,7 @@ class Tb_acceso extends Table {
     ====================================================================================================
   */
   /** 
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<COLUMNS_ACCESOS[]>}
    */
   chartCountPermits() {
     return new Promise(async (res, rej) => {

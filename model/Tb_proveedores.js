@@ -23,10 +23,10 @@ const columns = {
  *   tipo_documento_id: number,
  *   num_documento: string,
  *   estado: number
- * }} COLUMNS
+ * }} COLUMNS_PROVEEDORES
  */
 
-/** @extends {Table<COLUMNS>} */
+/** @extends {Table<COLUMNS_PROVEEDORES>} */
 class Tb_proveedores extends Table {
   /** @param {import('../app')} app */  constructor(app) {
     super(name);
@@ -45,7 +45,7 @@ class Tb_proveedores extends Table {
   */
   /**
    * @param {import('datatables.net-dt').AjaxData} option 
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<COLUMNS_PROVEEDORES[]>}
    */
   readInParts(option) {
     return new Promise(async (res, rej) => {
@@ -55,7 +55,7 @@ class Tb_proveedores extends Table {
         let query = `
           SELECT
             p.id,
-            p.nombres,
+            p.titular,
             p.telefono,
             p.direccion,
             p.tipo_proveedor_id,
@@ -71,22 +71,22 @@ class Tb_proveedores extends Table {
             JOIN 
               tipo_proveedor AS tp
             ON 
-              tp.id = c.tipo_proveedor_id
+              tp.id = p.tipo_proveedor_id
           INNER 
             JOIN 
               tipo_documento AS td
             ON 
-              td.id = c.tipo_documento_id
+              td.id = p.tipo_documento_id
         `, queryParams = [];
 
         if (search.value) {
           query += `
             WHERE
-              c.nombres LIKE ?
-              OR c.telefono LIKE ?
-              OR c.direccion LIKE ?
-              OR c.num_documento LIKE ?
-              OR tc.nombre LIKE ?
+              p.titular LIKE ?
+              OR p.telefono LIKE ?
+              OR p.direccion LIKE ?
+              OR p.num_documento LIKE ?
+              OR tp.nombre LIKE ?
               OR td.nombre LIKE ?
           `;
 
@@ -101,13 +101,13 @@ class Tb_proveedores extends Table {
         }
 
         let columnsSet = new Set([
-          'c.nombres',
-          'c.telefono',
-          'c.direccion',
-          'c.num_documento',
-          'tc.nombre',
+          'p.titular',
+          'p.telefono',
+          'p.direccion',
+          'p.num_documento',
+          'tp.nombre',
           'td.nombre',
-          'c.creacion'
+          'p.creacion'
         ]);
 
         order = order.filter(d => columnsSet.has(d.name));
@@ -149,29 +149,29 @@ class Tb_proveedores extends Table {
 
         let query = `
           SELECT
-            COUNT(c.id) AS cantidad
+            COUNT(p.id) AS cantidad
           FROM 
-            tb_proveedores AS c
+            tb_proveedores AS p
           INNER 
             JOIN 
-              tipo_cliente AS tc
+              tipo_proveedor AS tp
             ON 
-              tc.id = c.tipo_cliente_id
+              tp.id = p.tipo_proveedor_id
           INNER 
             JOIN 
               tipo_documento AS td
             ON 
-              td.id = c.tipo_documento_id
+              td.id = p.tipo_documento_id
         `, queryParams = [];
 
         if (search.value) {
           query += `
             WHERE
-              c.nombres LIKE ?
-              OR c.telefono LIKE ?
-              OR c.direccion LIKE ?
-              OR c.num_documento LIKE ?
-              OR tc.nombre LIKE ?
+              p.titular LIKE ?
+              OR p.telefono LIKE ?
+              OR p.direccion LIKE ?
+              OR p.num_documento LIKE ?
+              OR tp.nombre LIKE ?
               OR td.nombre LIKE ?
           `;
 
@@ -194,36 +194,36 @@ class Tb_proveedores extends Table {
     })
   }
   /** 
-   * @param {COLUMNS} data 
+   * @param {COLUMNS_PROVEEDORES} data 
    * @returns {Promise<import('mysql').OkPacket>}
    */
   insert(data) {
     return new Promise(async (res, rej) => {
       try {
         let {
-          nombres,
+          titular,
           telefono,
           direccion,
-          tipo_cliente_id,
+          tipo_proveedor_id,
           tipo_documento_id,
           num_documento,
           estado = 1
         } = data;
 
-        this.constraint('nombres', nombres);
+        this.constraint('titular', titular);
         this.constraint('telefono', telefono, { unic: true });
         this.constraint('direccion', direccion);
-        this.constraint('tipo_cliente_id', tipo_cliente_id);
+        this.constraint('tipo_proveedor_id', tipo_proveedor_id);
         this.constraint('tipo_documento_id', tipo_documento_id);
         this.constraint('num_documento', num_documento, { unic: true });
 
         let [result] = await this.app.model.poolValues(`
           INSERT INTO
             tb_proveedores (
-              nombres,
+              titular,
               telefono,
               direccion,
-              tipo_cliente_id,
+              tipo_proveedor_id,
               tipo_documento_id,
               num_documento,
               estado
@@ -238,17 +238,17 @@ class Tb_proveedores extends Table {
             ?
           )
         `, [
-          nombres,
+          titular,
           telefono,
           direccion,
-          tipo_cliente_id,
+          tipo_proveedor_id,
           tipo_documento_id,
           num_documento,
           estado
         ]);
 
         this.io.emitSocket(
-          '/clientes/data/insert',
+          '/proveedores/data/insert',
           _ => this.readIdJoin(result.insertId)
         )
 
@@ -259,36 +259,36 @@ class Tb_proveedores extends Table {
     })
   }
   /**
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<COLUMNS_PROVEEDORES[]>}
    */
   readAllJoin() {
     return new Promise(async (res, rej) => {
       try {
         let [result] = await this.app.model.pool(`
           SELECT
-            c.id,
-            c.nombres,
-            c.telefono,
-            c.direccion,
-            c.tipo_cliente_id,
-            tc.nombre AS tipo_cliente_nombre,
-            c.tipo_documento_id,
+            p.id,
+            p.nombres,
+            p.telefono,
+            p.direccion,
+            p.tipo_proveedor_id,
+            tp.nombre AS tipo_proveedor_nombre,
+            p.tipo_documento_id,
             td.nombre AS tipo_documento_nombre,
-            c.num_documento,
-            c.creacion,
-            c.estado
+            p.num_documento,
+            p.creacion,
+            p.estado
           FROM 
-            tb_proveedores AS c
+            tb_proveedores AS p
           INNER 
             JOIN 
-              tipo_cliente AS tc
+              tipo_proveedor AS tp
             ON 
-              tc.id = c.tipo_cliente_id
+              tp.id = p.tipo_proveedor_id
           INNER 
             JOIN 
               tipo_documento AS td
             ON 
-              td.id = c.tipo_documento_id
+              td.id = p.tipo_documento_id
         `);
 
         res(result);
@@ -301,11 +301,11 @@ class Tb_proveedores extends Table {
  * @param {number} id 
  * @returns {Promise<{
  *   id:number,
- *   nombres:string,
+ *   titular:string,
  *   telefono:string,
  *   direccion:string,
- *   tipo_cliente_id:number,
- *   tipo_cliente_nombre:string,
+ *   tipo_proveedor_id:number,
+ *   tipo_proveedor_nombre:string,
  *   tipo_documento_id:number,
  *   tipo_documento_nombre:string,
  *   num_documento:string,
@@ -320,31 +320,31 @@ class Tb_proveedores extends Table {
 
         let [result] = await this.app.model.poolValues(`
           SELECT
-            c.id,
-            c.nombres,
-            c.telefono,
-            c.direccion,
-            c.tipo_cliente_id,
-            tc.nombre AS tipo_cliente_nombre,
-            c.tipo_documento_id,
+            p.id,
+            p.titular,
+            p.telefono,
+            p.direccion,
+            p.tipo_proveedor_id,
+            tp.nombre AS tipo_proveedor_nombre,
+            p.tipo_documento_id,
             td.nombre AS tipo_documento_nombre,
-            c.num_documento,
-            c.creacion,
-            c.estado
+            p.num_documento,
+            p.creacion,
+            p.estado
           FROM 
-            tb_proveedores AS c
+            tb_proveedores AS p
           INNER 
             JOIN 
-              tipo_cliente AS tc
+              tipo_proveedor AS tp
             ON 
-              tc.id = c.tipo_cliente_id
+              tp.id = p.tipo_proveedor_id
           INNER 
             JOIN 
               tipo_documento AS td
             ON 
-              td.id = c.tipo_documento_id
+              td.id = p.tipo_documento_id
           WHERE
-            c.id = ?
+            p.id = ?
         `, [
           id
         ]);
@@ -359,26 +359,26 @@ class Tb_proveedores extends Table {
   }
   /** 
    * @param {number} id 
-   * @param {COLUMNS} data 
+   * @param {COLUMNS_PROVEEDORES} data 
    * @returns {Promise<import('mysql').OkPacket>}
    */
   updateId(id, data) {
     return new Promise(async (res, rej) => {
       try {
         let {
-          nombres,
+          titular,
           telefono,
           direccion,
-          tipo_cliente_id,
+          tipo_proveedor_id,
           tipo_documento_id,
           num_documento
         } = data;
 
         this.constraint('id', id);
-        this.constraint('nombres', nombres);
+        this.constraint('titular', titular);
         this.constraint('telefono', telefono, { unic: id });
         this.constraint('direccion', direccion);
-        this.constraint('tipo_cliente_id', tipo_cliente_id);
+        this.constraint('tipo_proveedor_id', tipo_proveedor_id);
         this.constraint('tipo_documento_id', tipo_documento_id);
         this.constraint('num_documento', num_documento, { unic: id });
 
@@ -386,27 +386,35 @@ class Tb_proveedores extends Table {
           UPDATE 
             tb_proveedores
           SET
-            nombres = ?,
+            titular = ?,
             telefono = ?,
             direccion = ?,
-            tipo_cliente_id = ?,
+            tipo_proveedor_id = ?,
             tipo_documento_id = ?,
             num_documento = ?
           WHERE 
             id = ?
         `, [
-          nombres,
+          titular,
           telefono,
           direccion,
-          tipo_cliente_id,
+          tipo_proveedor_id,
           tipo_documento_id,
           num_documento,
           id
         ]);
 
         this.io.emitSocket(
-          '/clientes/data/updateId',
-          _ => this.readIdJoin(id)
+          '/proveedores/data/updateId',
+          {
+            id,
+            titular,
+            telefono,
+            direccion,
+            tipo_proveedor_id,
+            tipo_documento_id,
+            num_documento
+          }
         )
 
         res(result)
@@ -439,7 +447,7 @@ class Tb_proveedores extends Table {
         ]);
 
         this.io.emitSocket(
-          '/clientes/data/state',
+          '/proveedores/data/state',
           estado
             ? _ => this.readIdJoin(id)
             : { id, estado }
@@ -469,8 +477,8 @@ class Tb_proveedores extends Table {
           id
         ]);
 
-        this.io.emit(
-          '/clientes/data/deleteId',
+        this.io.emitSocket(
+          '/proveedores/data/deleteId',
           { id }
         )
 
@@ -487,7 +495,7 @@ class Tb_proveedores extends Table {
   */
   /**
    * @param {SelectorRequest} option 
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<COLUMNS_PROVEEDORES[]>}
    */
   SelectorInParts(option) {
     return new Promise(async (res, rej) => {
@@ -569,7 +577,7 @@ class Tb_proveedores extends Table {
 
         if (typeof search == 'string' && search != '') {
           query += `
-            AND nombres LIKE ?
+            AND titular LIKE ?
           `;
 
           queryParams.push(`%${search}%`);

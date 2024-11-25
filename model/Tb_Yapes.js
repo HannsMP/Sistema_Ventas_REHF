@@ -19,10 +19,10 @@ const columns = {
  *   monto: number,
  *   fecha: string,
  *   mensaje: string
- * }} COLUMNS
+ * }} COLUMNS_VYAPES
  */
 
-/** @extends {Table<COLUMNS>} */
+/** @extends {Table<COLUMNS_VYAPES>} */
 class Tb_asistencias extends Table {
   /** @param {import('../app')} app */
   constructor(app) {
@@ -39,7 +39,7 @@ class Tb_asistencias extends Table {
   */
   /**
    * @param {import('datatables.net-dt').AjaxData} option 
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<COLUMNS_VYAPES[]>}
    */
   readInParts(option) {
     return new Promise(async (res, rej) => {
@@ -110,7 +110,7 @@ class Tb_asistencias extends Table {
   }
   /**
    * @param {import('datatables.net-dt').AjaxData} option 
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<COLUMNS_VYAPES[]>}
    */
   readInPartsCount(option) {
     return new Promise(async (res, rej) => {

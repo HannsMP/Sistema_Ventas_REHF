@@ -100,13 +100,13 @@
               <div class="form-body">
                 <div class="form-col">
                   <div class="input-box">
-                    <input name="nombre" type="text" oninput="inputCapitalize(this, 50)" required>
+                    <input id="nuevo-nombre" name="nombre" type="text" oninput="inputCapitalize(this, 50)" required>
                     <label for="nombre">Nombre (50):</label>
                   </div>
                 </div>
                 <div class="form-col">
                   <div class="input-box">
-                    <textarea name="descripcion" class="scroll-y" oninput="autoHeight(this); inputParagraphCase(this, 250);" required></textarea>
+                    <textarea id="nuevo-descripcion" name="descripcion" class="scroll-y" oninput="autoHeight(this); inputParagraphCase(this, 250);" required></textarea>
                     <label for="descripcion">Descripcion (250):</label>
                   </div>
                 </div>
@@ -114,7 +114,7 @@
               <div class="form-foot">
                 <a class="btn btn-success">guardar</a>
                 <div class="f-row">
-                  <input class="check-switch" type="checkbox" checked>
+                  <input id="nuevo-estado" class="check-switch" type="checkbox" checked>
                   <label>estado</label>
                 </div>
               </div>
@@ -137,13 +137,13 @@
                 <div class="form-col">
                   <input type="hidden" name="id">
                   <div class="input-box">
-                    <input name="nombre" type="text" oninput="inputCapitalize(this, 50)" required>
+                    <input id="editar-nombre" name="nombre" type="text" oninput="inputCapitalize(this, 50)" required>
                     <label for="nombre">Nombre (50):</label>
                   </div>
                 </div>
                 <div class="form-col">
                   <div class="input-box">
-                    <textarea name="descripcion" class="scroll-y" oninput="autoHeight(this); inputParagraphCase(this, 250);" required></textarea>
+                    <textarea id="editar-descripcion" name="descripcion" class="scroll-y" oninput="autoHeight(this); inputParagraphCase(this, 250);" required></textarea>
                     <label for="descripcion">Descripcion (250):</label>
                   </div>
                 </div>

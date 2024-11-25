@@ -31,10 +31,10 @@ const columns = {
  *   foto_id: number,
  *   creacion: string,
  *   estado: number,
- * }} COLUMNS
+ * }} COLUMNS_USUARIOS
  */
 
-/** @extends {Table<COLUMNS>} */
+/** @extends {Table<COLUMNS_USUARIOS>} */
 class Tb_usuarios extends Table {
   /** @param {import('../app')} app */
   constructor(app) {
@@ -76,7 +76,7 @@ class Tb_usuarios extends Table {
             `No existe el Usuario ${usuario}`
           ));
 
-        /** @type {COLUMNS} */
+        /** @type {COLUMNS_USUARIOS} */
         let data = result[0];
 
         if (!data.estado)
@@ -99,7 +99,7 @@ class Tb_usuarios extends Table {
   /** 
    * @param {string} usuario 
    * @param {string} clave 
-   * @returns {Promise<COLUMNS>}
+   * @returns {Promise<COLUMNS_USUARIOS>}
    */
   login(usuario, clave) {
     return new Promise(async (res, rej) => {
@@ -146,7 +146,7 @@ class Tb_usuarios extends Table {
             'No existe el Usuario'
           ));
 
-        /** @type {COLUMNS} */
+        /** @type {COLUMNS_USUARIOS} */
         let data = result[0];
 
         if (!data.estado)
@@ -168,7 +168,7 @@ class Tb_usuarios extends Table {
     })
   }
   /** 
-   * @param {COLUMNS} data 
+   * @param {COLUMNS_USUARIOS} data 
    * @returns {Promise<import('mysql').OkPacket>}
    */
   register(data) {
@@ -271,7 +271,7 @@ class Tb_usuarios extends Table {
             'No existe el Usuario'
           ));
 
-        /** @type {COLUMNS} */
+        /** @type {COLUMNS_USUARIOS} */
         let data = result[0];
 
         if (!data.estado)
@@ -363,7 +363,7 @@ class Tb_usuarios extends Table {
   /**
    * @param {import('datatables.net-dt').AjaxData} option 
    * @param {number} noId 
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<COLUMNS_USUARIOS[]>}
    */
   readInParts(option, noId) {
     return new Promise(async (res, rej) => {
@@ -550,7 +550,7 @@ class Tb_usuarios extends Table {
   }
   /** 
    * @param {number} id 
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<COLUMNS_USUARIOS[]>}
    */
   readAllJoinNoId(id) {
     return new Promise(async (res, rej) => {
@@ -891,7 +891,7 @@ class Tb_usuarios extends Table {
   */
   /**
    * @param {SelectorRequest} option 
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<COLUMNS_USUARIOS[]>}
    */
   SelectorInParts(option) {
     return new Promise(async (res, rej) => {
@@ -1006,7 +1006,7 @@ class Tb_usuarios extends Table {
     ====================================================================================================
   */
   /** 
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<COLUMNS_USUARIOS[]>}
    */
   readAllUnique() {
     return new Promise(async (res, rej) => {
@@ -1072,7 +1072,7 @@ class Tb_usuarios extends Table {
     })
   }
   /** 
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<COLUMNS_USUARIOS[]>}
    */
   readAllJoin() {
     return new Promise(async (res, rej) => {

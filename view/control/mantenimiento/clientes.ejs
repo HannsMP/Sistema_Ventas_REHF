@@ -104,29 +104,29 @@
               <div class="form-body">
                 <div class="form-col">
                   <div class="input-box">
-                    <input name="nombres" type="text" oninput="inputCapitalize(this, 50)" required>
+                    <input id="nuevo-nombre" name="nombres" type="text" oninput="inputCapitalize(this, 50)" required>
                     <label for="nombres">Nombres (50):</label>
                   </div>
                   <div class="input-box">
-                    <input class="selector" type="search" placeholder="Buscar tipo cliente...">
+                    <input id="nuevo-tipo-cliente" class="selector" type="search" placeholder="Buscar tipo cliente...">
                     <label for="tipo_cliente">Tipo cliente:</label>
                   </div>
                   <div class="input-box">
-                    <input name="telefono" type="text" oninput="inputInt(this, 20)" required>
+                    <input id="nuevo-telefono" name="telefono" type="text" oninput="inputInt(this, 20)" required>
                     <label for="telefono">Telefono (20):</label>
                   </div>
                 </div>
                 <div class="form-col">
                   <div class="input-box">
-                    <input name="direccion" type="text" oninput="inputCapitalize(this, 50)" required>
+                    <input id="nuevo-direccion" name="direccion" type="text" oninput="inputCapitalize(this, 50)" required>
                     <label for="direccion">Direccion (50):</label>
                   </div>
                   <div class="input-box">
-                    <input class="selector" type="search" placeholder="Buscar tipo Documento...">
+                    <input id="nuevo-tipo-documento" class="selector" type="search" placeholder="Buscar tipo Documento...">
                     <label for="tipo_Documento">Tipo Documento:</label>
                   </div>
                   <div class="input-box">
-                    <input name="num_documento" type="text" oninput="inputInt(this, 20)" required>
+                    <input id="nuevo-num-documento" name="num_documento" type="text" oninput="inputInt(this, 20)" required>
                     <label for="num_documento">Mumero de Documento (20):</label>
                   </div>
                 </div>
@@ -134,7 +134,7 @@
               <div class="form-foot">
                 <a class="btn btn-success">guardar</a>
                 <div class="f-row">
-                  <input class="check-switch" type="checkbox" checked>
+                  <input id="nuevo-estado" class="check-switch" type="checkbox" checked>
                   <label>estado</label>
                 </div>
               </div>
@@ -157,29 +157,29 @@
                 <div class="form-col">
                   <input type="hidden" name="id">
                   <div class="input-box">
-                    <input name="nombres" type="text" oninput="inputCapitalize(this, 50)" required>
+                    <input id="editar-nombre" name="nombres" type="text" oninput="inputCapitalize(this, 50)" required>
                     <label for="nombres">Nombres (50):</label>
                   </div>
                   <div class="input-box">
-                    <input class="selector" type="search" placeholder="Buscar tipo cliente...">
+                    <input id="editar-tipo-cliente" class="selector" type="search" placeholder="Buscar tipo cliente...">
                     <label for="tipo_cliente">Tipo cliente:</label>
                   </div>
                   <div class="input-box">
-                    <input name="telefono" type="text" oninput="inputInt(this, 20)" required>
+                    <input id="editar-telefono" name="telefono" type="text" oninput="inputInt(this, 20)" required>
                     <label for="telefono">Telefono (20):</label>
                   </div>
                 </div>
                 <div class="form-col">
                   <div class="input-box">
-                    <input name="direccion" type="text" oninput="inputCapitalize(this, 50)" required>
+                    <input id="editar-direccion" name="direccion" type="text" oninput="inputCapitalize(this, 50)" required>
                     <label for="direccion">Direccion (50):</label>
                   </div>
                   <div class="input-box">
-                    <input class="selector" type="search" placeholder="Buscar tipo Documento...">
+                    <input id="editar-tipo-documento" class="selector" type="search" placeholder="Buscar tipo Documento...">
                     <label for="tipo_Documento">Tipo Documento:</label>
                   </div>
                   <div class="input-box">
-                    <input name="num_documento" type="text" oninput="inputInt(this, 20)" required>
+                    <input id="editar-num-documento" name="num_documento" type="text" oninput="inputInt(this, 20)" required>
                     <label for="num_documento">Mumero de Documento (20):</label>
                   </div>
                 </div>

@@ -12,10 +12,10 @@ const columns = {
 *   id: number,
 *   principal: string,
 *   ruta: string
-* }} COLUMNS
+* }} COLUMNS_MENUS
 */
 
-/** @extends {Table<COLUMNS>} */
+/** @extends {Table<COLUMNS_MENUS>} */
 class Tb_menus extends Table {
   /** @param {import('../app')} app */  constructor(app) {
     super(name);
@@ -28,7 +28,7 @@ class Tb_menus extends Table {
     ====================================================================================================
   */
   /** 
-   * @param {COLUMNS} data 
+   * @param {COLUMNS_MENUS} data 
    * @returns {Promise<import('mysql').OkPacket>}
    */
   insert(data) {
@@ -135,7 +135,7 @@ class Tb_menus extends Table {
     ====================================================================================================
   */
   /** 
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<COLUMNS_MENUS[]>}
    */
   readAllUnique() {
     return new Promise(async (res, rej) => {

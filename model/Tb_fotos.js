@@ -24,10 +24,10 @@ const columns = {
 *   tabla: string,
 *   nombre: string,
 *   creacion: string
-* }} COLUMNS
+* }} COLUMNS_FOTOS
 */
 
-/** @extends {Table<COLUMNS>} */
+/** @extends {Table<COLUMNS_FOTOS>} */
 class Tb_fotos extends Table {
   cacheImg = resolve('.temp', 'img')
   /** @param {import('../app')} app */
@@ -38,7 +38,7 @@ class Tb_fotos extends Table {
     deletePath(this.cacheImg);
   }
   /** 
-   * @param {COLUMNS} data 
+   * @param {COLUMNS_FOTOS} data 
    * @returns {Promise<import('mysql').OkPacket>}
    */
   insert(data) {
@@ -95,7 +95,7 @@ class Tb_fotos extends Table {
   }
   /**
    * @param {string} hash 
-   * @returns {Promise<COLUMNS>}
+   * @returns {Promise<COLUMNS_FOTOS>}
    */
   readHash(hash) {
     return new Promise(async (res, rej) => {

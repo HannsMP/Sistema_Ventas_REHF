@@ -9,12 +9,6 @@ $('.content-body').ready(async () => {
 
     /* 
       ==================================================
-      =================== QUERY DATA ===================
-      ==================================================
-    */
-
-    /* 
-      ==================================================
       ================== VARIABLES DOM ==================
       ==================================================
     */
@@ -39,75 +33,14 @@ $('.content-body').ready(async () => {
 
     /* 
       ==================================================
-      ==================== DATATABLE ====================
-      ==================================================
-    */
-
-    $tableHistory.init({
-      serverSide: true,
-      ajax: (data, end) => {
-        socket.emit('/read/table', data, res => end(res))
-      },
-      pageLength: 10,
-      order: [[5, 'asc']],
-      columnDefs: [
-        {
-          name: 'tv.codigo',
-          className: 'dtr-code',
-          targets: 0,
-        },
-        {
-          name: 'p.producto',
-          className: 'dtr-tag',
-          orderable: false,
-          targets: 1,
-          render: data => '<div>' + data + '</div>'
-        },
-        {
-          name: 'v.cantidad',
-          className: 'dt-type-numeric',
-          targets: 2,
-          render: data => data?.toFixed(0)
-        },
-        {
-          name: 'tv.descuento',
-          className: 'dt-type-numeric',
-          targets: 3,
-          render: data => data?.toFixed(2)
-        },
-        {
-          name: 'tv.importe_total',
-          className: 'dt-type-numeric',
-          targets: 4,
-          render: data => data?.toFixed(2)
-        },
-        {
-          name: 'hora',
-          className: 'dt-type-date',
-          targets: 5
-        }
-      ],
-      columns: [
-        { data: 'transaccion_codigo' },
-        { data: 'producto_nombre' },
-        { data: 'cantidad' },
-        { data: 'importe' },
-        { data: 'descuento' },
-        { data: 'transaccion_hora' }
-      ],
-    })
-    $tableHistory.buttons('.tables-utils .download');
-
-    /* 
-      ==================================================
       =================== WITGETTABLE ===================
       ==================================================
     */
 
     let witgetTable = new WitgetTable(tableMain, {
       columns: [
-        { tittle: 'cantidad', width: '15%' },
         { tittle: 'producto', width: '40%' },
+        { tittle: 'cantidad', width: '15%' },
         { tittle: 'precio', width: '20%' },
         { tittle: 'total', width: '25%' },
       ],
@@ -217,24 +150,22 @@ $('.content-body').ready(async () => {
     */
 
     metodoPagoSelectorUnic.on('selected', async indexer => {
-      let resMetodoPago = await query.post.json.cookie("/api/tipo_metodo_pago/code/read", { id: indexer.id });
+      let metodo_pago_id = indexer.id;
+      socket.emit('/readId/metodoPago', metodo_pago_id, data => {
+        if (inputImporteTotal.valueImporte) {
+          let importeIgv = inputImporteTotal.valueImporte * data.igv;
 
-      /** @type {{data: {nombre:string, contador: number, igv:number}}} */
-      let { data } = await resMetodoPago.json();
+          let importeTotal = inputImporteTotal.valueImporte + importeIgv;
 
-      if (inputImporteTotal.valueImporte) {
-        let importeIgv = inputImporteTotal.valueImporte * data.igv;
+          inputImporteTotal.placeholder = inputImporteTotal.value = importeTotal;
 
-        let importeTotal = inputImporteTotal.valueImporte + importeIgv;
+          inputIgv.value = `${(data.igv * 100).toFixed(2)} %  -  s/ ${importeIgv.toFixed(2)}`;
+        }
+        else
+          inputIgv.value = `${(data.igv * 100).toFixed(2)} %`;
 
-        inputImporteTotal.placeholder = inputImporteTotal.value = importeTotal;
-
-        inputIgv.value = `${(data.igv * 100).toFixed(2)} %  -  s/ ${importeIgv.toFixed(2)}`;
-      }
-      else
-        inputIgv.value = `${(data.igv * 100).toFixed(2)} %`;
-
-      inputIgv.valueIgv = data.igv;
+        inputIgv.valueIgv = data.igv;
+      })
     })
 
     metodoPagoSelectorUnic.on('deselected', () => {
@@ -251,7 +182,7 @@ $('.content-body').ready(async () => {
     let refresh = () => {
       let importeTotal = 0;
       witgetTable.dataTable.forEach(({ data }) => {
-        if (data.total != '-') importeTotal += Number(data.total);
+        importeTotal += (Number(data.total) || 0);
       })
 
       let importeIgv = importeTotal * inputIgv.valueIgv;
@@ -273,19 +204,18 @@ $('.content-body').ready(async () => {
 
     let clickAddRow = _ => {
       let inputBoxCount = textToHtml(`
-          <div class="input-box" style="width: 100%;;">
+          <div class="input-box" style="width: 100%">
             <input type="text" oninput="inputInt(this, 10);" value="1" placeholder="Cantidad?">
           </div>
         `)[0];
+      let inputCount = inputBoxCount.querySelector('input');
+      inputBoxCount.inputElement = inputCount;
 
       let inputBoxSelect = textToHtml(`
           <div class="input-box" style="width: 100%; padding:0">
             <input class="selector" type="search" placeholder="Buscar producto...">
           </div>
         `)[0];
-
-      let inputCount = inputBoxCount.querySelector('input');
-      inputBoxCount.inputElement = inputCount;
       let inputSelect = inputBoxSelect.querySelector('input');
 
       let selector = inputBoxSelect.Selector = new SelectorInput(
@@ -300,24 +230,24 @@ $('.content-body').ready(async () => {
       })
       row.tr.setAttribute('ignore', true)
 
-      let precioVenta = 0;
+      let salePriceValue = 0;
       selector.on('selected', async dataSelected => {
-        let resProductos = await query.post.json.cookie("/api/productos/table/readPriceId", { id: dataSelected.id });
+        let producto_id = dataSelected.id
+        socket.emit('/readSalePriceId/producto', producto_id, res => {
+          salePriceValue = res;
+          row.set.precio(res?.toFixed(2) || 0);
 
-        /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-        let { list } = await resProductos.json();
-        precioVenta = list.venta;
-
-        row.tr.removeAttribute('ignore')
-        row.set.precio(precioVenta);
-        row.set.total((precioVenta * (Number(inputCount.value) || 0)).toFixed(2));
-        refresh();
+          row.tr.removeAttribute('ignore')
+          row.set.total((salePriceValue * (Number(inputCount.value) || 0)).toFixed(2));
+          refresh();
+        })
       })
 
       inputCount.addEventListener('change', () => {
-        if (inputCount.value == 0)
+        let countValue = Number(inputCount.value) || 0;
+        if (countValue == 0)
           return row.tr.setAttribute('ignore', true);
-        row.set.total((precioVenta * (Number(inputCount.value) || 0)).toFixed(2));
+        row.set.total((salePriceValue * countValue).toFixed(2));
         refresh();
       })
 
@@ -398,7 +328,7 @@ $('.content-body').ready(async () => {
 
         let cantidad = Number(data.cantidad.inputElement.value);
         let producto_id = data.producto.Selector.selected[0].id;
-        return { cantidad, producto_id }
+        return { producto_id, cantidad }
       })
 
       let importe_total = Number(inputImporteTotal.value);
@@ -410,17 +340,75 @@ $('.content-body').ready(async () => {
       jsonData.serie = inputSerie.value;
       jsonData.comentario = inputComentario.value
 
-      let resTransaccionVentas = await query.post.json.cookie("/api/transacciones_ventas/profile/insert", jsonData);
+      socket.emit('/insert/table', jsonData, err => {
+        if (err)
+          return alarm.warn(err);
 
-      /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-      let { err } = await resTransaccionVentas.json();
-
-      if (err)
-        return alarm.warn('No se pudo agregar');
-
-      alarm.success(`Fila Agregada`);
-      clickClear();
+        alarm.success(`Ventas agregadas.`);
+        clickClear();
+      })
     })
+
+    /* 
+      ==================================================
+      ==================== DATATABLE ====================
+      ==================================================
+    */
+
+    $tableHistory.init({
+      serverSide: true,
+      ajax: (data, end) => {
+        socket.emit('/read/table', data, res => end(res))
+      },
+      pageLength: 10,
+      order: [[5, 'desc']],
+      columnDefs: [
+        {
+          name: 'tv.codigo',
+          className: 'dtr-code',
+          targets: 0,
+        },
+        {
+          name: 'p.producto',
+          className: 'dtr-tag',
+          orderable: false,
+          targets: 1,
+          render: data => '<div>' + data + '</div>'
+        },
+        {
+          name: 'v.cantidad',
+          className: 'dt-type-numeric',
+          targets: 2,
+          render: data => data?.toFixed(0)
+        },
+        {
+          name: 'tv.descuento',
+          className: 'dt-type-numeric',
+          targets: 3,
+          render: data => data?.toFixed(2)
+        },
+        {
+          name: 'tv.importe_total',
+          className: 'dt-type-numeric',
+          targets: 4,
+          render: data => data?.toFixed(2)
+        },
+        {
+          name: 'hora',
+          className: 'dt-type-date',
+          targets: 5
+        }
+      ],
+      columns: [
+        { data: 'transaccion_codigo' },
+        { data: 'producto_nombre' },
+        { data: 'cantidad' },
+        { data: 'importe' },
+        { data: 'descuento' },
+        { data: 'transaccion_hora' }
+      ],
+    })
+    $tableHistory.buttons('.tables-utils .download');
 
     /* 
       ==================================================

@@ -17,7 +17,7 @@
 * }} 
 */
 module.exports = {
-  load: true,
+  load: false,
   route: "/api/clientes/table/readId",
   post: [
     async function (req, res, next) {

@@ -1,58 +1,74 @@
 $('.content-body').ready(async () => {
+  try {
 
-  /* 
-    ==================================================
-    ================= CARDS CLIENTES =================
-    ==================================================
-  */
+    /* 
+      ==================================================
+      ================== VARIABLES DOM ==================
+      ==================================================
+    */
 
-  let resClientes = await query.post.cookie("/api/clientes/chart/read");
+    /** @type {HTMLElement} */
+    let cardCantidad = document.querySelector('#categorias-cantidad small');
+    /** @type {HTMLElement[]} */
+    let [cardFecha, cardHora] = document.querySelectorAll('#categorias-fecha small');
+    /** @type {HTMLCanvasElement} */
+    let canvas = document.getElementById("chart-categorias").getContext("2d");
 
-  /** @type {{err: string, OkPacket: import('mysql').OkPacket, usuarios_chart: {[column:string]: string|number}[]}} */
-  let { card: cardClientes, charts: chartClientes } = await resClientes.json();
+    let chart = new Chart(canvas, {
+      type: "line",
+      data: {
+        labels: [],
+        datasets: [{
+          label: "Cantidad",
+          fill: false,
+          backgroundColor: "rgba(255, 140, 0, .7)",
+          data: []
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: { y: { min: 0 } }
+      }
+    });
 
-  let { max_creacion: max_creacion_clientes, cantidad_clientes } = cardClientes;
+    /* 
+      ==================================================
+      ====================== CARDS ======================
+      ==================================================
+    */
 
-  let clientesCantidad = document.querySelector('#clientes-cantidad small');
-  clientesCantidad.textContent = cantidad_clientes;
-
-  let [clientesInsercionFecha, clientesInsercionHora] = document.querySelectorAll('#clientes-fecha small');
-  clientesInsercionFecha.textContent = formatTime('YYYY / MM / DD', new Date(max_creacion_clientes));
-  clientesInsercionHora.textContent = formatTime('hh : mm tt', new Date(max_creacion_clientes));
-
-  /* 
-    ==================================================
-    =============== GRAFICOS CLIENTES  ===============
-    ==================================================
-  */
-
-  /** @type {HTMLCanvasElement} */
-  let canvasClientes = document.getElementById("chart-clientes")
-    .getContext("2d");
-
-  let { label: labelTipoClientes, data: dataTipoClientes } = chartClientes.tipo_cliente;
-  let { label: labelTipoDocumento, data: dataTipoDocumento } = chartClientes.tipo_documento;
-
-  let clientesChart = new Chart(canvasClientes, {
-    type: "line",
-    data: {
-      labels: [...labelTipoClientes, ...labelTipoDocumento],
-      datasets: [{
-        label: "Cantidad",
-        backgroundColor: [
-          "rgba(255, 140, 0, .7)",
-          "rgba(255, 140, 0, .6)",
-          "rgba(255, 140, 0, .5)",
-          "rgba(255, 140, 0, .4)",
-          "rgba(255, 140, 0, .3)"
-        ],
-        data: [...dataTipoClientes, ...dataTipoDocumento]
-      }]
-    },
-    options: {
-      responsive: true,
-      scales: { y: { min: 0 } }
+    /** @param {number} cantidad_clientes @param {string} max_creacion */
+    let renderCard = (cantidad_clientes, max_creacion) => {
+      cardCantidad.textContent = cantidad_clientes;
+      cardFecha.textContent = formatTime('YYYY / MM / DD', new Date(max_creacion));
+      cardHora.textContent = formatTime('hh : mm tt', new Date(max_creacion));
     }
-  });
 
+    /* 
+      ==================================================
+      ==================== GRAFICOS ====================
+      ==================================================
+    */
+
+    /** @param {any[]} labels @param {any[]} datasets */
+    let renderChart = (labels, datasets) => {
+      chart.data.labels = labels;
+      datasets.forEach((data, i) => chart.data.datasets[i].data = data);
+      chart.update();
+    }
+
+    /* 
+      ==================================================
+      ===================== SOCKET =====================
+      ==================================================
+    */
+
+    socket.emit('/dash/categorias', (cantidad, max_creacion, labels, datasets) => {
+      renderCard(cantidad, max_creacion);
+      renderChart(labels, datasets);
+    })
+
+  } catch (e) {
+    socket.emit('/err/client', { message, stack, url: window.location.href })
+  }
 })

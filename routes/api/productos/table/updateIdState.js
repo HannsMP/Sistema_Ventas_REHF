@@ -17,7 +17,7 @@
 * }} 
 */
 module.exports = {
-  load: true,
+  load: false,
   route: "/api/productos/table/updateIdState",
   post: [
     async function (req, res, next) {

@@ -4,55 +4,126 @@ const name = 'tipo_metodo_pago';
 const columns = {
   id: { name: 'id', null: false, type: 'Integer', limit: 11 },
   nombre: { name: 'nombre', null: false, type: 'String', limit: 20 },
-  contador: { name: 'contador', null: false, type: 'Integer', limit: 10 },
-  igv: { name: 'igv ', null: false, type: 'Number', limit: 10 }
+  igv: { name: 'igv ', null: false, type: 'Number', limit: 10 },
+  estado: { name: 'estado', null: false, type: 'Integer', limit: 1 }
 }
 
 /** 
  * @typedef {{
  *   id: number,
  *   nombre: string,
- *   contador: number,
- *   igv: number
- * }} COLUMNS
+ *   igv: number,
+ *   estado: number
+ * }} COLUMNS_TIPO_METODO_PAGO
  */
 
-/** @extends {Table<COLUMNS>} */
+/** @extends {Table<COLUMNS_TIPO_METODO_PAGO>} */
 class Tipo_metodo_pago extends Table {
   /** @param {import('../app')} app */  constructor(app) {
     super(name);
     this.columns = columns;
     this.app = app;
   }
-  /** 
-   * @returns {Promise<COLUMNS>}
+  /* 
+    ====================================================================================================
+    =============================================== Tabla ===============================================
+    ====================================================================================================
+  */
+  /**
+   * @param {import('datatables.net-dt').AjaxData} option 
+   * @returns {Promise<COLUMNS_TIPO_METODO_PAGO[]>}
    */
-  readId(id) {
+  readInParts(option) {
     return new Promise(async (res, rej) => {
       try {
+        let { order, start, length, search } = option;
 
-        this.constraint('id', id);
-
-        let [result] = await this.app.model.poolValues(`
-          SELECT
+        let query = `
+          SELECT 
+            id,
             nombre,
-            contador,
-            igv
+            igv,
+            estado
           FROM
             tipo_metodo_pago
-          WHERE
-            id = ?;
-        `, [
-          id
+        `, queryParams = [];
+
+        if (search.value) {
+          query += `
+            WHERE
+              nombre LIKE ?
+          `;
+
+          queryParams.push(
+            `%${search.value}%`
+          );
+        }
+
+        let columnsSet = new Set([
+          'id',
+          'nombre',
+          'igv',
+          'estado'
         ]);
 
-        if (!result.length)
-          return rej(this.error(
-            'RESPONSE_DATA_EMPTY',
-            'No existe el metodo de pago.'
-          ));
+        order = order.filter(d => columnsSet.has(d.name));
 
-        res(result[0]);
+        if (order?.length) {
+          query += `
+            ORDER BY
+          `
+          order.forEach(({ dir, name }, index) => {
+            query += `
+              ${name} ${dir == 'asc' ? 'ASC' : 'DESC'}`;
+
+            if (index < order.length - 1)
+              query += ', ';
+          })
+        }
+
+        query += `
+          LIMIT ? OFFSET ?
+        `;
+        queryParams.push(length, start);
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        res(result);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
+  /**
+   * @param {import('datatables.net-dt').AjaxData} option 
+   * @returns {Promise<number>}
+   */
+  readInPartsCount(option) {
+    return new Promise(async (res, rej) => {
+      try {
+        let { search } = option;
+
+        let query = `
+          SELECT 
+            COUNT(id) AS cantidad
+          FROM
+            tipo_metodo_pago
+        `, queryParams = [];
+
+        if (search.value) {
+          query += `
+            WHERE
+              nombre LIKE ?
+          `;
+
+          queryParams.push(
+            `%${search.value}%`
+          );
+        }
+
+        let [result] = await this.app.model.poolValues(query, queryParams);
+
+        res(result[0].cantidad);
       } catch (e) {
         rej(e);
       }
@@ -65,7 +136,7 @@ class Tipo_metodo_pago extends Table {
   */
   /**
    * @param {SelectorRequest} option 
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<COLUMNS_TIPO_METODO_PAGO[]>}
    */
   SelectorInParts(option) {
     return new Promise(async (res, rej) => {
@@ -167,6 +238,39 @@ class Tipo_metodo_pago extends Table {
         let [result] = await this.app.model.poolValues(query, queryParams);
 
         res(result[0].cantidad);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
+  /** 
+   * @returns {Promise<COLUMNS_TIPO_METODO_PAGO>}
+   */
+  readId(id) {
+    return new Promise(async (res, rej) => {
+      try {
+
+        this.constraint('id', id);
+
+        let [result] = await this.app.model.poolValues(`
+          SELECT
+            nombre,
+            igv
+          FROM
+            tipo_metodo_pago
+          WHERE
+            id = ?;
+        `, [
+          id
+        ]);
+
+        if (!result.length)
+          return rej(this.error(
+            'RESPONSE_DATA_EMPTY',
+            'No existe el metodo de pago.'
+          ));
+
+        res(result[0]);
       } catch (e) {
         rej(e);
       }

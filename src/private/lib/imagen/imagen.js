@@ -1,7 +1,8 @@
 class ImagenUnic {
-  files = [];
   #now = undefined;
-  /** @param {Element} input  */
+  /** @type {File[]} */
+  files = [];
+  /** @param {HTMLInputElement} input  */
   constructor(input) {
     this.input = input;
     input.style.display = 'none'
@@ -28,6 +29,9 @@ class ImagenUnic {
 
     let src = this.input.getAttribute('value');
     if (src) this.charge(src);
+
+    let defaultImg = this.input.getAttribute('default');
+    if (defaultImg) this.imgBox.style.backgroundImage = `url(${defaultImg})`;
   }
   state(enabled) {
     if (enabled) {

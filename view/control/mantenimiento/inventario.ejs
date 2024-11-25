@@ -64,7 +64,7 @@
                 <th>Producto</th>
                 <th>Descripcion</th>
                 <th>Categoria</th>
-                <th>Compra</th>
+                <th>Stock</th>
                 <th>Venta</th>
                 <th>Creacion</th>
               </tr>
@@ -76,8 +76,7 @@
               <div class="download" <% if(!session.permiso.exportar){ %> style="display: none" <% } %>></div>
 
               <div class="f-row option ">
-                <a class="btn btn-danger tbl-eliminar" <% if(!session.permiso.eliminar){ %> style="display: none" <% }
-                    %>>
+                <a class="btn btn-danger tbl-eliminar" <% if(!session.permiso.eliminar){ %> style="display: none" <% } %>>
                   <i class='bx bx-trash'></i>
                 </a>
                 <a class="btn btn-warning tbl-editar" <% if(!session.permiso.editar){ %> style="display: none" <% } %>>
@@ -106,37 +105,52 @@
               <div class="form-body">
                 <div class="form-col">
                   <div class="input-box">
-                    <input name="producto" type="text" oninput="inputCapitalize(this, 50)" required>
+                    <input id="nuevo-producto" name="producto" type="text" oninput="inputCapitalize(this, 50)" required>
                     <label for="producto">Nombre del Producto (50):</label>
                   </div>
                   <div class="input-box">
-                    <input name="compra" type="text" oninput="inputFloat(this, 10, 2);" required>
-                    <label for="compra">Precio de Compra (10):</label>
-                  </div>
-                  <div class="input-box">
-                    <input name="venta" type="text" oninput="inputFloat(this, 10, 2);" required>
+                    <input id="nuevo-precio-venta" name="venta" type="text" oninput="inputFloat(this, 10, 2);" required>
                     <label for="venta">Precio de Venta (10):</label>
                   </div>
                   <div class="input-box">
-                    <textarea name="descripcion" class="scroll-y" oninput="autoHeight(this); inputParagraphCase(this, 250);" required></textarea>
+                    <textarea id="nuevo-descripcion" name="descripcion" class="scroll-y" oninput="autoHeight(this); inputParagraphCase(this, 250);" required></textarea>
                     <label for="descripcion">Descripcion (250):</label>
                   </div>
                 </div>
                 <div class="form-col">
                   <div class="input-box">
-                    <input class="selector" type="search" placeholder="Buscar categoria...">
+                    <input id="nuevo-categoria" class="selector" type="search" placeholder="Buscar categoria...">
                     <label for="categorias">Categorias:</label>
                   </div>
                   <div class="input-box">
-                    <input class="imagen-unic" type="file" accept=".jpeg, .jpg, .png, .webp">
-                    <label for="fotos">Nombre:</label>
+                    <input id="nuevo-imagen" class="imagen-unic" type="file" accept=".jpeg, .jpg, .png, .webp" default="/src/resource/default/normal/1727219498616.jpg">
+                    <label for="fotos">Imagen:</label>
+                  </div>
+                  <div class="form-drop">
+                    <input id="nuevo-avanzado" name="avanzado" type="checkbox" class="form-toggle check-checked">
+                    <label for="avanzado">Mas opciones</label>
+                    <br>
+                    <div class="form-menu">
+                      <div class="input-box">
+                        <input id="nuevo-cantidad" name="compra" type="text" oninput="inputFloat(this, 10, 2);">
+                        <label for="compra">Cantidad (10):</label>
+                      </div>
+                      <div class="input-box">
+                        <input id="nuevo-precio-compra" name="compra" type="text" oninput="inputFloat(this, 10, 2);">
+                        <label for="compra">Precio de Compra (10):</label>
+                      </div>
+                      <div class="input-box">
+                        <input id="nuevo-proveedor" class="selector" type="search" placeholder="Buscar Proveedor...">
+                        <label for="Proveedor">Proveedor:</label>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
               <div class="form-foot">
-                <a class="btn btn-success">guardar</a>
+                <a class="btn btn-success">Agregar</a>
                 <div class="f-row">
-                  <input class="check-switch" type="checkbox" checked>
+                  <input id="nuevo-estado" class="check-switch" type="checkbox" checked>
                   <label>estado</label>
                 </div>
               </div>
@@ -159,30 +173,26 @@
                 <div class="form-col">
                   <input type="hidden" name="id">
                   <div class="input-box">
-                    <input name="producto" type="text" oninput="inputCapitalize(this, 50)" required>
+                    <input id="editar-producto" name="producto" type="text" oninput="inputCapitalize(this, 50)" required>
                     <label for="producto">Nombre del Producto (50):</label>
                   </div>
                   <div class="input-box">
-                    <input name="compra" type="text" oninput="inputFloat(this, 10, 2);" required>
-                    <label for="compra">Precio de Compra (10):</label>
-                  </div>
-                  <div class="input-box">
-                    <input name="venta" type="text" oninput="inputFloat(this, 10, 2);" required>
+                    <input id="editar-precio-venta" name="venta" type="text" oninput="inputFloat(this, 10, 2);" required>
                     <label for="venta">Precio de Venta (10):</label>
                   </div>
                   <div class="input-box">
-                    <textarea name="descripcion" class="scroll-y" oninput="autoHeight(this); inputParagraphCase(this, 250);" required></textarea>
+                    <textarea id="editar-descripcion" name="descripcion" class="scroll-y" oninput="autoHeight(this); inputParagraphCase(this, 250);" required></textarea>
                     <label for="descripcion">Descripcion (250):</label>
                   </div>
                 </div>
                 <div class="form-col">
                   <div class="input-box">
-                    <input class="selector" type="search" placeholder="Buscar categoria...">
+                    <input id="editar-categoria" class="selector" type="search" placeholder="Buscar categoria...">
                     <label for="categorias">Categorias:</label>
                   </div>
                   <div class="input-box">
-                    <input class="imagen-unic" type="file" accept=".jpg, .png">
-                    <label for="fotos">Nombre:</label>
+                    <input id="editar-imagen" class="imagen-unic" type="file" accept=".jpg, .png" default="/src/resource/default/normal/1727219498616.jpg">
+                    <label for="fotos">Imagen:</label>
                   </div>
                 </div>
               </div>

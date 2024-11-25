@@ -18,10 +18,10 @@ const columns = {
  *   cantidad: number,
  *   importe: number,
  *   descuento: number
- * }} COLUMNS
+ * }} COLUMNS_VENTAS
  */
 
-/** @extends {Table<COLUMNS>} */
+/** @extends {Table<COLUMNS_VENTAS>} */
 class tb_ventas extends Table {
   /** @param {import('../app')} app */
   constructor(app) {
@@ -137,7 +137,7 @@ class tb_ventas extends Table {
   /**
    * @param {import('datatables.net-dt').AjaxData} option 
    * @param {number} usuario_id 
-   * @returns {Promise<COLUMNS[]>}
+   * @returns {Promise<COLUMNS_VENTAS[]>}
    */
   readInPartsCount(option, usuario_id) {
     return new Promise(async (res, rej) => {
@@ -190,7 +190,7 @@ class tb_ventas extends Table {
     })
   }
   /** 
-   * @param {COLUMNS} data 
+   * @param {COLUMNS_VENTAS} data 
    * @returns {Promise<import('mysql').OkPacket>}
    */
   insert(data) {
@@ -241,7 +241,7 @@ class tb_ventas extends Table {
     })
   }
   /** 
-   * @param {...COLUMNS} datas 
+   * @param {...COLUMNS_VENTAS} datas 
    * @returns {Promise<import('mysql').OkPacket>}
    */
   inserts(...datas) {
@@ -464,7 +464,6 @@ class tb_ventas extends Table {
           p.id AS producto_id,
           p.producto AS producto_nombre,
           p.codigo AS producto_codigo,
-          p.compra AS precio_compra,
           p.venta AS precio_venta,
           c.nombre AS categoria_nombre,
           v.cantidad,
@@ -499,7 +498,7 @@ class tb_ventas extends Table {
   }
   /**
    * @param {number} id 
-   * @param {COLUMNS} data 
+   * @param {COLUMNS_VENTAS} data 
    * @returns {Promise<import('mysql').OkPacket>}
    */
   updateId(id, data) {

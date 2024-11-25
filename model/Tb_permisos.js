@@ -20,10 +20,10 @@ const columns = {
  *   eliminar: number,
  *   ocultar: number,
  *   exportar: number 
- * }} COLUMNS
+ * }} COLUMNS_PERMISOS
  */
 
-/** @extends {Table<COLUMNS>} */
+/** @extends {Table<COLUMNS_PERMISOS>} */
 class Tb_permisos extends Table {
   /** @param {import('../app')} app */  constructor(app) {
     super(name);
@@ -87,7 +87,7 @@ class Tb_permisos extends Table {
   }
   /** 
     * @param {number} id
-    * @returns {Promise<{[ruta:string]:COLUMNS}}>}
+    * @returns {Promise<{[ruta:string]:COLUMNS_PERMISOS}}>}
     */
   userLayoutAll(id) {
     return new Promise(async (res, rej) => {
@@ -150,7 +150,7 @@ class Tb_permisos extends Table {
   /** 
    * @param {number} id
    * @param {string} path 
-   * @returns {Promise<COLUMNS>}
+   * @returns {Promise<COLUMNS_PERMISOS>}
    */
   userPath(id, path) {
     return new Promise(async (res, rej) => {
@@ -202,7 +202,7 @@ class Tb_permisos extends Table {
   /** 
    * @param {number} id
    * @param {string} path 
-   * @returns {Promise<COLUMNS>}
+   * @returns {Promise<COLUMNS_PERMISOS>}
    */
   userPathAll(id, path) {
     return new Promise(async (res, rej) => {

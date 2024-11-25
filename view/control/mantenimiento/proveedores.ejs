@@ -1,0 +1,204 @@
+<div class="content-header">
+  <!---------------------- CSS ---------------------->
+
+  <!-- lib control -->
+  <link href="/src/private/lib/dataTables/datatables.min.css" rel="stylesheet">
+  <link href="/src/private/lib/calendar/calendar.min.css" rel="stylesheet">
+  <link href="/src/private/lib/selector/selector.min.css" rel="stylesheet">
+  <link href="/src/private/lib/formError/formError.min.css" rel="stylesheet">
+
+  <!-- layout -->
+  <link href="/src/private/layout/css/form.css" rel="stylesheet">
+  <link href="/src/private/layout/css/input.css" rel="stylesheet">
+  <link href="/src/private/layout/css/btn.css" rel="stylesheet">
+
+  <!---------------------- JS ---------------------->
+
+  <!-- lib control -->
+  <script src="/src/private/lib/dataTables/datatables.min.js"></script>
+  <script src="/src/private/lib/calendar/calendar.min.js"></script>
+  <script src="/src/private/lib/selector/selector.min.js"></script>
+  <script src="/src/private/lib/formatTime/formatTime.min.js"></script>
+  <script src="/src/private/lib/formError/formError.min.js"></script>
+
+  <!-- layout -->
+  <script src="/src/private/lib/input/input.min.js"></script>
+  <script src="/src/private/lib/Tables/tables.min.js"></script>
+
+  <!---------------------- BODY ---------------------->
+
+  <div class="content-tittle">Proveedor</div>
+  <div class="content-path">
+    <a href="/control">/control</a>
+    <a href="/control/mantenimiento">/mantenimiento</a>
+    <a href="/control/mantenimiento/clientes">/proveedor</a>
+  </div>
+</div>
+
+<div class="content-body">
+  <div class="menu-body">
+    <div class="card" id="card-main">
+      <div class="card-head">
+        <h3 class="card-tittle">Tabla de Proveedores</h3>
+        <div class="f-row">
+          <a class="btn btn-danger tbl-eliminar" <% if(!session.permiso.eliminar){ %> style="display: none" <% } %>>
+            <i class='bx bx-trash'></i>
+          </a>
+          <a class="btn btn-warning tbl-editar" <% if(!session.permiso.editar){ %> style="display: none" <% } %>>
+            <i class='bx bx-pencil'></i>
+          </a>
+          <a class="btn btn-info tbl-nuevo" <% if(!session.permiso.agregar){ %> style="display: none" <% } %>>
+            <i class='bx bx-plus'></i>
+          </a>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-box">
+          <table id="table-main" style="width: auto;">
+            <thead>
+              <tr>
+                <th>Estado</th>
+                <th>Titular</th>
+                <th>Tipo Proveedor</th>
+                <th>Telefono</th>
+                <th>Direccion</th>
+                <th>Tipo Documento</th>
+                <th>N.Documento</th>
+                <th>Creacion</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <div class="cards">
+            <div class="tables-utils">
+              <div class="download" <% if(!session.permiso.exportar){ %> style="display: none" <% } %>></div>
+
+              <div class="f-row option ">
+                <a class="btn btn-danger tbl-eliminar" <% if(!session.permiso.eliminar){ %> style="display: none" <% }
+                    %>>
+                  <i class='bx bx-trash'></i>
+                </a>
+                <a class="btn btn-warning tbl-editar" <% if(!session.permiso.editar){ %> style="display: none" <% } %>>
+                  <i class='bx bx-pencil'></i>
+                </a>
+                <a class="btn btn-info tbl-nuevo" <% if(!session.permiso.agregar){ %> style="display: none" <% } %>>
+                  <i class='bx bx-plus'></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="menu-side">
+    <div class="card" id="table-nuevo" style="display: none;">
+      <div class="card-head">
+        <h3 class="card-tittle">Nuevo Proveedor</h3>
+        <a class="card-close"><i class='bx bx-x'></i></a>
+      </div>
+      <div class="card-body">
+        <div class="card-form">
+          <div class="form-box">
+            <form>
+              <div class="form-body">
+                <div class="form-col">
+                  <div class="input-box">
+                    <input id="nuevo-titular" name="titular" type="text" oninput="inputCapitalize(this, 50)" required>
+                    <label for="titular">Titular (50):</label>
+                  </div>
+                  <div class="input-box">
+                    <input id="nuevo-tipo-proveedor" class="selector" type="search" placeholder="Buscar tipo proveedor...">
+                    <label for="tipo_proveedor">Tipo proveedor:</label>
+                  </div>
+                  <div class="input-box">
+                    <input id="nuevo-telefono" name="telefono" type="text" oninput="inputInt(this, 20)" required>
+                    <label for="telefono">Telefono (20):</label>
+                  </div>
+                </div>
+                <div class="form-col">
+                  <div class="input-box">
+                    <input id="nuevo-direccion" name="direccion" type="text" oninput="inputCapitalize(this, 50)" required>
+                    <label for="direccion">Direccion (50):</label>
+                  </div>
+                  <div class="input-box">
+                    <input id="nuevo-tipo-documento" class="selector" type="search" placeholder="Buscar tipo Documento...">
+                    <label for="tipo_Documento">Tipo Documento:</label>
+                  </div>
+                  <div class="input-box">
+                    <input id="nuevo-num-documento" name="num_documento" type="text" oninput="inputInt(this, 20)" required>
+                    <label for="num_documento">Mumero de Documento (20):</label>
+                  </div>
+                </div>
+              </div>
+              <div class="form-foot">
+                <a class="btn btn-success">guardar</a>
+                <div class="f-row">
+                  <input id="nuevo-estado" class="check-switch" type="checkbox" checked>
+                  <label>estado</label>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="table-editar" style="display: none;">
+      <div class="card-head">
+        <h3 class="card-tittle">Editar Proveedor</h3>
+        <a class="card-close"><i class='bx bx-x'></i></a>
+      </div>
+      <div class="card-body">
+        <div class="card-form">
+          <div class="form-box">
+            <form>
+              <div class="form-body">
+                <div class="form-col">
+                  <input type="hidden" name="id">
+                  <div class="input-box">
+                    <input id="editar-titular" name="titular" type="text" oninput="inputCapitalize(this, 50)" required>
+                    <label for="titular">Titular (50):</label>
+                  </div>
+                  <div class="input-box">
+                    <input id="editar-tipo-proveedor" class="selector" type="search" placeholder="Buscar tipo proveedor...">
+                    <label for="tipo_proveedor">Tipo proveedor:</label>
+                  </div>
+                  <div class="input-box">
+                    <input id="editar-telefono" name="telefono" type="text" oninput="inputInt(this, 20)" required>
+                    <label for="telefono">Telefono (20):</label>
+                  </div>
+                </div>
+                <div class="form-col">
+                  <div class="input-box">
+                    <input id="editar-direccion" name="direccion" type="text" oninput="inputCapitalize(this, 50)" required>
+                    <label for="direccion">Direccion (50):</label>
+                  </div>
+                  <div class="input-box">
+                    <input id="editar-tipo-documento" class="selector" type="search" placeholder="Buscar tipo Documento...">
+                    <label for="tipo_Documento">Tipo Documento:</label>
+                  </div>
+                  <div class="input-box">
+                    <input id="editar-num-documento" name="num_documento" type="text" oninput="inputInt(this, 20)" required>
+                    <label for="num_documento">Mumero de Documento (20):</label>
+                  </div>
+                </div>
+              </div>
+              <div class="form-foot">
+                <a class="btn btn-success">guardar</a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="select-date">
+      <div class="card-body">
+        <div class="calendario"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/src/private/routes/mantenimiento/proveedor/index.js"></script>

@@ -3,19 +3,6 @@ $('.content-body').ready(async () => {
 
     /* 
       ==================================================
-      =================== QUERY DATA ===================
-      ==================================================
-    */
-
-    let resPrecioVenta = await query.post.cookie("/api/cerebro/precio_venta/readJson");
-
-    /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[], permisos: PERMISOS}} */
-    let { prediccion } = await resPrecioVenta.json();
-
-    let prediccionPrecioVenta = new Function('return ' + prediccion)();
-
-    /* 
-      ==================================================
       ================== VARIABLES DOM ==================
       ==================================================
     */
@@ -33,26 +20,46 @@ $('.content-body').ready(async () => {
 
     let $tableNuevo = $('#table-nuevo');
     let tableNuevo = $tableNuevo[0];
-    let inputNuevoText = tableNuevo?.querySelectorAll('input[type=text], textarea');
-    let inputNuevoProducto = inputNuevoText[0];
-    let inputNuevoPrecioCompra = inputNuevoText[1];
-    let inputNuevoPrecioVenta = inputNuevoText[2];
-    let inputNuevoCheckbox = tableNuevo?.querySelector('input[type=checkbox]');
-    let inputNuevoSelector = tableNuevo?.querySelector('input.selector');
-    let inputNuevoImagen = tableNuevo?.querySelector('.imagen-unic');
-    let btnNuevo = tableNuevo?.querySelector('.btn');
+    let inputNuevoText = tableNuevo.querySelectorAll('input[type=text], textarea');
+    /** @type {HTMLInputElement} */
+    let inputNuevoProducto = document.getElementById('nuevo-producto');
+    /** @type {HTMLInputElement} */
+    let inputNuevoPrecioVenta = document.getElementById('nuevo-precio-venta');
+    /** @type {HTMLInputElement} */
+    let inputNuevoDescripcion = document.getElementById('nuevo-descripcion');
+    /** @type {HTMLInputElement} */
+    let inputNuevoSelectorCategoria = document.getElementById('nuevo-categoria');
+    /** @type {HTMLInputElement} */
+    let inputNuevoImagen = document.getElementById('nuevo-imagen');
+    /** @type {HTMLInputElement} */
+    let checkboxNuevoAvanzado = document.getElementById('nuevo-avanzado');
+    /** @type {HTMLInputElement} */
+    let inputNuevoCantidad = document.getElementById('nuevo-cantidad');
+    /** @type {HTMLInputElement} */
+    let inputNuevoPrecioCompra = document.getElementById('nuevo-precio-compra');
+    /** @type {HTMLInputElement} */
+    let inputNuevoSelectorProveedor = document.getElementById('nuevo-proveedor');
+    /** @type {HTMLInputElement} */
+    let checkboxNuevoEstado = document.getElementById('nuevo-estado');
+    /** @type {HTMLAnchorElement} */
+    let btnNuevo = tableNuevo.querySelector('.btn');
 
+    let currentEditarId = 0;
     let $tableEditar = $('#table-editar');
     let tableEditar = $tableEditar[0];
-    let inputEditarHidden = tableEditar?.querySelector('input[type=hidden]');
-    let inputEditarText = tableEditar?.querySelectorAll('input[type=text], textarea');
-    let inputEditarProducto = inputEditarText[0];
-    let inputEditarPrecioCompra = inputEditarText[1];
-    let inputEditarPrecioVenta = inputEditarText[2];
-    let inputEditarDescripcion = inputEditarText[3];
-    let inputEditarSelector = tableEditar?.querySelector('input.selector');
-    let inputEditarImagen = tableEditar?.querySelector('.imagen-unic');
-    let btnEditar = tableEditar?.querySelector('.btn');
+    let inputEditarText = tableEditar.querySelectorAll('input[type=text], textarea');
+    /** @type {HTMLInputElement} */
+    let inputEditarProducto = document.getElementById('editar-producto');
+    /** @type {HTMLInputElement} */
+    let inputEditarPrecioVenta = document.getElementById('editar-precio-venta');
+    /** @type {HTMLInputElement} */
+    let inputEditarDescripcion = document.getElementById('editar-descripcion');
+    /** @type {HTMLInputElement} */
+    let inputEditarSelectorCategoria = document.getElementById('editar-categoria');
+    /** @type {HTMLInputElement} */
+    let inputEditarImagen = document.getElementById('editar-imagen');
+    /** @type {HTMLAnchorElement} */
+    let btnEditar = tableEditar.querySelector('.btn');
 
     let calendarioBox = document.querySelector('.calendario');
 
@@ -68,28 +75,24 @@ $('.content-body').ready(async () => {
     async function updateIdState({ id, producto }) {
       this.disabled = true;
       let estado = this.checked;
-      let resEstado = await query.post.json.cookie("/api/productos/table/updateIdState", { id, estado });
+      socket.emit('/stateId/table', id, estado, err => {
+        if (err) {
+          this.checked = !estado;
+          return alarm.error(err);
+        }
 
-      /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-      let { err } = await resEstado.json();
+        if (estado)
+          alarm.success(`${producto} activado`);
+        else
+          alarm.success(`${producto} desactivado`);
 
-      if (estado)
-        alarm.success(`${producto} activado`);
-      else
-        alarm.success(`${producto} desactivado`);
-
-      if (err) {
-        this.checked = !estado;
-        alarm.error(`${producto} inaccesible`);
-        return
-      }
-
-      this.disabled = false;
+        this.disabled = false;
+      })
     }
 
     /* 
       ==================================================
-      ================= DATATABLE STATE =================
+      ==================== DATATABLE ====================
       ==================================================
     */
 
@@ -105,7 +108,7 @@ $('.content-body').ready(async () => {
       order: [[2, 'asc']],
       columnDefs: [
         {
-          name: 'estado',
+          name: 'p.estado',
           className: 'dtr-control',
           orderable: false,
           targets: 0,
@@ -119,41 +122,40 @@ $('.content-body').ready(async () => {
           }
         },
         {
-          name: 'codigo',
+          name: 'p.codigo',
           className: 'dtr-code',
           orderable: false,
           targets: 1
         },
         {
-          name: 'producto',
+          name: 'p.producto',
           targets: 2
         },
         {
-          name: 'descripcion',
+          name: 'p.descripcion',
           className: 'dtr-description',
           orderable: false,
           targets: 3,
           render: data => '<div class="scroll-y">' + data + '</div>'
         },
         {
-          name: 'categoria_nombre',
+          name: 'c.nombre',
           className: 'dtr-tag',
           targets: 4,
           render: data => '<div>' + data + '</div>'
         },
         {
-          name: 'compra',
+          name: 'p.stock_disponible',
           className: 'dt-type-numeric',
-          targets: 5,
-          render: data => data?.toFixed(2)
+          targets: 5
         },
         {
-          name: 'venta',
+          name: 'p.venta',
           className: 'dt-type-numeric',
           targets: 6,
           render: data => data?.toFixed(2)
         }, {
-          name: 'creacion',
+          name: 'p.creacion',
           className: 'dt-type-date',
           targets: 7
         }
@@ -164,7 +166,7 @@ $('.content-body').ready(async () => {
         { data: 'producto' },
         { data: 'descripcion' },
         { data: 'categoria_nombre' },
-        { data: 'compra' },
+        { data: 'stock_disponible' },
         { data: 'venta' },
         { data: 'creacion' }
       ],
@@ -183,6 +185,10 @@ $('.content-body').ready(async () => {
 
     let selectorOptionsCategorias = new OptionsServerside(
       (req, end) => socket.emit('/selector/categorias', req, res => end(res)),
+      { showIndex: false, order: 'asc', noInclude: true }
+    );
+    let selectorOptionsProveedor = new OptionsServerside(
+      (req, end) => socket.emit('/selector/proveedor', req, res => end(res)),
       { showIndex: false, order: 'asc', noInclude: true }
     );
 
@@ -213,13 +219,18 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    let nuevoSelectorUnic = new SelectorInput(
-      inputNuevoSelector,
+    let selectorNuevoProveedor = new SelectorInput(
+      inputNuevoSelectorProveedor,
+      selectorOptionsProveedor,
+      { autohide: true }
+    );
+    let selectorNuevoCategoria = new SelectorInput(
+      inputNuevoSelectorCategoria,
       selectorOptionsCategorias,
       { autohide: true }
     );
-    let editarSelectorUnic = new SelectorInput(
-      inputEditarSelector,
+    let selectorEditarCategoria = new SelectorInput(
+      inputEditarSelectorCategoria,
       selectorOptionsCategorias,
       { justChange: true }
     );
@@ -230,8 +241,8 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    let nuevoImagenUnic = new ImagenUnic(inputNuevoImagen);
-    let editarImagenUnic = new ImagenUnic(inputEditarImagen);
+    let imagenNuevoUnic = new ImagenUnic(inputNuevoImagen);
+    let imagenEditarUnic = new ImagenUnic(inputEditarImagen);
 
     /* 
       ==================================================
@@ -256,6 +267,7 @@ $('.content-body').ready(async () => {
         sideContent.scrollTop = tableEditar.offsetTop - sideContent.offsetTop - 100;
       },
       close() {
+        currentEditarId = 0;
         this.emptyNuevo();
         this.emptyEditar();
         this.now = 'table';
@@ -271,14 +283,15 @@ $('.content-body').ready(async () => {
       emptyNuevo() {
         if (this.now != 'nuevo') return;
         inputNuevoText.forEach(i => i.value = '');
-        nuevoSelectorUnic.empty();
-        nuevoImagenUnic.empty();
+        selectorNuevoCategoria.empty();
+        selectorNuevoProveedor.empty();
+        imagenNuevoUnic.empty();
       },
       emptyEditar() {
         if (this.now != 'editar') return;
         inputEditarText.forEach(i => i.value = '');
-        editarSelectorUnic.empty();
-        editarImagenUnic.empty();
+        selectorEditarCategoria.empty();
+        imagenEditarUnic.empty();
       },
     }
 
@@ -335,10 +348,25 @@ $('.content-body').ready(async () => {
     */
 
     inputNuevoPrecioCompra.addEventListener('input', () => {
-      let value = inputNuevoPrecioCompra.value;
-      if (value == '') return inputNuevoPrecioVenta.value = value;
-      inputNuevoPrecioVenta.value = prediccionPrecioVenta(Number(value)).toFixed(2);
+      if (inputNuevoPrecioVenta.noPredict) {
+        if (Number(inputNuevoPrecioVenta.value) < Number(inputNuevoPrecioCompra.value))
+          formError(`El precio de compra es mayor al de venta.`, inputNuevoPrecioCompra.parentNode);
+        return;
+      }
+
+      let value = Number(inputNuevoPrecioCompra.value) || 0;
+      if (!value) return inputNuevoPrecioVenta.value = value;
+      socket.emit('/predict/precio_venta', value, res => {
+        inputNuevoPrecioVenta.value = res?.toFixed(2);
+        inputNuevoPrecioVenta.noPredict = false;
+      })
     });
+
+    inputNuevoPrecioVenta.addEventListener('input', () => {
+      inputNuevoPrecioVenta.noPredict = inputNuevoPrecioVenta.value != '';
+      if (Number(inputNuevoPrecioVenta.value) < Number(inputNuevoPrecioCompra.value))
+        formError(`El precio de venta es menor al de compra.`, inputNuevoPrecioVenta.parentNode);
+    })
 
     /* 
       ==================================================
@@ -355,26 +383,45 @@ $('.content-body').ready(async () => {
     */
 
     btnNuevo.addEventListener('click', async () => {
-      if (inputNuevoProducto.except)
-        return formError(inputNuevoProducto.except, inputNuevoProducto.parentNode);
-
       let formData = new FormData();
-      inputNuevoText.forEach(i => {
-        let column = i.getAttribute('name');
-        let value = i.value;
-        if (!value) return formError(`Se requiere un valor para ${column}`, i.parentNode);
-        formData.append(column, value);
-      })
 
-      let select = nuevoSelectorUnic.selected[0];
-      if (!select) return formError(`Selecciona un Rol`, inputNuevoSelector.parentNode);
-      formData.append('categoria_id', Number(select.id));
+      let productoValue = inputNuevoProducto.value;
+      if (!productoValue) return formError(`Se require un nombre!.`, inputNuevoProducto.parentNode);
+      formData.append('producto', productoValue);
 
-      let file = nuevoImagenUnic.files[0]
+      let precioVentaValue = inputNuevoPrecioVenta.value;
+      if (!precioVentaValue) return formError(`Se require un precio de venta!.`, inputNuevoPrecioVenta.parentNode);
+      formData.append('venta', Number(precioVentaValue));
+
+      let descripcionValue = inputNuevoDescripcion.value;
+      formData.append('descripcion', descripcionValue);
+
+      let selectCategoria = selectorNuevoCategoria.selected[0];
+      if (!selectCategoria) return formError(`Selecciona una categoria`, inputNuevoSelectorCategoria.parentNode);
+      formData.append('categoria_id', Number(selectCategoria.id));
+
+      let file = imagenNuevoUnic.files[0]
       if (file) formData.append('foto_file', file);
 
-      let estado = inputNuevoCheckbox.checked ? 1 : 0
+      let estado = checkboxNuevoEstado.checked ? 1 : 0;
       formData.append('estado', estado);
+
+      let avanzadoChecked = checkboxNuevoAvanzado.checked
+      formData.append('avanzado', avanzadoChecked);
+
+      if (avanzadoChecked) {
+        let cantidadVentaValue = inputNuevoCantidad.value;
+        if (!cantidadVentaValue) return formError(`Se require una cantidad!.`, inputNuevoCantidad.parentNode);
+        formData.append('cantidad', Number(cantidadVentaValue));
+
+        let precioCompraValue = inputNuevoPrecioCompra.value;
+        if (!precioCompraValue) return formError(`Se require un precio de compra!.`, inputNuevoPrecioCompra.parentNode);
+        formData.append('compra', Number(precioCompraValue));
+
+        let selectProveedor = selectorNuevoProveedor.selected[0];
+        if (!selectProveedor) return formError(`Selecciona un proveedor`, inputNuevoSelectorProveedor.parentNode);
+        formData.append('proveedor_id', Number(selectProveedor.id));
+      }
 
       let resUsuarios = await query.post.form.cookie("/api/productos/table/insert", formData);
 
@@ -399,55 +446,77 @@ $('.content-body').ready(async () => {
 
     /* 
       ==================================================
+      ================ VALID CHANGE DATA ================
+      ==================================================
+    */
+
+    let validChangeData = () => {
+      let valid = false;
+      valid ||= inputEditarProducto.value != inputEditarProducto.currentValue;
+      valid ||= Number(inputEditarPrecioVenta.value) != Number(inputEditarPrecioVenta.currentValue);
+      valid ||= inputEditarDescripcion.value != inputEditarDescripcion.currentValue;
+      valid ||= selectorEditarCategoria?.selected[0]?.id != selectorEditarCategoria.currentValue;
+
+      valid
+        ? btnEditar.classList.remove('disabled')
+        : btnEditar.classList.add('disabled');
+    }
+
+    inputEditarProducto.addEventListener('input', validChangeData);
+    inputEditarPrecioVenta.addEventListener('input', validChangeData);
+    inputEditarDescripcion.addEventListener('input', validChangeData);
+    selectorEditarCategoria.on('change', validChangeData)
+
+    /* 
+      ==================================================
       =================== OPEN EDITAR ===================
       ==================================================
     */
+
+    let defaultEditar = async data => {
+      inputEditarProducto.currentValue
+        = inputEditarProducto.placeholder
+        = data.producto;
+
+      inputEditarPrecioVenta.currentValue
+        = inputEditarPrecioVenta.placeholder
+        = data.venta.toFixed(2);
+
+      inputEditarDescripcion.currentValue
+        = inputEditarDescripcion.placeholder
+        = data.descripcion;
+
+      let asyncCategoria = selectorEditarCategoria.select(data.categoria_id);
+      selectorEditarCategoria.currentValue = data.categoria_id;
+
+      await asyncCategoria;
+    }
+
+    let setterEditar = data => {
+      currentEditarId = data.id;
+
+      inputEditarProducto.value
+        = data.producto;
+
+      inputEditarPrecioVenta.value
+        = data.venta.toFixed(2);
+
+      inputEditarDescripcion.value
+        = data.descripcion;
+
+      imagenEditarUnic.charge(data.foto_src);
+
+      defaultEditar(data);
+      btnEditar.classList.add('disabled');
+    }
 
     tblEditar.forEach(btn => btn.addEventListener('click', async () => {
       let id = $table.selected();
       if (!id) return alarm.warn('Selecciona una fila');
 
       toggleMenu.editar();
-
-      let resProductos = await query.post.json.cookie("/api/productos/table/readId", { id });
-
-      /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-      let { list } = await resProductos.json();
-
-      inputEditarProducto.placeholder
-        = inputEditarProducto.value
-        = list.producto;
-      inputEditarPrecioCompra.placeholder
-        = inputEditarPrecioCompra.value
-        = list.compra.toFixed(2);
-      inputEditarPrecioVenta.placeholder
-        = inputEditarPrecioVenta.value
-        = list.venta.toFixed(2);
-      inputEditarDescripcion.placeholder
-        = inputEditarDescripcion.value
-        = list.descripcion;
-
-      editarSelectorUnic.select(list.categoria_id);
-      editarSelectorUnic.beforeValue = list.categoria_id;
-
-      if (list.foto_src)
-        editarImagenUnic.charge(list.foto_src),
-          editarImagenUnic.beforeValue = list.foto_src;
-
-      inputEditarHidden.value = id;
+      socket.emit('/readId/table', id, setterEditar);
     }))
-
-    /* 
-      ==================================================
-      ================== PREDICCIONES ==================
-      ==================================================
-    */
-
-    inputEditarPrecioCompra.addEventListener('input', () => {
-      let value = inputEditarPrecioCompra.value;
-      if (value == '') return inputEditarPrecioVenta.value = value;
-      inputEditarPrecioVenta.value = prediccionPrecioVenta(Number(value)).toFixed(2);
-    });
 
     /* 
       ==================================================
@@ -456,25 +525,26 @@ $('.content-body').ready(async () => {
     */
 
     btnEditar.addEventListener('click', async () => {
-      if (inputEditarProducto.except)
-        return formError(inputEditarProducto.except, inputEditarProducto.parentNode);
-
       let formData = new FormData();
 
-      let id = Number(inputEditarHidden.value);
-      formData.append('id', id);
+      formData.append('id', currentEditarId);
 
-      inputEditarText.forEach(i => {
-        let column = i.getAttribute('name');
-        let value = i.value;
-        if (!value) return formError(`Se requiere un valor para ${column}`, i.parentNode);
-        formData.append(column, value);
-      })
+      let productoValue = inputEditarProducto.value;
+      if (!productoValue) return formError(`Se require un nombre!.`, inputEditarProducto.parentNode);
+      formData.append('producto', productoValue);
 
-      let select = editarSelectorUnic.selected[0];
-      formData.append('categoria_id', select.id);
+      let precioVentaValue = inputEditarPrecioVenta.value;
+      if (!precioVentaValue) return formError(`Se require un precio de venta!.`, inputEditarPrecioVenta.parentNode);
+      formData.append('venta', Number(precioVentaValue));
 
-      let file = editarImagenUnic.files[0];
+      let descripcionValue = inputEditarDescripcion.value;
+      formData.append('descripcion', descripcionValue);
+
+      let selectCategoria = selectorEditarCategoria.selected[0];
+      if (!selectCategoria) return formError(`Selecciona una categoria`, inputNuevoSelectorCategoria.parentNode);
+      formData.append('categoria_id', selectCategoria.id | selectorEditarCategoria.currentValue);
+
+      let file = imagenEditarUnic.files[0];
       if (file) formData.append('foto_file', file);
 
       let resUsuarios = await query.post.form.cookie("/api/productos/table/updateId", formData);
@@ -523,17 +593,11 @@ $('.content-body').ready(async () => {
         color: 'rgb(255, 255, 255)',
       })
         .then(async (result) => {
-          if (result.isConfirmed) {
-            let resCategorias = await query.post.json.cookie("/api/productos/table/deleteId", { id });
-
-            /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-            let { err } = await resCategorias.json();
-
-            if (err)
-              return alarm.error(`Fila no Eliminada`);
-
-            alarm.success(`Fila eliminada`);
-          }
+          if (result.isConfirmed)
+            socket.emit('/deleteId/table', id, err => {
+              if (err) return alarm.error(err);
+              alarm.success(`Fila eliminada`);
+            })
         });
     }))
 
@@ -543,60 +607,34 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    socket.on('/productos/data/insert', data => {
-      let row = $table.get('#' + data.id);
-      if (row) return;
-
-      $table.add({
-        id: data.id,
-        estado: data.estado,
-        codigo: data.codigo,
-        producto: data.producto,
-        descripcion: data.descripcion,
-        venta: data.venta,
-        compra: data.compra,
-        categoria_nombre: data.categoria_nombre,
-        creacion: formatTime('YYYY-MM-DD hh:mm:ss')
-      });
+    socket.on('/productos/data/insert', () => {
+      $table.datatable.draw();
     })
 
-    socket.on('/productos/data/updateId', data => {
-      let row = $table.get('#' + data.id);
-      if (!row) return;
-
-      $table.update('#' + data.id, {
-        producto: data.producto,
-        categoria_nombre: data.categoria_nombre,
-        descripcion: data.descripcion,
-        venta: data.venta,
-        compra: data.compra,
-      });
-
-      let menuEditarid = $table.selected();
-      if (menuEditarid && menuEditarid == data.id)
-        tblEditar?.[0]?.click();
+    socket.on('/productos/data/updateId', async data => {
+      if (currentEditarId == data.id) {
+        await defaultEditar(data);
+        validChangeData()
+      }
+      $table.datatable.draw();
     })
 
-    socket.on('/productos/data/state', data => {
-      let row = $table.get('#' + data.id);
-      if (!row) return;
+    socket.on('/productos/data/updateIdBussines', () => {
+      $table.datatable.draw();
+    })
 
-      $table.update('#' + data.id, {
-        estado: data.estado,
-      });
+    socket.on('/productos/data/state', () => {
+      $table.datatable.draw();
     })
 
     socket.on('/productos/data/deleteId', data => {
-      let row = $table.get('#' + data.id);
-      if (!row) return;
-      $table.remove('#' + data.id);
+      if (currentEditarId == data.id)
+        toggleMenu.close()
+      $table.datatable.draw();
     })
 
-    socket.on('/productos/categorias/state', data => {
-      if (data.estado)
-        $table.add(...data.data.filter(d => $table.get('#' + d.id) ? false : true));
-      else
-        $table.remove(...data.data.map(d => '#' + d.id));
+    socket.on('/productos/categorias/state', () => {
+      $table.datatable.draw();
     })
 
     socket.on('/session/acceso/state', data => {
