@@ -11,7 +11,7 @@ const columns = {
   exportar: { name: 'exportar', null: false, type: 'Integer', limit: 1, min: -1, max: 1 }
 }
 
-/** 
+/**
  * @typedef {{
  *   id: number,
  *   ver: number,
@@ -19,7 +19,7 @@ const columns = {
  *   editar: number,
  *   eliminar: number,
  *   ocultar: number,
- *   exportar: number 
+ *   exportar: number
  * }} COLUMNS_PERMISOS
  */
 
@@ -30,12 +30,12 @@ class Tb_permisos extends Table {
     this.columns = columns;
     this.app = app;
   }
-  /* 
+  /*
     ====================================================================================================
     ============================================== session ==============================================
     ====================================================================================================
   */
-  /** 
+  /**
     * @param {number} id
     * @returns {Promise<{[ruta:string]:{ver: number}}>}
     */
@@ -44,11 +44,11 @@ class Tb_permisos extends Table {
       try {
         this.app.model.tb_usuarios.constraint('id', id);
 
-        let [result] = await this.app.model.poolValues(`
-          SELECT 
+        let [result] = await this.app.model.pool(`
+          SELECT
             m.ruta,
             p.ver
-          FROM 
+          FROM
             tb_usuarios AS u
           INNER JOIN
             tipo_rol AS r
@@ -85,7 +85,7 @@ class Tb_permisos extends Table {
       }
     })
   }
-  /** 
+  /**
     * @param {number} id
     * @returns {Promise<{[ruta:string]:COLUMNS_PERMISOS}}>}
     */
@@ -94,8 +94,8 @@ class Tb_permisos extends Table {
       try {
         this.app.model.tb_usuarios.constraint('id', id);
 
-        let [result] = await this.app.model.poolValues(`
-          SELECT 
+        let [result] = await this.app.model.pool(`
+          SELECT
             m.ruta,
             p.ver,
             p.agregar,
@@ -103,7 +103,7 @@ class Tb_permisos extends Table {
             p.eliminar,
             p.ocultar,
             p.exportar
-          FROM 
+          FROM
             tb_usuarios AS u
           INNER JOIN
             tipo_rol AS r
@@ -142,14 +142,14 @@ class Tb_permisos extends Table {
       }
     })
   }
-  /* 
+  /*
     ====================================================================================================
     ============================================== routes ==============================================
     ====================================================================================================
   */
-  /** 
+  /**
    * @param {number} id
-   * @param {string} path 
+   * @param {string} path
    * @returns {Promise<COLUMNS_PERMISOS>}
    */
   userPath(id, path) {
@@ -158,12 +158,12 @@ class Tb_permisos extends Table {
         this.app.model.tb_usuarios.constraint('id', id);
         this.app.model.tb_menus.constraint('ruta', path);
 
-        let [result] = await this.app.model.poolValues(`
-          SELECT 
+        let [result] = await this.app.model.pool(`
+          SELECT
             u.usuario,
             r.nombre,
             p.*
-          FROM 
+          FROM
             tb_usuarios AS u
           INNER JOIN
             tipo_rol AS r
@@ -199,9 +199,9 @@ class Tb_permisos extends Table {
       }
     })
   }
-  /** 
+  /**
    * @param {number} id
-   * @param {string} path 
+   * @param {string} path
    * @returns {Promise<COLUMNS_PERMISOS>}
    */
   userPathAll(id, path) {
@@ -210,15 +210,15 @@ class Tb_permisos extends Table {
         this.app.model.tb_usuarios.constraint('id', id);
         this.app.model.tb_menus.constraint('ruta', path);
 
-        let [result] = await this.app.model.poolValues(`
-          SELECT 
+        let [result] = await this.app.model.pool(`
+          SELECT
             p.ver,
             p.agregar,
             p.editar,
             p.eliminar,
             p.ocultar,
             p.exportar
-          FROM 
+          FROM
             tb_usuarios AS u
           INNER JOIN
             tipo_rol AS r
@@ -252,9 +252,9 @@ class Tb_permisos extends Table {
       }
     })
   }
-  /** 
+  /**
    * @param {number} id
-   * @param {string} path 
+   * @param {string} path
    * @returns {Promise<number>}
    */
   userPathView(id, path) {
@@ -263,10 +263,10 @@ class Tb_permisos extends Table {
         this.app.model.tb_usuarios.constraint('id', id);
         this.app.model.tb_menus.constraint('ruta', path);
 
-        let [result] = await this.app.model.poolValues(`
-          SELECT 
+        let [result] = await this.app.model.pool(`
+          SELECT
             p.ver
-          FROM 
+          FROM
             tb_usuarios AS u
           INNER JOIN
             tipo_rol AS r
@@ -300,9 +300,9 @@ class Tb_permisos extends Table {
       }
     })
   }
-  /** 
+  /**
    * @param {number} id
-   * @param {string} path 
+   * @param {string} path
    * @returns {Promise<number>}
    */
   userPathAdd(id, path) {
@@ -311,10 +311,10 @@ class Tb_permisos extends Table {
         this.app.model.tb_usuarios.constraint('id', id);
         this.app.model.tb_menus.constraint('ruta', path);
 
-        let [result] = await this.app.model.poolValues(`
-          SELECT 
+        let [result] = await this.app.model.pool(`
+          SELECT
             p.agregar
-          FROM 
+          FROM
             tb_usuarios AS u
           INNER JOIN
             tipo_rol AS r
@@ -348,9 +348,9 @@ class Tb_permisos extends Table {
       }
     })
   }
-  /** 
+  /**
    * @param {number} id
-   * @param {string} path 
+   * @param {string} path
    * @returns {Promise<number>}
    */
   userPathUpdate(id, path) {
@@ -359,10 +359,10 @@ class Tb_permisos extends Table {
         this.app.model.tb_usuarios.constraint('id', id);
         this.app.model.tb_menus.constraint('ruta', path);
 
-        let [result] = await this.app.model.poolValues(`
-          SELECT 
+        let [result] = await this.app.model.pool(`
+          SELECT
             p.editar
-          FROM 
+          FROM
             tb_usuarios AS u
           INNER JOIN
             tipo_rol AS r
@@ -396,9 +396,9 @@ class Tb_permisos extends Table {
       }
     })
   }
-  /** 
+  /**
    * @param {number} id
-   * @param {string} path 
+   * @param {string} path
    * @returns {Promise<number>}
    */
   userPathDelete(id, path) {
@@ -407,10 +407,10 @@ class Tb_permisos extends Table {
         this.app.model.tb_usuarios.constraint('id', id);
         this.app.model.tb_menus.constraint('ruta', path);
 
-        let [result] = await this.app.model.poolValues(`
-          SELECT 
+        let [result] = await this.app.model.pool(`
+          SELECT
             p.eliminar
-          FROM 
+          FROM
             tb_usuarios AS u
           INNER JOIN
             tipo_rol AS r
@@ -444,9 +444,9 @@ class Tb_permisos extends Table {
       }
     })
   }
-  /** 
+  /**
    * @param {number} id
-   * @param {string} path 
+   * @param {string} path
    * @returns {Promise<number>}
    */
   userPathHide(id, path) {
@@ -455,10 +455,10 @@ class Tb_permisos extends Table {
         this.app.model.tb_usuarios.constraint('id', id);
         this.app.model.tb_menus.constraint('ruta', path);
 
-        let [result] = await this.app.model.poolValues(`
-          SELECT 
+        let [result] = await this.app.model.pool(`
+          SELECT
             p.ocultar
-          FROM 
+          FROM
             tb_usuarios AS u
           INNER JOIN
             tipo_rol AS r
@@ -492,9 +492,9 @@ class Tb_permisos extends Table {
       }
     })
   }
-  /** 
+  /**
    * @param {number} id
-   * @param {string} path 
+   * @param {string} path
    * @returns {Promise<number>}
    */
   userPathExport(id, path) {
@@ -503,10 +503,10 @@ class Tb_permisos extends Table {
         this.app.model.tb_usuarios.constraint('id', id);
         this.app.model.tb_menus.constraint('ruta', path);
 
-        let [result] = await this.app.model.poolValues(`
-          SELECT 
+        let [result] = await this.app.model.pool(`
+          SELECT
             p.exportar
-          FROM 
+          FROM
             tb_usuarios AS u
           INNER JOIN
             tipo_rol AS r
@@ -540,19 +540,19 @@ class Tb_permisos extends Table {
       }
     })
   }
-  /* 
+  /*
     ====================================================================================================
     =============================================== phone ===============================================
     ====================================================================================================
   */
-  /** 
+  /**
    * @param {string} telefono
    * @returns {Promise<{
-   *   id:string, 
-   *   usuario:String, 
-   *   telefono:string, 
-   *   rol_id:number, 
-   *   rol_nombre:string, 
+   *   id:string,
+   *   usuario:String,
+   *   telefono:string,
+   *   rol_id:number,
+   *   rol_nombre:string,
    *   ver:number,
    *   commando: string
    * }[]>}
@@ -565,8 +565,8 @@ class Tb_permisos extends Table {
         let values = [telefono];
         if (comando) values.push(comando);
 
-        let [result] = await this.app.model.poolValues(`
-          SELECT 
+        let [result] = await this.app.model.pool(`
+          SELECT
             u.id,
             u.telefono,
             u.usuario,
@@ -574,7 +574,7 @@ class Tb_permisos extends Table {
           	r.nombre AS rol_nombre,
             p.ver,
             m.ruta AS commando
-          FROM 
+          FROM
             tb_usuarios AS u
           INNER JOIN
             tipo_rol AS r
@@ -602,9 +602,9 @@ class Tb_permisos extends Table {
       }
     })
   }
-  /** 
+  /**
    * @param {number} telefono
-   * @param {string} path 
+   * @param {string} path
    * @returns {Promise<number>}
    */
   phonePathView(telefono, path) {
@@ -613,10 +613,10 @@ class Tb_permisos extends Table {
         this.app.model.tb_usuarios.constraint('telefono', telefono);
         this.app.model.tb_menus.constraint('ruta', path);
 
-        let [result] = await this.app.model.poolValues(`
-          SELECT 
+        let [result] = await this.app.model.pool(`
+          SELECT
             p.ver
-          FROM 
+          FROM
             tb_usuarios AS u
           INNER JOIN
             tipo_rol AS r
@@ -650,13 +650,13 @@ class Tb_permisos extends Table {
       }
     })
   }
-  /* 
+  /*
     ====================================================================================================
     =============================================== Socket ===============================================
     ====================================================================================================
   */
-  /** 
-   * @param {string} path 
+  /**
+   * @param {string} path
    * @returns {Promise<number[]>}
    */
   socketPath(path) {
@@ -664,10 +664,10 @@ class Tb_permisos extends Table {
       try {
         this.app.model.tb_menus.constraint('ruta', path);
 
-        let [result] = await this.app.model.poolValues(`
-          SELECT 
+        let [result] = await this.app.model.pool(`
+          SELECT
             a.rol_id
-          FROM 
+          FROM
             tb_acceso AS a
           INNER JOIN
             tb_menus AS m
@@ -675,7 +675,7 @@ class Tb_permisos extends Table {
           INNER JOIN
             tb_permisos AS p
               ON p.id = a.permiso_id
-          WHERE 
+          WHERE
             m.ruta = ?
             AND p.ver = 1
         `, [
@@ -688,7 +688,7 @@ class Tb_permisos extends Table {
       }
     })
   }
-  /* 
+  /*
     ====================================================================================================
     ============================================= COMPUTED =============================================
     ====================================================================================================
@@ -701,7 +701,7 @@ class Tb_permisos extends Table {
    *   eliminar: number,
    *   ocultar: number,
    *   exportar: number
-   * }} permisos 
+   * }} permisos
    * @returns {number}
    */
   computedPermisoId(permisos) {

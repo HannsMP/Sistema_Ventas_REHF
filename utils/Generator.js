@@ -4,7 +4,7 @@ const FileJSON = require("./FileJSON");
 const Event = require("./Event");
 const Id = require("./Id");
 
-/** 
+/**
  * @type {{
  *   numeric?: boolean,
  *   letters: boolean,
@@ -16,7 +16,7 @@ const Id = require("./Id");
  *   autoSave?: boolean,
  *   expire?: number,
  *   indexed?: string
- * }} 
+ * }}
  */
 const GeneradorOption = {
   numeric: false,
@@ -36,8 +36,8 @@ class Generator extends Id {
   /** @type {Event<{expire: string}>} */
   ev = new Event();
   /**
-   * @param {string} template 
-   * @param {GeneradorOption} option 
+   * @param {string} template
+   * @param {GeneradorOption} option
    */
   constructor(template, option) {
     option = mergeObjects(GeneradorOption, option);

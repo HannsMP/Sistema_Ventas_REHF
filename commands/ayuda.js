@@ -7,7 +7,7 @@ module.exports = {
   name: 'ayuda',
   cooldown: 1 * 1000,
   onColldown: {},
-  description: `Ayuda mostrando la descripcion de los comandos existentes. 
+  description: `Ayuda mostrando la descripcion de los comandos existentes.
   Uso: */ayuda [comando]*
   comando: escribe un solo comando para que te muestre sus utilidades.`,
   async run(phone, msg, arg, complete) {
@@ -32,7 +32,7 @@ module.exports = {
         `⏰ Tiempo de enfriamiento: _${cooldown / 1000} seg_`,
         ''
       ];
-      
+
       msg.reply(sendMsg.join('\n'));
     })
 

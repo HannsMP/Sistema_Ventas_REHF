@@ -28,17 +28,17 @@ class WitgetTable extends EventListener {
     return td;
   }
 
-  /** 
-   * @param {HTMLTableElement} table 
+  /**
+   * @param {HTMLTableElement} table
    * @param {{
    *   columns: {
-   *     tittle: string, 
-   *     width:string, 
+   *     tittle: string,
+   *     width:string,
    *     textAlign:string
-   *   }[], 
-   *   drag:boolean, 
+   *   }[],
+   *   drag:boolean,
    *   drop:boolean
-   * }} config 
+   * }} config
    */
   constructor(table, config = { drag: true, drop: true, columns: [] }) {
     if (table.nodeName != 'TABLE') throw new TypeError('El parametro table no es un elemento HTMLTableElement.');
@@ -83,12 +83,12 @@ class WitgetTable extends EventListener {
 
   /**
    * @template {R}
-   * @param {R} data 
+   * @param {R} data
    * @returns {{
    *   data: R,
    *   td: { [K in keyof R]: HTMLTableCellElement },
-   *   tr: { [K in keyof R]: HTMLTableRowElement },
-   *   set: {[K in keyof R]: (values: string)=>void}
+   *   set: {[K in keyof R]: (values: string)=>void},
+   *   tr: HTMLTableRowElement
    * }}
    */
   newRow(data) {

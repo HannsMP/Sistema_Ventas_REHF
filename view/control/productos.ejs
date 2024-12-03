@@ -16,7 +16,7 @@
   <!-- lib control -->
   <script src="/src/private/lib/selector/selector.min.js"></script>
   <script src="/src/private/lib/inputRange/inputRange.min.js"></script>
-  <script src="/src/private/lib/catalogue/catalogue.min.js"></script>
+  <script src="/src/private/lib/catalogue/catalogue.js"></script>
 
   <!-- layout -->
   <script src="/src/private/lib/input/input.min.js"></script>
@@ -47,21 +47,21 @@
                 <div class="form-col">
                   <input type="hidden" name="id">
                   <div class="input-box">
-                    <input name="codigo" type="text" oninput="inputUppercase(this, 50)" required>
+                    <input id="filtro-codigo" name="codigo" type="text" oninput="inputUppercase(this, 50)" required>
                     <label for="codigo">Codigo:</label>
                   </div>
                   <div class="input-box">
-                    <input name="producto" type="text" oninput="inputCapitalize(this, 50)" required>
+                    <input id="filtro-nombre" name="producto" type="text" oninput="inputCapitalize(this, 50)" required>
                     <label for="producto">Nombre del Producto:</label>
                   </div>
                 </div>
                 <div class="form-col">
                   <div class="input-box">
-                    <input class="selector" type="search" placeholder="Buscar categorias...">
+                    <input id="filtro-categorias" class="selector" type="search" placeholder="Buscar categorias...">
                     <label for="categoria">Categoria:</label>
                   </div>
                   <div class="input-box">
-                    <div class="wrapper" id="range-box"> </div>
+                    <div id="range-box" class="wrapper"> </div>
                     <label class="active" for="producto">Rango de precios:</label>
                   </div>
                 </div>

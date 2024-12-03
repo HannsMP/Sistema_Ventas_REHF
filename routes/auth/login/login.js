@@ -6,18 +6,18 @@ const ModelError = require('./../../../utils//error/Model');
 /** @typedef {import('../../../utils/SocketNode')} SocketNode */
 /** @typedef {Array.<(this: App, req: import('express').Request, res: import('express').Response, next: import('express').NextFunction)=>void>} routeArr */
 
-/** 
+/**
  * @type {{
-*   load:boolean, 
-*   route:string, 
-*   viewLayoutPath:string, 
-*   viewRenderPath:string, 
-*   viewErrorPath:string, 
-*   use: routeArr, 
-*   get: routeArr, 
+*   load:boolean,
+*   route:string,
+*   viewLayoutPath:string,
+*   viewRenderPath:string,
+*   viewErrorPath:string,
+*   use: routeArr,
+*   get: routeArr,
 *   post: routeArr,
-*   nodeRoute: (this: App, node: SocketNode)=>void
-* }} 
+*   nodeRoute: {last:boolean, tagsName:boolean, collector:boolean} | (this: App, node: SocketNode)=>void
+* }}
 */
 module.exports = {
   load: true,
@@ -55,9 +55,9 @@ module.exports = {
 
         let data_Usuario = await this.model.tb_usuarios.login(usuario, clave);
 
-        await this.model.tb_asistencias.insertUserId(data_Usuario.id);
+        this.model.tb_asistencias.insertUserId(data_Usuario.id);
 
-        let dataPackage = this.cache.packageJSON.readJSON()
+        let dataPackage = this.cache.packageJSON.readJSON();
         apiKey = this.cache.apiKey.create({
           theme,
           usuario: data_Usuario,
@@ -71,10 +71,7 @@ module.exports = {
           httpOnly: true
         });
 
-        let { returnLoad } = req.session;
-        req.session.returnLoad = undefined;
-
-        return res.redirect(returnLoad || '/control');
+        return res.redirect('/control');
       } catch (e) {
         res.clearCookie('apiKey');
         res.clearCookie('remember');

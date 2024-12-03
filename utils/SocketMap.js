@@ -6,12 +6,12 @@ class SocketMap extends Map {
     super();
   }
 
-  /** 
+  /**
    * @template T
-   * @param {string} eventName 
-   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data 
-   * @param {(socketClient:SocketClient, dataSend: T)=>void} [each] 
-   * @returns {Promise<T>} 
+   * @param {string} eventName
+   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data
+   * @param {(socketClient:SocketClient, dataSend: T)=>void} [each]
+   * @returns {Promise<T>}
    */
   async emit(eventName, data, each) {
     if (!this.size) return null;

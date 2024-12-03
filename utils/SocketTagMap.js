@@ -14,13 +14,13 @@ class SocketTagMap extends Map {
     return sum
   }
 
-  /** 
+  /**
    * @template T
-   * @param {tagsName[]} tags 
-   * @param {string} eventName 
-   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data 
-   * @param {(socketClient:SocketClient, dataSend: T)=>void} [each] 
-   * @returns {Promise<T>} 
+   * @param {tagsName[]} tags
+   * @param {string} eventName
+   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data
+   * @param {(socketClient:SocketClient, dataSend: T)=>void} [each]
+   * @returns {Promise<T>}
    */
   async emitTag(tags, eventName, data, each) {
     if (!tags.length && !this.size)
@@ -70,13 +70,13 @@ class SocketTagMap extends Map {
 
   }
 
-  /** 
+  /**
    * @template T
-   * @param {number} rol_id 
-   * @param {string} eventName 
-   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data 
-   * @param {(socketClient:SocketClient, dataSend: T)=>void} [each] 
-   * @returns {Promise<T>} 
+   * @param {number} rol_id
+   * @param {string} eventName
+   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data
+   * @param {(socketClient:SocketClient, dataSend: T)=>void} [each]
+   * @returns {Promise<T>}
    */
   emitRolToJunior(rol_id, eventName, data, each) {
     let rolIds = [`rol:1`];
@@ -91,13 +91,13 @@ class SocketTagMap extends Map {
     );
   }
 
-  /** 
+  /**
    * @template T
-   * @param {number} rol_id 
-   * @param {string} eventName 
-   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data 
-   * @param {(socketClient:SocketClient, dataSend: T)=>void} [each] 
-   * @returns {Promise<T>} 
+   * @param {number} rol_id
+   * @param {string} eventName
+   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data
+   * @param {(socketClient:SocketClient, dataSend: T)=>void} [each]
+   * @returns {Promise<T>}
    */
   emitRolToSenior(rol_id, eventName, data, each) {
     let rolIds = [`rol:1`];

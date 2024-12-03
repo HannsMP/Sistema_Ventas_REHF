@@ -15,9 +15,9 @@ let errorMessages = {
 
 class ModelError extends Error {
   /**
-   * @param {keyof errorMessages} code 
-   * @param {string} message 
-   * @param {string} table 
+   * @param {keyof errorMessages} code
+   * @param {string} message
+   * @param {string} table
    */
   constructor(code, message, table) {
     super(message);

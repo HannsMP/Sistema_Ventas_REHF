@@ -10,7 +10,7 @@ const columns = {
   descuento: { name: 'descuento ', null: false, type: 'Number', limit: 10 }
 }
 
-/** 
+/**
  * @typedef {{
  *   id: number,
  *   transaccion_id: number,
@@ -22,7 +22,7 @@ const columns = {
  */
 
 /** @extends {Table<COLUMNS_VENTAS>} */
-class tb_ventas extends Table {
+class Tb_ventas extends Table {
   /** @param {import('../app')} app */
   constructor(app) {
     super(name);
@@ -31,14 +31,14 @@ class tb_ventas extends Table {
 
     this.io = app.socket.node.selectNode('/control/movimientos/ventas', true);
   }
-  /* 
+  /*
     ====================================================================================================
     =============================================== Tabla ===============================================
     ====================================================================================================
   */
   /**
-   * @param {import('datatables.net-dt').AjaxData} option 
-   * @param {number} usuario_id 
+   * @param {import('datatables.net-dt').AjaxData} option
+   * @param {number} usuario_id
    * @returns {Promise<{
    *   id: number,
    *   transaccion_id: number,
@@ -57,7 +57,7 @@ class tb_ventas extends Table {
         let { order, start, length, search } = option;
 
         let query = `
-          SELECT 
+          SELECT
             v.id,
             tv.id AS transaccion_id,
             tv.codigo AS transaccion_codigo,
@@ -69,13 +69,13 @@ class tb_ventas extends Table {
             DATE_FORMAT(tv.creacion, '%r') AS transaccion_hora
           FROM
             tb_ventas AS v
-          INNER 
+          INNER
             JOIN tb_transacciones_ventas AS tv
               ON v.transaccion_id = tv.id
-          INNER 
+          INNER
             JOIN tb_productos AS p
               ON v.producto_id = p.id
-          WHERE 
+          WHERE
             DATE(tv.creacion) = CURDATE()
             AND tv.usuario_id = ?
         `, queryParams = [usuario_id];
@@ -126,7 +126,7 @@ class tb_ventas extends Table {
         `;
         queryParams.push(length, start);
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
 
         res(result);
       } catch (e) {
@@ -135,8 +135,8 @@ class tb_ventas extends Table {
     })
   }
   /**
-   * @param {import('datatables.net-dt').AjaxData} option 
-   * @param {number} usuario_id 
+   * @param {import('datatables.net-dt').AjaxData} option
+   * @param {number} usuario_id
    * @returns {Promise<COLUMNS_VENTAS[]>}
    */
   readInPartsCount(option, usuario_id) {
@@ -145,20 +145,20 @@ class tb_ventas extends Table {
         let { search } = option;
 
         let query = `
-          SELECT 
+          SELECT
             COUNT(v.id) AS cantidad
           FROM
             tb_ventas AS v
-          INNER 
+          INNER
             JOIN tb_transacciones_ventas AS tv
               ON v.transaccion_id = tv.id
-          INNER 
+          INNER
             JOIN tb_clientes AS c
               ON tv.cliente_id = c.id
-          INNER 
+          INNER
             JOIN tb_productos AS p
               ON v.producto_id = p.id
-          WHERE 
+          WHERE
             DATE(tv.creacion) = CURDATE()
             AND tv.usuario_id = ?
         `, queryParams = [usuario_id];
@@ -181,7 +181,7 @@ class tb_ventas extends Table {
           );
         }
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
 
         res(result[0].cantidad);
       } catch (e) {
@@ -189,8 +189,8 @@ class tb_ventas extends Table {
       }
     })
   }
-  /** 
-   * @param {COLUMNS_VENTAS} data 
+  /**
+   * @param {COLUMNS_VENTAS} data
    * @returns {Promise<import('mysql').OkPacket>}
    */
   insert(data) {
@@ -210,9 +210,9 @@ class tb_ventas extends Table {
         this.constraint('producto_id', producto_id);
         this.constraint('transaccion_id', transaccion_id);
 
-        let [result] = await this.app.model.poolValues(`
+        let [result] = await this.app.model.pool(`
           INSERT INTO
-            tb_ventas ( 
+            tb_ventas (
               importe,
               cantidad,
               descuento,
@@ -234,14 +234,19 @@ class tb_ventas extends Table {
           transaccion_id
         ]);
 
+        if (result.affectedRows)
+          this.app.model.tb_productos.updateIdBussines(producto_id, {
+            stock_disponible: -cantidad,
+          })
+
         res(result)
       } catch (e) {
         rej(e);
       }
     })
   }
-  /** 
-   * @param {...COLUMNS_VENTAS} datas 
+  /**
+   * @param {...COLUMNS_VENTAS} datas
    * @returns {Promise<import('mysql').OkPacket>}
    */
   inserts(...datas) {
@@ -268,9 +273,9 @@ class tb_ventas extends Table {
             producto_id, transaccion_id, cantidad, importe, descuento
           ])
 
-        let [result] = await this.app.model.poolValues(`
+        let [result] = await this.app.model.pool(`
           INSERT INTO
-            tb_ventas ( 
+            tb_ventas (
               producto_id,
               transaccion_id,
               cantidad,
@@ -281,6 +286,13 @@ class tb_ventas extends Table {
         `, [
           values
         ]);
+
+        if (result.affectedRows)
+          for (let { producto_id, cantidad } of datas) {
+            this.app.model.tb_productos.updateIdBussines(producto_id, {
+              stock_disponible: -cantidad,
+            })
+          }
 
         res(result)
       } catch (e) {
@@ -300,12 +312,12 @@ class tb_ventas extends Table {
     return new Promise(async (res, rej) => {
       this.constraint('id', id)
 
-      let [result] = await this.app.model.poolValues(`
-        SELECT 
+      let [result] = await this.app.model.pool(`
+        SELECT
         	cantidad,
           producto_id,
           importe
-        FROM 
+        FROM
           tb_ventas
         WHERE
           id = ?
@@ -319,100 +331,10 @@ class tb_ventas extends Table {
   /**
    * @param {number} id
    * @returns {Promise<{
-   *   cantidad:number, 
-   *   producto_codigo:string, 
-   *   importe:number
-   * }>}
-   */
-  readJoinId(id) {
-    return new Promise(async (res, rej) => {
-      this.constraint('id', id)
-
-      let [result] = await this.app.model.poolValues(`
-        SELECT 
-        	v.cantidad,
-          p.codigo AS producto_codigo,
-          v.importe
-        FROM 
-          tb_ventas AS v
-        INNER 
-          JOIN tb_productos AS p
-            ON 
-              p.id = v.producto_id
-        WHERE
-          v.id = ?
-      `, [
-        id
-      ]);
-
-      res(result[0])
-    })
-  }
-  /**
-   * @param {...number} ids 
-   * @returns {Promise<{
-   *   cantidad:number, 
-   *   importe:number
-   * }[]>}
-   */
-  readIds(...ids) {
-    return new Promise(async (res, rej) => {
-      ids.forEach(id => this.constraint('id', id));
-
-      let [result] = await this.app.model.poolValues(`
-        SELECT 
-        	cantidad,
-          importe
-        FROM 
-          tb_ventas
-        WHERE
-          transaccion_id IN (${ids.map(_ => '?').join(',')})
-      `,
-        ids
-      );
-
-      res(result)
-    })
-  }
-  /**
-   * @param {...number} ids 
-   * @returns {Promise<{
-   *   cantidad:number, 
-   *   producto_codigo:string, 
-   *   importe:number
-   * }[]>}
-   */
-  readJoinIds(...ids) {
-    return new Promise(async (res, rej) => {
-      ids.forEach(id => this.constraint('id', id));
-
-      let [result] = await this.app.model.poolValues(`
-        SELECT 
-        	v.cantidad,
-          p.codigo AS producto_codigo,
-          v.importe
-        FROM 
-          tb_ventas AS v
-        INNER 
-          JOIN tb_productos AS p
-            ON 
-              p.id = v.producto_id
-        WHERE
-          v.transaccion_id IN (${ids.map(_ => '?').join(',')})
-        `,
-        ids
-      );
-
-      res(result)
-    })
-  }
-  /**
-   * @param {number} id
-   * @returns {Promise<{
    *   id:number,
    *   producto_id:number,
-   *   cantidad:number, 
-   *   descuento:number, 
+   *   cantidad:number,
+   *   descuento:number,
    *   importe:number
    * }[]>}
    */
@@ -420,14 +342,14 @@ class tb_ventas extends Table {
     return new Promise(async (res, rej) => {
       this.constraint('id', id)
 
-      let [result] = await this.app.model.poolValues(`
-        SELECT 
+      let [result] = await this.app.model.pool(`
+        SELECT
           id,
           cantidad,
           producto_id,
           descuento,
           importe
-        FROM 
+        FROM
           tb_ventas
         WHERE
           transaccion_id = ?
@@ -456,8 +378,8 @@ class tb_ventas extends Table {
     return new Promise(async (res, rej) => {
       this.app.model.tb_transacciones_ventas.constraint('id', transaccion_id)
 
-      let [result] = await this.app.model.poolValues(`
-        SELECT 
+      let [result] = await this.app.model.pool(`
+        SELECT
           v.id,
           tv.id AS transaccion_id,
           tv.codigo AS transaccion_codigo,
@@ -472,20 +394,20 @@ class tb_ventas extends Table {
           DATE_FORMAT(tv.creacion, '%r') AS transaccion_hora
         FROM
           tb_transacciones_ventas AS tv
-        INNER 
-          JOIN 
+        INNER
+          JOIN
             tb_ventas AS v
-          ON 
+          ON
             v.transaccion_id = tv.id
-        INNER 
+        INNER
           JOIN
             tb_productos AS p
-          ON 
+          ON
             v.producto_id = p.id
-        INNER 
+        INNER
           JOIN
             tb_categorias AS c
-          ON 
+          ON
             p.categoria_id = c.id
         WHERE
           tv.id = ?
@@ -497,8 +419,11 @@ class tb_ventas extends Table {
     })
   }
   /**
-   * @param {number} id 
-   * @param {COLUMNS_VENTAS} data 
+   * @param {number} id
+   * @param {{
+   *   producto_id: number,
+   *   cantidad: number
+   * }} data
    * @returns {Promise<import('mysql').OkPacket>}
    */
   updateId(id, data) {
@@ -507,27 +432,50 @@ class tb_ventas extends Table {
         this.constraint('id', id);
 
         let {
-          importe,
           producto_id,
           cantidad
-        } = data;
+        } = data,
+          importe = 0;
 
         this.constraint('producto_id', producto_id);
         this.constraint('cantidad', cantidad);
 
-        let [result] = await this.app.model.poolValues(`
+        let currentProductoVenta = await this.readId(id)
+
+        if (currentProductoVenta.producto_id == producto_id) {
+          importe = cantidad * (currentProductoVenta.importe / currentProductoVenta.cantidad);
+
+          if (currentProductoVenta.cantidad == cantidad)
+            this.app.model.tb_productos.updateIdBussines(currentProductoVenta.producto_id, {
+              stock_disponible: currentProductoVenta.cantidad - cantidad
+            })
+        }
+        else {
+          let selectedProduct = await this.app.model.tb_productos.readPriceId(Number(producto_id))
+          importe = cantidad * selectedProduct.venta;
+
+          this.app.model.tb_productos.updateIdBussines(currentProductoVenta.producto_id, {
+            stock_disponible: currentProductoVenta.cantidad
+          })
+
+          this.app.model.tb_productos.updateIdBussines(producto_id, {
+            stock_disponible: -cantidad
+          })
+        }
+
+        let [result] = await this.app.model.pool(`
           UPDATE
             tb_ventas
           SET
-            importe = ?,
             producto_id = ?,
-            cantidad = ?
-          WHERE 
+            cantidad = ?,
+            importe = ?
+          WHERE
             id = ?;
         `, [
-          importe,
           producto_id,
           cantidad,
+          importe,
           id
         ]);
 
@@ -538,7 +486,7 @@ class tb_ventas extends Table {
     })
   }
   /**
-   * @param {number} id 
+   * @param {number} id
    * @returns {Promise<import('mysql').OkPacket>}
    */
   deleteId(id) {
@@ -546,14 +494,34 @@ class tb_ventas extends Table {
       try {
         this.constraint('id', id);
 
-        let [result] = await this.app.model.poolValues(`
-          DELETE FROM 
-            tb_ventas 
-          WHERE 
-            id = ?
+        await this.app.model.pool(`
+          UPDATE
+            tb_productos p
+          JOIN
+            tb_ventas v
+          ON
+            p.id = v.producto_id
+          SET
+            p.stock_disponible = p.stock_disponible + v.cantidad
+          WHERE
+            v.id = ?;
         `, [
           id
         ]);
+
+        let [result] = await this.app.model.pool(`
+          DELETE FROM
+            tb_ventas
+          WHERE
+            id = ?;
+        `, [
+          id
+        ]);
+
+        if (result.affectedRows) this.app.model.tb_productos.io.emitSocket(
+          '/productos/data/updateIdBussines',
+          { id: false }
+        )
 
         res(result)
       } catch (e) {
@@ -563,4 +531,4 @@ class tb_ventas extends Table {
   }
 }
 
-module.exports = tb_ventas;
+module.exports = Tb_ventas;

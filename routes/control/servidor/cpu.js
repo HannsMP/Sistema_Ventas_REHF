@@ -4,19 +4,18 @@ const { resolve } = require('path');
 /** @typedef {import('../../../utils/SocketNode')} SocketNode */
 /** @typedef {Array.<(this: App, req: import('express').Request, res: import('express').Response, next: import('express').NextFunction)=>void>} routeArr */
 
-/** 
+/**
  * @type {{
- *   load:boolean, 
- *   route:string, 
- *   viewLayoutPath:string, 
- *   viewRenderPath:string, 
- *   viewErrorPath:string, 
- *   use: routeArr, 
- *   get: routeArr, 
+ *   load:boolean,
+ *   route:string,
+ *   viewLayoutPath:string,
+ *   viewRenderPath:string,
+ *   viewErrorPath:string,
+ *   use: routeArr,
+ *   get: routeArr,
  *   post: routeArr,
- *   nodeOption: {last:boolean, tagsName:boolean, collector:boolean},
- *   nodeRoute: (this: App, node: SocketNode)=>void
- * }} 
+ *   nodeRoute: {last:boolean, tagsName:boolean, collector:boolean} | (this: App, node: SocketNode)=>void
+ * }}
 */
 module.exports = {
   load: true,
@@ -44,13 +43,101 @@ module.exports = {
   nodeRoute: function (node) {
     let internalId;
 
-    node.ev.on('remove', socket => {
+    node.ev.on('remove', () => {
       if (node.sockets.size != 0) return
       clearInterval(internalId);
       internalId = null;
     })
 
-    node.ev.on('connected', () => {
+    /** @param {()=>void} res */
+    let cpuSytem = async (res) => {
+      try {
+        let data = await this.system.cpu();
+        res(data)
+      } catch (e) {
+        this.logError.writeStart(e.message, e.stack)
+      }
+    }
+
+    /** @param {()=>void} res */
+    let coreSytem = async (res) => {
+      try {
+        let data = await this.system.currentLoad();
+        res(data)
+      } catch (e) {
+        this.logError.writeStart(e.message, e.stack)
+      }
+    }
+
+    /** @param {()=>void} res */
+    let ramSytem = async (res) => {
+      try {
+        let data = await this.system.mem();
+        res(data)
+      } catch (e) {
+        this.logError.writeStart(e.message, e.stack)
+      }
+    }
+
+    /** @param {()=>void} res */
+    let diskSytem = async (res) => {
+      try {
+        let data = await this.system.diskLayout();
+        res(data)
+      } catch (e) {
+        this.logError.writeStart(e.message, e.stack)
+      }
+    }
+
+    /** @param {()=>void} res */
+    let fsSytem = async (res) => {
+      try {
+        let data = await this.system.fsSize();
+        res(data)
+      } catch (e) {
+        this.logError.writeStart(e.message, e.stack)
+      }
+    }
+
+    /** @param {number} myId @param {()=>void} res */
+    let powerSytem = async (myId, res) => {
+      try {
+        let permiso = await this.model.tb_permisos.userPathUpdate(myId, module.exports.route);
+        if (!permiso) return res('No tienes Permisos para controlar el reinicio del sistema.');
+
+        this.system.reboot();
+        res();
+      } catch (e) {
+        this.logError.writeStart(e.message, e.stack)
+        res('Ocurrio un error, ponte en contacto con el administrador.');
+      }
+    }
+
+    /** @param {number} myId @param {()=>void} res */
+    let resetSytem = async (myId, res) => {
+      try {
+        let permiso = await this.model.tb_permisos.userPathDelete(myId, module.exports.route);
+        if (!permiso) return res('No tienes Permisos para controlar el apagado del sistema.');
+
+        this.system.powerOff();
+        res();
+      } catch (e) {
+        this.logError.writeStart(e.message, e.stack)
+        res('Ocurrio un error, ponte en contacto con el administrador.');
+      }
+    }
+
+    node.ev.on('connected', socket => {
+      let myId = socket.session.usuario_id;
+
+      socket.on('/cpu/sytem', cpuSytem)
+      socket.on('/core/sytem', coreSytem)
+      socket.on('/ram/sytem', ramSytem)
+      socket.on('/disk/sytem', diskSytem)
+      socket.on('/fs/sytem', fsSytem)
+      socket.on('/power/sytem', powerSytem.bind(null, myId))
+      socket.on('/reset/sytem', resetSytem.bind(null, myId))
+
       if (!internalId)
         internalId = setInterval(() => {
           let CurrentLoadData = this.system.currentLoad();

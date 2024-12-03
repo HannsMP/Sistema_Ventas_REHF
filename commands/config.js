@@ -7,7 +7,7 @@ module.exports = {
   name: 'config',
   cooldown: 2 * 1000,
   onColldown: {},
-  description: `Permite controlar las configuraciones del servidor. 
+  description: `Permite controlar las configuraciones del servidor.
   Uso: */config [propiedades] =? [asignador] | lectura*
   si no se especifica accion: retorna informacion del servidor.
   accion:

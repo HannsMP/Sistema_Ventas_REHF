@@ -9,7 +9,7 @@ class FileJSON extends File {
   #template;
   /**
    * @param {string} pathFile
-   * @param {boolean} autoSave 
+   * @param {boolean} autoSave
    * @param {T} template
    */
   constructor(pathFile, autoSave = true, template = {}) {

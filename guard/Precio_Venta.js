@@ -50,38 +50,56 @@ class Precio_venta {
     if (!this.app.model.estado && !await this.app.model._run()) return;
 
     let [limitsResult] = await this.app.model.pool(`
-      SELECT 
-        MIN(compra) AS min_compra,
-        MAX(compra) AS max_compra,
-        MIN(venta) AS min_venta,
-        MAX(venta) AS max_venta
-      FROM 
-        tb_productos
+      SELECT
+        MIN(c.compra) AS min_compra,
+        MAX(c.compra) AS max_compra,
+        MIN(p.venta) AS min_venta,
+        MAX(p.venta) AS max_venta
+      FROM
+        tb_productos AS p
+      RIGHT
+      	JOIN
+        	tb_compras AS c
+        ON
+        	c.producto_id = p.id
       WHERE
-        estado = 1;
+        p.estado = 1;
     `)
 
     this.limit = limitsResult[0];
 
     let [data] = await this.app.model.pool(`
-      SELECT 
-        ((p.compra - sub.min_compra) / (sub.max_compra - sub.min_compra)) AS input,
+      SELECT
+        ((c.compra - sub.min_compra) / (sub.max_compra - sub.min_compra)) AS input,
         ((p.venta - sub.min_venta) / (sub.max_venta - sub.min_venta)) AS output
-      FROM 
-        tb_productos p,
-        (
-          SELECT 
-            MIN(compra) AS min_compra, 
-            MAX(compra) AS max_compra,
-            MIN(venta) AS min_venta, 
-            MAX(venta) AS max_venta
-          FROM 
-            tb_productos 
-          WHERE 
-            estado = 1
-        ) sub
-      WHERE 
-        p.estado = 1;
+      FROM
+        tb_productos p
+      INNER
+        JOIN
+          tb_compras c
+        ON
+          c.producto_id = p.id
+      INNER
+        JOIN
+          (
+            SELECT
+              MIN(c.compra) AS min_compra,
+              MAX(c.compra) AS max_compra,
+              MIN(p.venta) AS min_venta,
+              MAX(p.venta) AS max_venta
+            FROM
+              tb_productos p
+            INNER JOIN
+              tb_compras c
+            ON
+              c.producto_id = p.id
+            WHERE
+              p.estado = 1 AND c.compra IS NOT NULL
+          ) sub
+        ON
+          c.producto_id = p.id
+      WHERE
+        p.estado = 1 AND c.compra IS NOT NULL;
     `)
 
     data.forEach(d => {
@@ -111,8 +129,8 @@ class Precio_venta {
       prediccion: this.toFunction.toString()
     });
   }
-  /** 
-   * @param {number} price  
+  /**
+   * @param {number} price
    * @returns {Promise<Number>}
    */
   predict(price) {

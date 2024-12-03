@@ -107,10 +107,18 @@ class Tables {
 
       tableConfig.ajax = config.ajax;
     }
-    this.datatable = this.i.DataTable(tableConfig);
+
+    if (searchParam) {
+      let url = new URL(window.location.href);
+      if (url.searchParams.has(searchParam)) {
+        let search = url.searchParams.get(searchParam);
+        tableConfig.search = { search };
+      }
+    }
 
     /** @type {import('datatables.net-dt').Config}  */
     this.config = tableConfig;
+    this.datatable = this.i.DataTable(tableConfig);
 
     if (searchParam) {
       let timeoutId;
@@ -134,12 +142,6 @@ class Tables {
 
         return arg?.oPreviousSearch?.search
       })
-
-      let url = new URL(window.location.href);
-      if (url.searchParams.has(searchParam)) {
-        let search = url.searchParams.get(searchParam);
-        this.datatable.search(search).draw();
-      }
     }
   }
   /** @returns {number} */

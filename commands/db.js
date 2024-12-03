@@ -10,7 +10,7 @@ module.exports = {
   name: 'db',
   cooldown: 5 * 1000,
   onColldown: {},
-  description: `Permite controlar el estado de la base de datos. 
+  description: `Permite controlar el estado de la base de datos.
   Uso: */db [accion]*
   si no se especifica accion: calcula el tiempo de respuesta.
   accion:

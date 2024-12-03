@@ -23,10 +23,10 @@ const defaultOption = {
 class Logger extends File {
   #option;
   /**
-   * @param {string} pathFile 
-   * @param {TimeClass} Time 
-   * @param {defaultOption} option 
-   * @param {import('../app')} app 
+   * @param {string} pathFile
+   * @param {TimeClass} Time
+   * @param {defaultOption} option
+   * @param {import('../app')} app
    */
   constructor(pathFile, Time, option, app) {
     option = mergeObjects(defaultOption, option);

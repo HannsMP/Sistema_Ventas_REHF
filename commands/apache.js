@@ -7,7 +7,7 @@ module.exports = {
   name: 'apache',
   cooldown: 30 * 1000,
   onColldown: {},
-  description: `Permite controlar el estado del servidor Apache. 
+  description: `Permite controlar el estado del servidor Apache.
   Uso: */apache [accion]*
   si no se especifica accion: retorna informacion sobre el servidor Apache.
   accion:

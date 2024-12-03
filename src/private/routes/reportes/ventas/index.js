@@ -1,7 +1,7 @@
 $('.content-body').ready(async () => {
   try {
 
-    /* 
+    /*
       ==================================================
       ================== VARIABLES DOM ==================
       ==================================================
@@ -11,6 +11,7 @@ $('.content-body').ready(async () => {
 
     let tableTableMain = document.querySelector('#card-table-main');
     let tblNuevoMain = tableTableMain.querySelectorAll('.tbl-nuevo');
+    let tblEditarMain = tableTableMain.querySelectorAll('.tbl-editar');
     let tblEliminarMain = tableTableMain.querySelectorAll('.tbl-eliminar');
     let cardMainDownload = tableTableMain.querySelector('.download');
 
@@ -21,35 +22,44 @@ $('.content-body').ready(async () => {
     let tblEliminarVentas = tableTableVentas.querySelectorAll('.tbl-eliminar');
     let cardVentasDownload = tableTableVentas.querySelector('.download-other');
 
-    let $cardEditarMain = $('#card-editar');
-    let cardEditarMain = $cardEditarMain[0];
-    let inputEditarMainId = cardEditarMain?.querySelector('input[name=id]');
-    let inputEditarMainImporteTotal = cardEditarMain?.querySelector('input[type=text]');
-    let inputSelectorVendedor = cardEditarMain?.querySelector('input.selector#vendedor');
-    let inputSelectorMetodoPago = cardEditarMain?.querySelector('input.selector#metodo-transaccion');
-    let btnEditarMain = cardEditarMain?.querySelector('.btn');
+    let currentEditarTransaccionId = 0;
+    let currentEditarVentaId = 0;
 
     let $cardNuevoVentas = $('#card-nuevo-ventas');
     let cardNuevoVentas = $cardNuevoVentas[0];
-    let inputNuevoIdTrasaccionVenta = cardNuevoVentas?.querySelector('input[name=transaccion_id]');
-    let inputNuevoCantidadVentas = cardNuevoVentas?.querySelector('input[type=text]');
-    let inputNuevoSelectorProductos = cardNuevoVentas?.querySelector('input.selector#productos');
+    /** @type {HTMLInputElement} */
+    let inputNuevoVentasCantidad = document.getElementById('nuevo-cantidad');
+    /** @type {HTMLInputElement} */
+    let inputNuevoSelectorProductos = document.getElementById('nuevo-producto');
+    /** @type {HTMLAnchorElement} */
     let btnNuevoVentas = cardNuevoVentas?.querySelector('.btn');
 
     let $cardEditarVentas = $('#card-editar-ventas');
     let cardEditarVentas = $cardEditarVentas[0];
-    let inputEditarIdVentas = cardEditarVentas?.querySelector('input[name=id]');
-    let inputEditarIdTrasaccionVenta = cardEditarVentas?.querySelector('input[name=transaccion_id]');
-    let inputEditarCantidadVentas = cardEditarVentas?.querySelector('input[type=text]');
-    let inputEditarSelectorProductos = cardEditarVentas?.querySelector('input.selector#productos');
+    /** @type {HTMLInputElement} */
+    let inputEditarVentasCantidad = document.getElementById('editar-cantidad');
+    /** @type {HTMLInputElement} */
+    let inputEditarSelectorProductos = document.getElementById('editar-producto');
+    /** @type {HTMLAnchorElement} */
     let btnEditarVentas = cardEditarVentas?.querySelector('.btn');
+
+    let $cardEditarMain = $('#card-editar');
+    let cardEditarMain = $cardEditarMain[0];
+    /** @type {HTMLInputElement} */
+    let inputEditarImporteTotal = document.getElementById('editar-importe-total');
+    /** @type {HTMLInputElement} */
+    let inputEditarSelectorVendedor = document.getElementById('editar-vendedor');
+    /** @type {HTMLInputElement} */
+    let inputEditarSelectorTipoTransaccion = document.getElementById('editar-tipo-transaccion');
+    /** @type {HTMLAnchorElement} */
+    let btnEditarMain = cardEditarMain?.querySelector('.btn');
 
     let calendarioBox = document.querySelector('.calendario');
 
     let $tableMain = new Tables('#table-main');
     let $tableVentas = new Tables('#table-toggle');
 
-    /* 
+    /*
       ==================================================
       ==================== DATATABLE ====================
       ==================================================
@@ -84,13 +94,13 @@ $('.content-body').ready(async () => {
           render: data => '<div>' + data + '</div>'
         },
         {
-          name: 'tv.descuento',
+          name: 'tv.importe_total',
           className: 'dt-type-numeric',
           targets: 3,
           render: data => data?.toFixed(2)
         },
         {
-          name: 'tv.importe_total',
+          name: 'tv.descuento',
           className: 'dt-type-numeric',
           targets: 4,
           render: data => data?.toFixed(2)
@@ -105,8 +115,8 @@ $('.content-body').ready(async () => {
         { data: 'codigo' },
         { data: 'usuario' },
         { data: 'metodo_pago_nombre' },
-        { data: 'descuento' },
         { data: 'importe_total' },
+        { data: 'descuento' },
         { data: 'creacion' }
       ],
     })
@@ -116,7 +126,7 @@ $('.content-body').ready(async () => {
 
     $tableMain.toggleSelect(permiso.editar);
 
-    /* 
+    /*
       ==================================================
       ================ DATATABLE VENTAS ================
       ==================================================
@@ -143,19 +153,22 @@ $('.content-body').ready(async () => {
           render: data => '<div>' + data + '</div>'
         },
         {
+          className: 'dt-type-numeric',
           targets: 3,
-          render: data => data?.toFixed(2)
         },
         {
+          className: 'dt-type-numeric',
           targets: 4,
           render: data => data?.toFixed(2)
         },
         {
-          targets: 6,
+          className: 'dt-type-numeric',
+          targets: 5,
           render: data => data?.toFixed(2)
         },
         {
-          targets: 7,
+          className: 'dt-type-numeric',
+          targets: 6,
           render: data => data?.toFixed(2)
         }
       ],
@@ -163,11 +176,10 @@ $('.content-body').ready(async () => {
         { data: 'producto_codigo' },
         { data: 'producto_nombre' },
         { data: 'categoria_nombre' },
-        { data: 'precio_compra' },
-        { data: 'precio_venta' },
         { data: 'cantidad' },
-        { data: 'descuento' },
+        { data: 'precio_venta' },
         { data: 'importe' },
+        { data: 'descuento' }
       ],
     }, false)
 
@@ -176,55 +188,55 @@ $('.content-body').ready(async () => {
 
     $tableVentas.toggleSelect(permiso.editar);
 
-    /* 
+    /*
       ==================================================
       ==================== SELECTOR ====================
       ==================================================
     */
 
-    let dataSelectorProductos = new OptionsServerside(
+    let selectorOptionsProductos = new OptionsServerside(
       (req, end) => socket.emit('/selector/producto', req, res => end(res)),
       { showIndex: 'img', order: 'asc', noInclude: true }
     );
 
-    let dataSelectorMetodoPago = new OptionsServerside(
+    let selectorOptionsMetodoPago = new OptionsServerside(
       (req, end) => socket.emit('/selector/metodoPago', req, res => end(res)),
       { showIndex: false, order: 'asc', noInclude: true }
     );
 
-    let dataSelectorUsuario = new OptionsServerside(
+    let selectorOptionsUsuario = new OptionsServerside(
       (req, end) => socket.emit('/selector/usuario', req, res => end(res)),
       { showIndex: 'img', order: 'asc', noInclude: true }
     );
 
-    /* 
+    /*
       ==================================================
       ================== SELECTOR UNIC ==================
       ==================================================
     */
 
-    let productosNuevoSelectorUnic = new SelectorInput(
+    let selectorNuevoProducto = new SelectorInput(
       inputNuevoSelectorProductos,
-      dataSelectorProductos,
+      selectorOptionsProductos,
       { autohide: true }
     );
-    let productosEditarSelectorUnic = new SelectorInput(
+    let selectorEditarProducto = new SelectorInput(
       inputEditarSelectorProductos,
-      dataSelectorProductos,
+      selectorOptionsProductos,
       { justChange: true }
     );
-    let metodoTransaccionSelectorUnic = new SelectorInput(
-      inputSelectorMetodoPago,
-      dataSelectorMetodoPago,
+    let selectorEditarMetodoTransaccion = new SelectorInput(
+      inputEditarSelectorTipoTransaccion,
+      selectorOptionsMetodoPago,
       { justChange: true }
     );
-    let usuarioSelectorUnic = new SelectorInput(
-      inputSelectorVendedor,
-      dataSelectorUsuario,
+    let selectorEditarAgente = new SelectorInput(
+      inputEditarSelectorVendedor,
+      selectorOptionsUsuario,
       { justChange: true }
     );
 
-    /* 
+    /*
       ==================================================
       =================== TOGGLE ===================
       ==================================================
@@ -233,11 +245,33 @@ $('.content-body').ready(async () => {
     function toggleTable(state) {
       if (state) {
         $tableTableVentas.show('fast');
+      } else {
+        $tableTableVentas.hide();
+      }
+    }
+
+    function toggleTableEditar(state) {
+      if (state) {
         sideContent.scrollTop = tableTableVentas.offsetTop - sideContent.offsetTop - 100;
         $cardEditarMain.show('fast');
       } else {
-        $tableTableVentas.hide();
+        currentEditarTransaccionId = 0;
+        currentEditarVentaId = 0;
         $cardEditarMain.hide();
+      }
+    }
+
+    function toggleCardNuevo(state) {
+      if (state) {
+        inputNuevoVentasCantidad.value = 1;
+        toggleCardEditar(false);
+        $cardNuevoVentas.show('fast');
+        $tableVentas.datatable.rows().deselect()
+        sideContent.scrollTop = cardNuevoVentas.offsetTop - sideContent.offsetTop - 100;
+      }
+      else {
+        selectorNuevoProducto.empty();
+        $cardNuevoVentas.hide('fast');
       }
     }
 
@@ -247,23 +281,14 @@ $('.content-body').ready(async () => {
         $cardEditarVentas.show('fast');
         sideContent.scrollTop = cardEditarVentas.offsetTop - sideContent.offsetTop - 100;
       }
-      else
+      else {
+        currentEditarVentaId = 0;
+        selectorEditarProducto.empty();
         $cardEditarVentas.hide('fast');
-    }
-
-    function toggleCardNuevo(state) {
-      if (state) {
-        inputNuevoCantidadVentas.value = '1';
-        toggleCardEditar(false);
-        $cardNuevoVentas.show('fast');
-        $tableVentas.datatable.rows().deselect()
-        sideContent.scrollTop = cardNuevoVentas.offsetTop - sideContent.offsetTop - 100;
       }
-      else
-        $cardNuevoVentas.hide('fast');
     }
 
-    /* 
+    /*
       ==================================================
       =================== CALENDARIO ===================
       ==================================================
@@ -293,160 +318,126 @@ $('.content-body').ready(async () => {
       calendar.setDate(fotmatDate);
     }
 
-    /* 
+    /*
       ==================================================
-      ================== OPEN BUSINESS ==================
+      =========== VALID CHANGE TRANSACCIONES ===========
       ==================================================
     */
 
-    $tableMain.datatable.on('select', async (e, dt, type, indexes) => {
-      toggleTable(true);
-      let { id, codigo, metodo_pago_id, usuario_id, importe_total } = $tableMain.datatable
-        .rows(indexes).data().toArray()[0];
+    let validChangeTransacciones = () => {
+      let valid = false;
+      valid ||= Number(inputEditarImporteTotal.value) != Number(inputEditarImporteTotal.currentValue);
+      valid ||= selectorEditarMetodoTransaccion?.selected[0]?.id != selectorEditarMetodoTransaccion.currentValue;
+      valid ||= selectorEditarAgente?.selected[0]?.id != selectorEditarAgente.currentValue;
 
-      let resVentas = await query.post.json.cookie("/api/ventas/table/readBusinessId", { id });
+      valid
+        ? btnEditarMain.classList.remove('disabled')
+        : btnEditarMain.classList.add('disabled');
+    }
 
-      /** @type {{list: {[column:string]: string|number}[]}} */
-      let { list: dataVentas } = await resVentas.json();
+    inputEditarImporteTotal.addEventListener('input', validChangeTransacciones);
+    selectorEditarMetodoTransaccion.on('change', validChangeTransacciones)
+    selectorEditarAgente.on('change', validChangeTransacciones)
 
-      cardVentasTittle.textContent = codigo;
+    /*
+      ==================================================
+      =============== OPEN TRANSACCIONES ===============
+      ==================================================
+    */
 
-      $tableVentas.data(dataVentas);
+    let defaultEditarTransaccion = async data => {
+      cardVentasTittle.textContent
+        = data.codigo;
 
-      if ($cardEditarMain[0]) {
-        inputEditarMainId.value = id;
-        inputEditarIdTrasaccionVenta.value = id;
-        inputNuevoIdTrasaccionVenta.value = id;
-        inputEditarMainImporteTotal.value = importe_total;
-        metodoTransaccionSelectorUnic.select(metodo_pago_id);
-        usuarioSelectorUnic.select(usuario_id);
-      }
+      inputEditarImporteTotal.currentValue
+        = inputEditarImporteTotal.placeholder
+        = data.importe_total.toFixed(2);
+
+      let asyncMetodoTransaccion = selectorEditarMetodoTransaccion.select(data.metodo_pago_id);
+      selectorEditarMetodoTransaccion.currentValue = data.metodo_pago_id;
+
+      let asyncAgente = selectorEditarAgente.select(data.usuario_id);
+      selectorEditarAgente.currentValue = data.usuario_id;
+
+      await asyncMetodoTransaccion;
+      await asyncAgente;
+    }
+
+    let setterEditarTransaccion = data => {
+      currentEditarTransaccionId = data.id;
+
+      cardVentasTittle.textContent
+        = data.codigo;
+
+      inputEditarImporteTotal.value
+        = data.importe_total.toFixed(2);
+
+      defaultEditarTransaccion(data);
+      btnEditarMain.classList.add('disabled');
+    }
+
+    $tableMain.datatable.on('select', (e, dt, type, indexes) => {
+      let data = $tableMain.datatable.rows(indexes).data().toArray()[0];
+
+      socket.emit('/read/ventas', data.id, dataVentas => {
+        $tableVentas.data(dataVentas);
+        currentEditarTransaccionId = data.id;
+        toggleTable(true);
+      })
     })
 
-    $tableVentas.datatable.on('select', async (e, dt, type, indexes) => {
-      let { id, producto_id, cantidad } = $tableVentas.datatable
-        .rows(indexes).data().toArray()[0];
-      toggleCardEditar(true);
-      inputEditarIdVentas.value = id;
-      inputEditarCantidadVentas.value = cantidad;
-      productosEditarSelectorUnic.select(producto_id);
-    })
+    tblEditarMain.forEach(btn => btn.addEventListener('click', () => {
+      let id = $tableMain.selected();
+      if (!id) return alarm.warn('Selecciona una fila');
+
+      socket.emit('/readId/table', id, data => {
+        setterEditarTransaccion(data);
+        toggleTableEditar(true)
+      })
+    }))
 
     $tableMain.datatable.on('deselect', _ => {
       toggleTable(false);
+      toggleTableEditar(false);
       toggleCardEditar(false);
       toggleCardNuevo(false);
     })
 
-    $tableVentas.datatable.on('deselect', _ => {
-      toggleCardEditar(false);
-    })
-
-    /* 
+    /*
     ==================================================
     =================== EDITAR MAIN ===================
     ==================================================
     */
 
-    if ($cardEditarMain[0]) {
-      btnEditarMain.addEventListener('click', async () => {
-        let id = Number(inputEditarMainId.value);
-        let json = { id };
+    btnEditarMain.addEventListener('click', async () => {
+      let jsonData = {};
 
-        json.importe_total = Number(inputEditarMainImporteTotal.value);
+      jsonData.id = currentEditarTransaccionId;
 
-        let selectMetodo = metodoTransaccionSelectorUnic.selected[0];
-        if (!selectMetodo) return formError(`Selecciona un Metodo`, inputSelectorMetodoPago.parentNode);
-        json.metodo_pago_id = selectMetodo.id;
+      let importeTotalValue = Number(inputEditarImporteTotal.value);
+      if (!importeTotalValue) return formError(`Se require el precio del importe total!.`, inputEditarImporteTotal);
+      jsonData.importe_total = importeTotalValue;
 
-        let selectVendedor = usuarioSelectorUnic.selected[0];
-        if (!selectVendedor) return formError(`Selecciona un Vendedor`, inputSelectorVendedor.parentNode);
-        json.usuario_id = selectVendedor.id;
+      let selectMetodo = selectorEditarMetodoTransaccion.selected[0];
+      if (!selectMetodo) return formError(`Selecciona un Metodo`, inputEditarSelectorTipoTransaccion);
+      jsonData.metodo_pago_id = Number(selectMetodo.id || selectorEditarMetodoTransaccion.currentValue);
 
-        let resTrasaccionUpdate = await query.post.json.cookie("/api/transacciones_ventas/table/updateId", json);
+      let selectVendedor = selectorEditarAgente.selected[0];
+      if (!selectVendedor) return formError(`Selecciona un Vendedor`, inputEditarSelectorVendedor);
+      jsonData.usuario_id = Number(selectVendedor.id || selectorEditarAgente.currentValue);
 
-        /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-        let { err } = await resTrasaccionUpdate.json();
-
+      socket.emit('/updateId/table', jsonData, err => {
         if (err)
-          return alarm.error(`Transaccion no Editada.`);
+          return alarm.error(err);
 
         alarm.success(`Transaccion Editada.`);
       })
-    }
 
-    /* 
+    })
+
+    /*
       ==================================================
-      ================== NUEVO VENTAS ==================
-      ==================================================
-    */
-
-    if ($cardNuevoVentas[0]) {
-      tblNuevoVentas.forEach(btn => btn.addEventListener('click', () => toggleCardNuevo(true)))
-
-      btnNuevoVentas.addEventListener('click', async () => {
-        let transaccion_id = Number(inputNuevoIdTrasaccionVenta.value);
-        let json = { transaccion_id };
-
-        json.cantidad = Number(inputNuevoCantidadVentas.value);
-
-        let selectProducto = productosNuevoSelectorUnic.selected[0];
-        if (!selectProducto) return formError(`Selecciona un Producto`, inputNuevoSelectorProductos.parentNode);
-        json.producto_id = selectProducto.id;
-
-        let resTrasaccionUpdate = await query.post.json.cookie("/api/ventas/table/insert", json);
-
-        /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-        let { err, data } = await resTrasaccionUpdate.json();
-
-        if (err)
-          return alarm.error(`Venta no Agregada.`);
-
-        $tableMain.update('#' + transaccion_id, {
-          descuento: data.descuento?.toFixed(2)
-        });
-
-        alarm.success(`Venta Agregada.`);
-
-        $tableMain.datatable.rows().deselect();
-        $tableMain.datatable.rows('#' + transaccion_id).select();
-        $tableVentas.datatable.rows('#' + id).select();
-      })
-    }
-
-    /* 
-    ==================================================
-    ================== EDITAR VENTAS ==================
-    ==================================================
-    */
-
-    if ($cardEditarVentas[0]) {
-      btnEditarVentas.addEventListener('click', async () => {
-        let id = Number(inputEditarIdVentas.value);
-        let transaccion_id = Number(inputEditarIdTrasaccionVenta.value);
-        let json = { id, transaccion_id };
-
-        json.cantidad = Number(inputEditarCantidadVentas.value);
-
-        let selectProducto = productosEditarSelectorUnic.selected[0];
-        if (!selectProducto) return formError(`Selecciona un Producto`, inputEditarSelectorProductos.parentNode);
-        json.producto_id = selectProducto.id;
-
-        let resTrasaccionUpdate = await query.post.json.cookie("/api/ventas/table/updateId", json);
-
-        /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-        let { err } = await resTrasaccionUpdate.json();
-
-        if (err)
-          return alarm.error(`Venta no Editada.`);
-
-        alarm.success(`Venta Editada.`);
-      })
-    }
-
-    /* 
-      ==================================================
-      ==================== ELIMINAR ====================
+      ================== ELIMINAR MAIN ==================
       ==================================================
     */
 
@@ -467,19 +458,136 @@ $('.content-body').ready(async () => {
         color: 'rgb(255, 255, 255)',
       })
         .then(async (result) => {
-          if (result.isConfirmed) {
-            let resClientes = await query.post.json.cookie("/api/transacciones_ventas/table/deleteId", { id });
+          if (result.isConfirmed)
+            socket.emit('/deleteId/table', id, err => {
+              if (err)
+                return alarm.error(err);
 
-            /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-            let { err } = await resClientes.json();
-
-            if (err)
-              return alarm.error(`Transaccion no Eliminada.`);
-
-            alarm.success(`Transaccion eliminada.`);
-          }
+              alarm.success(`Transaccion eliminada.`);
+            })
         });
     }))
+
+    /*
+      ==================================================
+      ================== NUEVO VENTAS ==================
+      ==================================================
+    */
+
+    tblNuevoVentas.forEach(btn => btn.addEventListener('click', () => toggleCardNuevo(true)))
+
+    btnNuevoVentas.addEventListener('click', async () => {
+      let jsonData = {};
+
+      jsonData.transaccion_id = currentEditarTransaccionId;
+
+      jsonData.cantidad = Number(inputNuevoVentasCantidad.value);
+
+      let selectProducto = selectorNuevoProducto.selected[0];
+      if (!selectProducto) return formError(`Selecciona un Producto`, inputNuevoSelectorProductos);
+      jsonData.producto_id = Number(selectProducto.id || selectorNuevoProducto.currentValue);
+
+      socket.emit('/insertId/ventas', jsonData, err => {
+        if (err)
+          return alarm.error(err);
+
+        $tableMain.datatable.draw();
+        $tableVentas.datatable.draw();
+        alarm.success(`Venta Agregada.`);
+      })
+    })
+
+    /*
+      ==================================================
+      =============== VALID CHANGE VENTAS ===============
+      ==================================================
+    */
+
+    let validChangeVentas = () => {
+      let valid = false;
+      valid ||= inputEditarVentasCantidad.value != inputEditarVentasCantidad.currentValue;
+      valid ||= selectorEditarProducto?.selected[0]?.id != selectorEditarProducto.currentValue;
+
+      valid
+        ? btnEditarVentas.classList.remove('disabled')
+        : btnEditarVentas.classList.add('disabled');
+    }
+
+    inputEditarVentasCantidad.addEventListener('input', validChangeVentas);
+    selectorEditarProducto.on('change', validChangeVentas)
+
+    /*
+      ==================================================
+      =================== OPEN VENTAS ===================
+      ==================================================
+    */
+
+    let defaultEditarVentas = async data => {
+      inputEditarVentasCantidad.currentValue
+        = inputEditarVentasCantidad.placeholder
+        = data.cantidad;
+
+      let asyncMetodoProducto = selectorEditarProducto.select(data.producto_id);
+      selectorEditarProducto.currentValue = data.producto_id;
+
+      await asyncMetodoProducto;
+    }
+
+    let setterEditarVentas = data => {
+      currentEditarVentaId = data.id;
+
+      inputEditarVentasCantidad.value
+        = data.cantidad;
+
+      defaultEditarVentas(data);
+      btnEditarVentas.classList.add('disabled');
+    }
+
+    $tableVentas.datatable.on('select', (e, dt, type, indexes) => {
+      let data = $tableVentas.datatable.rows(indexes).data().toArray()[0];
+
+      setterEditarVentas(data);
+      currentEditarVentaId = data.id;
+      toggleCardEditar(true);
+    })
+
+    $tableVentas.datatable.on('deselect', _ => {
+      toggleCardEditar(false);
+    })
+
+    /*
+    ==================================================
+    ================== EDITAR VENTAS ==================
+    ==================================================
+    */
+
+    btnEditarVentas.addEventListener('click', async () => {
+      let jsonData = {};
+
+      jsonData.id = currentEditarVentaId;
+      jsonData.transaccion_id = currentEditarTransaccionId;
+
+      let cantidadValue = Number(inputEditarVentasCantidad.value);
+      if (!cantidadValue) return formError(`Se require una cantidad!.`, inputEditarVentasCantidad);
+      jsonData.cantidad = cantidadValue;
+
+      let selectProducto = selectorEditarProducto.selected[0];
+      if (!selectProducto) return formError(`Selecciona un Producto`, inputEditarSelectorProductos);
+      jsonData.producto_id = Number(selectProducto.id || selectorEditarProducto.currentValue);
+
+      socket.emit('/updateId/ventas', jsonData, err => {
+        if (err)
+          return alarm.error(err);
+
+        alarm.success(`Venta Editada.`);
+      })
+    })
+
+    /*
+      ==================================================
+      ================= ELIMINAR VENTAS =================
+      ==================================================
+    */
 
     tblEliminarVentas.forEach(btn => btn.addEventListener('click', _ => {
       let id = $tableVentas.selected();
@@ -500,18 +608,13 @@ $('.content-body').ready(async () => {
           color: 'rgb(255, 255, 255)',
         })
           .then(async (result) => {
-            if (result.isConfirmed) {
+            if (result.isConfirmed)
+              socket.emit('/deleteId/table', transaccion_id, err => {
+                if (err)
+                  return alarm.error(err);
 
-              let resClientes = await query.post.json.cookie("/api/transacciones_ventas/table/deleteId", { id: transaccion_id });
-
-              /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-              let { err } = await resClientes.json();
-
-              if (err)
-                return alarm.error(`Transaccion no Eliminada.`);
-
-              alarm.success(`Transaccion eliminada.`);
-            }
+                alarm.success(`Transaccion eliminada.`);
+              })
           });
 
       if (!id) return alarm.warn('Selecciona una fila');
@@ -529,60 +632,53 @@ $('.content-body').ready(async () => {
         color: 'rgb(255, 255, 255)',
       })
         .then(async (result) => {
-          if (result.isConfirmed) {
+          if (result.isConfirmed)
+            socket.emit('/deleteId/ventas', id, transaccion_id, err => {
+              if (err)
+                return alarm.error(err);
 
-            let resClientes = await query.post.json.cookie("/api/ventas/table/deleteId", { id, transaccion_id });
-
-            /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-            let { err } = await resClientes.json();
-
-            if (err)
-              return alarm.error(`Venta no Eliminada.`);
-
-            alarm.success(`Venta eliminada.`);
-          }
+              alarm.success(`Venta eliminada.`);
+            })
         });
 
     }))
 
-    /* 
+    /*
       ==================================================
       ===================== SOCKET =====================
       ==================================================
     */
 
-    socket.on('/transacciones_ventas/data/insert', data => {
+    socket.on('/transacciones_ventas/data/insert', () => {
       $tableMain.datatable.draw();
     })
 
-    socket.on('/transacciones_ventas/data/updateId', data => {
+    socket.on('/transacciones_ventas/data/updateId', async data => {
+      if (currentEditarTransaccionId == data.id) {
+        await defaultEditarTransaccion(data);
+        validChangeTransacciones()
+      }
+      if (!$tableMain.get('#' + data.id)) return;
       $tableMain.datatable.draw();
     })
 
     socket.on('/transacciones_ventas/data/deleteId', data => {
+      if (currentEditarTransaccionId == data.id) {
+        toggleTable(false);
+        toggleCardEditar(false);
+      }
+      if (!$tableMain.get('#' + data.id)) return;
       $tableMain.datatable.draw();
-      let id = $tableMain.selected();
-
-      if (data.id != id) return;
-      toggleTable(false);
-      toggleCardEditar(false);
     })
 
     socket.on('/transacciones_ventas/data/refreshId', data => {
-      $tableMain.update('#' + data.id, {
-        descuento: data.descuento
-      });
-
-      let id = $tableMain.selected();
-      if (data.id != id) return;
-      $tableMain.datatable.rows().deselect();
-      $tableMain.datatable.rows('#' + data.id).select();
+      if (!$tableMain.get('#' + data.id)) return;
+      $tableMain.datatable.draw();
     })
 
     socket.on('/ventas/data/deleteId', data => {
-      let row = $tableVentas.get('#' + data.id);
-      if (!row) return;
-      $tableVentas.remove('#' + data.id);
+      if (!$tableVentas.get('#' + data.id)) return;
+      $tableVentas.datatable.draw();
 
       let id = $tableVentas.selected();
       if (data.id != id) return;

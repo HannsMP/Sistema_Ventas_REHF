@@ -1,7 +1,7 @@
 $('.content-body').ready(async () => {
   try {
 
-    /* 
+    /*
       ==================================================
       ================== VARIABLES DOM ==================
       ==================================================
@@ -21,29 +21,49 @@ $('.content-body').ready(async () => {
     let $tableNuevo = $('#table-nuevo');
     let tableNuevo = $tableNuevo[0];
     let inputNuevoText = tableNuevo?.querySelectorAll('input[type=text]');
-    let inputNuevoUsuario = inputNuevoText[2];
-    let inputNuevoTelefono = inputNuevoText[3];
-    let inputNuevoEmail = tableNuevo?.querySelector('input[type=email]');
-    let inputNuevoSelector = tableNuevo?.querySelector('input.selector');
-    let inputNuevoCheckbox = tableNuevo?.querySelector('input[type=checkbox]');
+    /** @type {HTMLInputElement} */
+    let inputNuevoNombres = document.getElementById('nuevo-nombres');
+    /** @type {HTMLInputElement} */
+    let inputNuevoApellidos = document.getElementById('nuevo-apellidos');
+    /** @type {HTMLInputElement & {except?: string}} */
+    let inputNuevoUsuario = document.getElementById('nuevo-usuario');
+    /** @type {HTMLInputElement & {except?: string}} */
+    let inputNuevoTelefono = document.getElementById('nuevo-telefono');
+    /** @type {HTMLInputElement & {except?: string}} */
+    let inputNuevoEmail = document.getElementById('nuevo-email');
+    /** @type {HTMLInputElement} */
+    let inputNuevoSelectorRol = document.getElementById('nuevo-rol');
+    /** @type {HTMLInputElement} */
+    let checkboxNuevoEstado = document.getElementById('nuevo-estado');
+    /** @type {HTMLAnchorElement} */
     let btnNuevo = tableNuevo?.querySelector('.btn');
 
+    let currentEditarId = 0;
     let $tableEditar = $('#table-editar');
     let tableEditar = $tableEditar[0];
-    let inputEditarHidden = tableEditar?.querySelector('input[type=hidden]');
     let inputEditarText = tableEditar?.querySelectorAll('input[type=text]');
-    let inputEditarUsuario = inputEditarText[2];
-    let inputEditarTelefono = inputEditarText[3];
-    let inputEditarEmail = tableEditar?.querySelector('input[type=email]');
-    let inputEditarSelector = tableEditar?.querySelector('input.selector');
-    let inputEditarImagen = tableEditar?.querySelector('.imagen-unic');
+    /** @type {HTMLInputElement} */
+    let inputEditarNombres = document.getElementById('editar-nombres');
+    /** @type {HTMLInputElement} */
+    let inputEditarApellidos = document.getElementById('editar-apellidos');
+    /** @type {HTMLInputElement & {except?: string}} */
+    let inputEditarUsuario = document.getElementById('editar-usuario');
+    /** @type {HTMLInputElement & {except?: string}} */
+    let inputEditarTelefono = document.getElementById('editar-telefono');
+    /** @type {HTMLInputElement & {except?: string}} */
+    let inputEditarEmail = document.getElementById('editar-email');
+    /** @type {HTMLInputElement} */
+    let inputEditarSelectorRol = document.getElementById('editar-rol');
+    /** @type {HTMLInputElement} */
+    let inputEditarImagen = document.getElementById('editar-imagen');
+    /** @type {HTMLAnchorElement} */
     let btnEditar = tableEditar?.querySelector('.btn');
 
     let calendarioBox = document.querySelector('.calendario');
 
     let $table = new Tables('#table-main');
 
-    /* 
+    /*
       ==================================================
       ===================== ESTADO =====================
       ==================================================
@@ -53,26 +73,22 @@ $('.content-body').ready(async () => {
     async function updateIdState({ id, usuario }) {
       this.disabled = true;
       let estado = this.checked;
-      let resEstado = await query.post.json.cookie("/api/usuarios/table/updateIdState", { id, estado });
+      socket.emit('/stateId/table', id, estado, err => {
+        if (err) {
+          this.checked = !estado;
+          return alarm.error(err);
+        }
 
-      /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-      let { err } = await resEstado.json();
+        if (estado)
+          alarm.success(`${usuario} activado`);
+        else
+          alarm.success(`${usuario} desactivado`);
 
-      if (estado)
-        alarm.success(`${usuario} activado`);
-      else
-        alarm.success(`${usuario} desactivado`);
-
-      if (err) {
-        this.checked = !estado;
-        alarm.error(`${usuario} inaccesible`);
-        return
-      }
-
-      this.disabled = false;
+        this.disabled = false;
+      })
     }
 
-    /* 
+    /*
       ==================================================
       ================= DATATABLE STATE =================
       ==================================================
@@ -87,7 +103,7 @@ $('.content-body').ready(async () => {
       select: {
         style: 'single'
       },
-      order: [[1, 'asc']],
+      order: [[7, 'asc']],
       columnDefs: [
         {
           name: 'u.estado',
@@ -116,11 +132,12 @@ $('.content-body').ready(async () => {
           targets: 3
         },
         {
-          name: 'u.telefono',
+          name: 'u.email',
           targets: 4
         },
         {
-          name: 'u.email',
+          name: 'u.telefono',
+          className: 'dt-type-numeric',
           targets: 5
         },
         {
@@ -131,6 +148,7 @@ $('.content-body').ready(async () => {
         },
         {
           name: 'u.creacion',
+          className: 'dt-type-date',
           targets: 7
         }
       ],
@@ -151,42 +169,42 @@ $('.content-body').ready(async () => {
 
     $table.toggleColumn(0, permiso.ocultar);
 
-    /* 
+    /*
       ==================================================
       ==================== SELECTOR ====================
       ==================================================
     */
 
-    let dataSelectorRoles = new OptionsServerside(
+    let selectorOptionsTipoRol = new OptionsServerside(
       (req, end) => socket.emit('/selector/rol', req, res => end(res)),
       { showIndex: true, order: 'asc', noInclude: true }
     );
 
-    /* 
+    /*
       ==================================================
       ================== SELECTOR UNIC ==================
       ==================================================
     */
 
-    let nuevoSelectorUnic = new SelectorInput(
-      inputNuevoSelector,
-      dataSelectorRoles,
+    let selectorNuevoTipoRol = new SelectorInput(
+      inputNuevoSelectorRol,
+      selectorOptionsTipoRol,
       { autohide: true }
     );
-    let editarSelectorUnic = new SelectorInput(
-      inputEditarSelector,
-      dataSelectorRoles,
+    let selectorEditarTipoRol = new SelectorInput(
+      inputEditarSelectorRol,
+      selectorOptionsTipoRol,
       { justChange: true }
     );
 
-    /* 
+    /*
       ==================================================
       ===================== IMAGEN =====================
       ==================================================
     */
-    let editarImagenUnic = new ImagenUnic(inputEditarImagen);
+    let imagenEditarAvatar = new ImagenUnic(inputEditarImagen);
 
-    /* 
+    /*
       ==================================================
       ====================== MENU ======================
       ==================================================
@@ -195,15 +213,15 @@ $('.content-body').ready(async () => {
     let toggleMenu = {
       now: 'table',
       nuevo() {
-        this.emptyNuevo();
         this.now = 'nuevo';
+        this.emptyNuevo();
         $tableNuevo.show('fast');
         tableEditar.style.display = 'none';
         sideContent.scrollTop = tableNuevo.offsetTop - sideContent.offsetTop - 100;
       },
       editar() {
-        this.emptyEditar();
         this.now = 'editar';
+        this.emptyEditar();
         $tableEditar.show('fast');
         tableNuevo.style.display = 'none';
         sideContent.scrollTop = tableEditar.offsetTop - sideContent.offsetTop - 100;
@@ -224,17 +242,17 @@ $('.content-body').ready(async () => {
       emptyNuevo() {
         if (this.now != 'nuevo') return;
         inputNuevoText.forEach(i => i.value = '');
-        nuevoSelectorUnic.empty();
+        selectorNuevoTipoRol.empty();
       },
       emptyEditar() {
         if (this.now != 'editar') return;
         inputEditarText.forEach(i => i.value = '');
-        editarSelectorUnic.empty();
-        editarImagenUnic.empty();
+        selectorEditarTipoRol.empty();
+        imagenEditarAvatar.empty();
       },
     }
 
-    /* 
+    /*
       ==================================================
       =================== CALENDARIO ===================
       ==================================================
@@ -264,7 +282,7 @@ $('.content-body').ready(async () => {
       calendar.setDate(fotmatDate);
     }
 
-    /* 
+    /*
       ==================================================
       =================== CLOSE MENU ===================
       ==================================================
@@ -272,7 +290,7 @@ $('.content-body').ready(async () => {
 
     tblclose.forEach(btn => btn.addEventListener('click', () => toggleMenu.close()));
 
-    /* 
+    /*
       ==================================================
       ================= PERMISO AGREGAR =================
       ==================================================
@@ -280,7 +298,7 @@ $('.content-body').ready(async () => {
 
     if (!permiso.agregar) tblNuevo.forEach(t => t.style.display = 'none');
 
-    /* 
+    /*
       ==================================================
       ================= UNIQUE AGREGAR =================
       ==================================================
@@ -295,7 +313,7 @@ $('.content-body').ready(async () => {
           if (res)
             return inputNuevoUsuario.except = null;
           inputNuevoUsuario.except = `El usuario '${value}' ya existe.`;
-          formError(inputNuevoUsuario.except, inputNuevoUsuario.parentNode);
+          formError(inputNuevoUsuario.except, inputNuevoUsuario);
         }
       )
     })
@@ -309,7 +327,7 @@ $('.content-body').ready(async () => {
           if (res)
             return inputNuevoTelefono.except = null;
           inputNuevoTelefono.except = `El telefono '${value}' ya existe.`;
-          formError(inputNuevoTelefono.except, inputNuevoTelefono.parentNode);
+          formError(inputNuevoTelefono.except, inputNuevoTelefono);
         }
       )
     })
@@ -323,12 +341,12 @@ $('.content-body').ready(async () => {
           if (res)
             return inputNuevoEmail.except = null;
           inputNuevoEmail.except = `El Email '${value}' ya existe.`;
-          formError(inputNuevoEmail.except, inputNuevoEmail.parentNode);
+          formError(inputNuevoEmail.except, inputNuevoEmail);
         }
       )
     })
 
-    /* 
+    /*
       ==================================================
       =================== OPEN NUEVO ===================
       ==================================================
@@ -336,47 +354,61 @@ $('.content-body').ready(async () => {
 
     tblNuevo.forEach(btn => btn.addEventListener('click', () => toggleMenu.nuevo()));
 
-    /* 
+    /*
       ==================================================
       =================== NUEVA DATA ===================
       ==================================================
     */
 
     btnNuevo.addEventListener('click', async () => {
+      if (inputNuevoUsuario.except)
+        return formError(inputNuevoUsuario.except, inputNuevoUsuario);
+      if (inputNuevoTelefono.except)
+        return formError(inputNuevoTelefono.except, inputNuevoTelefono);
+      if (inputNuevoEmail.except)
+        return formError(inputNuevoEmail.except, inputNuevoEmail);
+
       let jsonData = {};
 
-      inputNuevoText.forEach(i => {
-        if (i.except) return formError(i.except, i.parentNode);
-        let column = i.getAttribute('name');
-        let value = i.value;
-        if (!value) return formError(`Se requiere un valor para ${column}`, i.parentNode);
-        jsonData[column] = value;
+      let nombresValue = inputNuevoNombres.value;
+      if (!nombresValue) return formError(`Se require los nombres!.`, inputNuevoNombres);
+      jsonData.nombres = nombresValue;
+
+      let apellidosValue = inputNuevoApellidos.value;
+      if (!apellidosValue) return formError(`Se require los apellidos!.`, inputNuevoApellidos);
+      jsonData.apellidos = apellidosValue;
+
+      let usuarioValue = inputNuevoUsuario.value;
+      if (!usuarioValue) return formError(`Se require un nombre usuario.`, inputNuevoUsuario);
+      jsonData.usuario = usuarioValue;
+
+      let telefonoValue = inputNuevoTelefono.value;
+      if (!telefonoValue) return formError(`Se require un telefono`, inputNuevoTelefono);
+      jsonData.telefono = telefonoValue;
+
+      let emailValue = inputNuevoEmail.value;
+      if (!emailValue) return formError(`Se require un email!.`, inputNuevoEmail);
+      if (!emailValue.includes('@')) return formError(`Email no valido`, inputNuevoEmail);
+      jsonData.email = emailValue;
+
+
+      let selectTipoRol = selectorNuevoTipoRol.selected[0].id;
+      if (!selectTipoRol) return formError(`Selecciona un Rol`, inputNuevoSelectorRol);
+      jsonData.rol_id = Number(selectTipoRol);
+
+      let estado = checkboxNuevoEstado.checked ? 1 : 0;
+      jsonData.estado = estado;
+
+      socket.emit('/insert/table', jsonData, err => {
+        if (err)
+          return alarm.warn(err)
+
+        alarm.success(`Fila Agregada`);
+        toggleMenu.close();
       })
-
-      if (inputNuevoEmail.except) return formError(inputNuevoEmail.except, inputNuevoEmail.parentNode);
-
-      let email = inputNuevoEmail.value;
-      if (!email) return formError(`Se requiere un valor para email`, inputNuevoEmail.parentNode);
-      if (!email.includes('@')) return formError(`Email no valido`, inputNuevoEmail.parentNode);
-      jsonData.email = email;
-
-      let select = nuevoSelectorUnic.selected[0];
-      if (!select) return formError(`Selecciona un Rol`, inputNuevoSelector.parentNode);
-      jsonData.rol_id = Number(select.id);
-      jsonData.estado = inputNuevoCheckbox.checked ? 1 : 0;
-
-      let resUsuarios = await query.post.json.cookie("/api/usuarios/table/insert", jsonData);
-
-      /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-      let { err, OkPacket } = await resUsuarios.json();
-
-      if (err)
-        return alarm.warn('No se pudo agregar')
-
-      alarm.success(`Fila Agregada`);
     })
 
-    /* 
+    /*
       ==================================================
       ================= PERMISO EDITAR =================
       ==================================================
@@ -384,41 +416,96 @@ $('.content-body').ready(async () => {
 
     if (!permiso.editar) tblEditar.forEach(t => t.style.display = 'none');
 
-    /* 
+    let validChangeData = () => {
+      let valid = false;
+      valid ||= inputEditarNombres.value != inputEditarNombres.currentValue;
+      valid ||= inputEditarApellidos.value != inputEditarApellidos.currentValue;
+      valid ||= inputEditarUsuario.value != inputEditarUsuario.currentValue;
+      valid ||= inputEditarTelefono.value != inputEditarTelefono.currentValue;
+      valid ||= inputEditarEmail.value != inputEditarEmail.currentValue;
+      valid ||= selectorEditarTipoRol?.selected[0]?.id != selectorEditarTipoRol.currentValue;
+
+      valid
+        ? btnEditar.classList.remove('disabled')
+        : btnEditar.classList.add('disabled');
+    }
+
+    inputEditarNombres.addEventListener('input', validChangeData);
+    inputEditarApellidos.addEventListener('input', validChangeData);
+    inputEditarUsuario.addEventListener('input', validChangeData);
+    inputEditarTelefono.addEventListener('input', validChangeData);
+    inputEditarEmail.addEventListener('input', validChangeData);
+    selectorEditarTipoRol.on('change', validChangeData);
+
+    /*
       ==================================================
       =================== OPEN EDITAR ===================
       ==================================================
     */
+
+    let defaultEditar = async data => {
+      inputEditarNombres.currentValue
+        = inputEditarNombres.placeholder
+        = data.nombres;
+
+      inputEditarApellidos.currentValue
+        = inputEditarApellidos.placeholder
+        = data.apellidos;
+
+      inputEditarUsuario.currentValue
+        = inputEditarUsuario.placeholder
+        = data.usuario;
+
+      inputEditarTelefono.currentValue
+        = inputEditarTelefono.placeholder
+        = data.telefono;
+
+      inputEditarEmail.currentValue
+        = inputEditarEmail.placeholder
+        = data.email;
+
+      let asyncTipoRol = selectorEditarTipoRol.select(data.rol_id);
+      selectorEditarTipoRol.currentValue = data.rol_id;
+
+      if (data.foto_src) {
+        imagenEditarAvatar.charge(data.foto_src);
+        imagenEditarAvatar.currentValue = data.foto_src;
+      }
+
+      await asyncTipoRol;
+    }
+
+    let setterEditar = data => {
+      currentEditarId = data.id;
+
+      inputEditarNombres.value
+        = data.nombres;
+
+      inputEditarApellidos.value
+        = data.apellidos;
+
+      inputEditarUsuario.value
+        = data.usuario;
+
+      inputEditarTelefono.value
+        = data.telefono;
+
+      inputEditarEmail.value
+        = data.email;
+
+      defaultEditar(data);
+      btnEditar.classList.add('disabled');
+    }
 
     tblEditar.forEach(btn => btn.addEventListener('click', async () => {
       let id = $table.selected();
       if (!id) return alarm.warn('Selecciona una fila');
 
       toggleMenu.editar();
-
-      let resUsuarios = await query.post.json.cookie("/api/usuarios/table/readId", { id });
-
-      /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-      let { list } = await resUsuarios.json();
-
-      inputEditarHidden.value = id;
-
-      inputEditarText.forEach(i => {
-        let column = i.getAttribute('name');
-        let value = list[column];
-        i.beforeValue = i.value = value;
-      })
-      inputEditarEmail.beforeValue = inputEditarEmail.value = list.email;
-
-      editarSelectorUnic.select(list.rol_id);
-      editarSelectorUnic.beforeValue = list.rol_id;
-
-      if (list.foto_src)
-        editarImagenUnic.charge(list.foto_src),
-          editarImagenUnic.beforeValue = list.foto_src;
+      socket.emit('/readId/table', id, setterEditar);
     }))
 
-    /* 
+    /*
       ==================================================
       ================== UNIQUE EDITAR ==================
       ==================================================
@@ -426,7 +513,7 @@ $('.content-body').ready(async () => {
 
     inputEditarUsuario.addEventListener('input', () => {
       let value = inputEditarUsuario.value;
-      let id = Number(inputEditarHidden.value);
+      let id = currentEditarId;
       socket.emit(
         '/read/unic',
         { column: 'usuario', value, id },
@@ -434,14 +521,14 @@ $('.content-body').ready(async () => {
           if (res)
             return inputEditarUsuario.except = null;
           inputEditarUsuario.except = `El usuario '${value}' ya existe.`;
-          formError(inputEditarUsuario.except, inputEditarUsuario.parentNode);
+          formError(inputEditarUsuario.except, inputEditarUsuario);
         }
       )
     })
 
     inputEditarTelefono.addEventListener('input', () => {
       let value = inputEditarTelefono.value;
-      let id = Number(inputEditarHidden.value);
+      let id = currentEditarId;
       socket.emit(
         '/read/unic',
         { column: 'telefono', value, id },
@@ -449,14 +536,14 @@ $('.content-body').ready(async () => {
           if (res)
             return inputEditarTelefono.except = null;
           inputEditarTelefono.except = `El telefono '${value}' ya existe.`;
-          formError(inputEditarTelefono.except, inputEditarTelefono.parentNode);
+          formError(inputEditarTelefono.except, inputEditarTelefono);
         }
       )
     })
 
     inputEditarEmail.addEventListener('input', () => {
       let value = inputEditarEmail.value;
-      let id = Number(inputEditarHidden.value);
+      let id = currentEditarId;
       socket.emit(
         '/read/unic',
         { column: 'email', value, id },
@@ -464,57 +551,65 @@ $('.content-body').ready(async () => {
           if (res)
             return inputEditarEmail.except = null;
           inputEditarEmail.except = `El Email '${value}' ya existe.`;
-          formError(inputEditarEmail.except, inputEditarEmail.parentNode);
+          formError(inputEditarEmail.except, inputEditarEmail);
         }
       )
     })
 
-    /* 
+    /*
       ==================================================
       =================== EDITAR DATA ===================
       ==================================================
     */
 
     btnEditar.addEventListener('click', async () => {
-      let beforeJsonData = {};
+      if (inputEditarUsuario.except)
+        return formError(inputEditarUsuario.except, inputEditar);
+      if (inputEditarTelefono.except)
+        return formError(inputEditarTelefono.except, inputEditar);
+      if (inputEditarEmail.except)
+        return formError(inputEditarEmail.except, inputEditar);
 
       let jsonData = {};
-      let id = inputEditarHidden.value;
-      jsonData.id = id;
 
-      inputEditarText.forEach(i => {
-        if (i.except) return formError(i.except, i.parentNode);
-        let column = i.getAttribute('name');
-        beforeJsonData[column] = i.beforeValue;
-        let value = i.value;
-        if (!value) return formError(`Se requiere un valor para ${column}`, i.parentNode);
-        jsonData[column] = value;
+      jsonData.id = currentEditarId;
+
+      let nombresValue = inputEditarNombres.value;
+      if (!nombresValue) return formError(`Se require los nombres!.`, inputEditarNombres);
+      jsonData.nombres = nombresValue;
+
+      let apellidosValue = inputEditarApellidos.value;
+      if (!apellidosValue) return formError(`Se require los apellidos!.`, inputEditarApellidos);
+      jsonData.apellidos = apellidosValue;
+
+      let usuarioValue = inputEditarUsuario.value;
+      if (!usuarioValue) return formError(`Se require un nombre usuario.`, inputEditarUsuario);
+      jsonData.usuario = usuarioValue;
+
+      let telefonoValue = inputEditarTelefono.value;
+      if (!telefonoValue) return formError(`Se require un telefono`, inputEditarTelefono);
+      jsonData.telefono = telefonoValue;
+
+      let emailValue = inputEditarEmail.value;
+      if (!emailValue) return formError(`Se require un email!.`, inputEditarEmail);
+      if (!emailValue.includes('@')) return formError(`Email no valido`, inputEditarEmail);
+      jsonData.email = emailValue;
+
+      let selectTipoRol = selectorEditarTipoRol.selected[0].id;
+      if (!selectTipoRol) return formError(`Selecciona un Rol`, inputNuevoSelectorRol);
+      jsonData.rol_id = Number(selectTipoRol);
+
+      socket.emit('/updateId/table', jsonData, err => {
+        if (err)
+          return alarm.warn(err)
+
+        alarm.success(`Fila Agregada`);
+        toggleMenu.close();
+        $table.datatable.rows().deselect();
       })
-
-      if (inputEditarEmail.except) return formError(inputEditarEmail.except, inputEditarEmail.parentNode);
-
-      let email = inputEditarEmail.value;
-      beforeJsonData.email = inputEditarEmail.beforeValue;
-      if (!email) return formError(`Se requiere un valor para email`, inputEditarEmail.parentNode);
-      if (!email.includes('@')) return formError(`Email no valido`, inputEditarEmail.parentNode);
-      jsonData.email = email;
-
-      let select = editarSelectorUnic.selected[0];
-      if (!select) return formError(`Selecciona un Rol`, inputEditarSelector.parentNode);
-      jsonData.rol_id = Number(select.id);
-
-      let resUsuarios = await query.post.json.cookie("/api/usuarios/table/updateId", jsonData);
-
-      /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-      let { err } = await resUsuarios.json();
-
-      if (err)
-        return alarm.warn('No se pudo Editar');
-
-      alarm.success(`Fila actualizada`);
     })
 
-    /* 
+    /*
       ==================================================
       ================ PERMISO ELIMINAR ================
       ==================================================
@@ -522,7 +617,7 @@ $('.content-body').ready(async () => {
 
     if (!permiso.eliminar) tblEliminar.forEach(t => t.style.display = 'none');
 
-    /* 
+    /*
       ==================================================
       ================== ELIMINAR DATA ==================
       ==================================================
@@ -545,77 +640,43 @@ $('.content-body').ready(async () => {
         color: 'rgb(255, 255, 255)',
       })
         .then(async (result) => {
-          if (result.isConfirmed) {
-            let resUsuarios = await query.post.json.cookie("/api/usuarios/table/deleteId", { id });
-
-            /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-            let { err } = await resUsuarios.json();
-
-            if (err)
-              return alarm.error(`Fila no Eliminada`);
-
-            let dataBefore = $table.get('#' + id)
-
-            $table.remove('#' + id);
-            alarm.success(`Fila eliminada`);
-          }
+          if (result.isConfirmed)
+            socket.emit('/deleteId/table', id, err => {
+              if (err) return alarm.error(err);
+              alarm.success(`Fila eliminada`);
+            })
         });
     }))
 
-    /* 
+    /*
       ==================================================
       ===================== SOCKET =====================
       ==================================================
     */
 
-    socket.on('/usuarios/data/insert', data => {
-      let row = $table.get('#' + data.id);
-      if (row) return;
-
-      $table.add({
-        id: data.id,
-        estado: data.estado,
-        nombres: data.nombres,
-        apellidos: data.apellidos,
-        usuario: data.usuario,
-        email: data.email,
-        telefono: data.telefono,
-        rol_nombre: data.rol_nombre,
-        creacion: formatTime('YYYY-MM-DD hh:mm:ss')
-      });
+    socket.on('/usuarios/data/insert', () => {
+      $table.datatable.draw();
     })
 
-    socket.on('/usuarios/data/updateId', data => {
-      let row = $table.get('#' + data.id);
-      if (!row) return;
-
-      $table.update('#' + data.id, {
-        nombres: data.nombres,
-        apellidos: data.apellidos,
-        usuario: data.usuario,
-        email: data.email,
-        telefono: data.telefono,
-        rol_nombre: data.rol_nombre
-      });
-
-      let menuEditarid = $table.selected();
-      if (menuEditarid && menuEditarid == data.id)
-        tblEditar?.[0]?.click();
+    socket.on('/usuarios/data/updateId', async data => {
+      if (currentEditarId == data.id) {
+        await defaultEditar(data);
+        validChangeData()
+      }
+      if (!$table.get('#' + data.id)) return;
+      $table.datatable.draw();
     })
 
     socket.on('/usuarios/data/state', data => {
-      let row = $table.get('#' + data.id);
-      if (!row) return;
-
-      $table.update('#' + data.id, {
-        estado: data.estado,
-      });
+      if (!$table.get('#' + data.id)) return;
+      $table.datatable.draw();
     })
 
-    socket.on('/productos/data/deleteId', data => {
-      let row = $table.get('#' + data.id);
-      if (!row) return;
-      $table.remove('#' + data.id);
+    socket.on('/usuarios/data/deleteId', data => {
+      if (currentEditarId == data.id)
+        toggleMenu.close()
+      if (!$table.get('#' + data.id)) return;
+      $table.datatable.draw();
     })
 
     socket.on('/session/acceso/state', data => {

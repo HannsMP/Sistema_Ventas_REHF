@@ -1,8 +1,8 @@
 /** @typedef {{[key:string]:obj|string|number}} obj */
 /**
  * @template T
- * @param {T} defaults 
- * @param {Partial<T>} overrides 
+ * @param {T} defaults
+ * @param {Partial<T>} overrides
  * @returns {T}
  */
 function mergeObjects(defaults, overrides = {}) {

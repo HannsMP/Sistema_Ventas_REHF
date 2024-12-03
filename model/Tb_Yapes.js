@@ -11,7 +11,7 @@ const columns = {
   mensaje: { name: 'mensaje', null: false, type: 'String', limit: 250 }
 }
 
-/** 
+/**
  * @typedef {{
  *   id: number,
  *   emisor: string,
@@ -23,7 +23,7 @@ const columns = {
  */
 
 /** @extends {Table<COLUMNS_VYAPES>} */
-class Tb_asistencias extends Table {
+class Tb_Yapes extends Table {
   /** @param {import('../app')} app */
   constructor(app) {
     super(name);
@@ -32,13 +32,13 @@ class Tb_asistencias extends Table {
 
     this.io = app.socket.node.selectNode('/control/reportes/yapes', true);
   }
-  /* 
+  /*
     ====================================================================================================
     =============================================== Tabla ===============================================
     ====================================================================================================
   */
   /**
-   * @param {import('datatables.net-dt').AjaxData} option 
+   * @param {import('datatables.net-dt').AjaxData} option
    * @returns {Promise<COLUMNS_VYAPES[]>}
    */
   readInParts(option) {
@@ -47,9 +47,9 @@ class Tb_asistencias extends Table {
         let { order, start, length, search } = option;
 
         let query = `
-          SELECT 
-            * 
-          FROM 
+          SELECT
+            *
+          FROM
             tb_yapes AS y
         `, queryParams = [];
 
@@ -100,7 +100,7 @@ class Tb_asistencias extends Table {
         `;
         queryParams.push(length, start);
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
 
         res(result);
       } catch (e) {
@@ -109,7 +109,7 @@ class Tb_asistencias extends Table {
     })
   }
   /**
-   * @param {import('datatables.net-dt').AjaxData} option 
+   * @param {import('datatables.net-dt').AjaxData} option
    * @returns {Promise<COLUMNS_VYAPES[]>}
    */
   readInPartsCount(option) {
@@ -118,9 +118,9 @@ class Tb_asistencias extends Table {
         let { search } = option;
 
         let query = `
-          SELECT 
+          SELECT
             COUNT(y.id) AS cantidad
-          FROM 
+          FROM
             tb_yapes AS y
         `, queryParams = [];
 
@@ -143,7 +143,7 @@ class Tb_asistencias extends Table {
           );
         }
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
 
         res(result[0].cantidad);
       } catch (e) {
@@ -153,4 +153,4 @@ class Tb_asistencias extends Table {
   }
 }
 
-module.exports = Tb_asistencias;
+module.exports = Tb_Yapes;

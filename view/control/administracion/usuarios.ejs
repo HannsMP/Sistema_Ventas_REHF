@@ -108,29 +108,29 @@
               <div class="form-body">
                 <div class="form-col">
                   <div class="input-box">
-                    <input name="nombres" type="text" oninput="inputCapitalize(this, 50)" required>
+                    <input id="nuevo-nombres" name="nombres" type="text" oninput="inputCapitalize(this, 50)" required>
                     <label for="nombres">Nombres (50):</label>
                   </div>
                   <div class="input-box">
-                    <input name="apellidos" type="text" oninput="inputCapitalize(this, 50)" required>
+                    <input id="nuevo-apellidos" name="apellidos" type="text" oninput="inputCapitalize(this, 50)" required>
                     <label for="apellidos">Apellidos (50):</label>
                   </div>
                   <div class="input-box">
-                    <input name="usuario" type="text" oninput="inputNoSpace(this, 50)" required>
+                    <input id="nuevo-usuario" name="usuario" type="text" oninput="inputNoSpace(this, 50)" required>
                     <label for="usuario">Usuario (50):</label>
                   </div>
                   <div class="input-box">
-                    <input name="telefono" type="text" oninput="inputInt(this, 20)" required>
+                    <input id="nuevo-telefono" name="telefono" type="text" oninput="inputInt(this, 20)" required>
                     <label for="telefono">Telefono (20):</label>
                   </div>
                   <div class="input-box">
-                    <input name="email" type="email" oninput="inputNoSpace(this, 50)" required>
+                    <input id="nuevo-email" name="email" type="text" oninput="inputNoSpace(this, 50)" required>
                     <label for="email">Email (50):</label>
                   </div>
                 </div>
                 <div class="form-col">
                   <div class="input-box">
-                    <input class="selector" type="search" placeholder="Buscar categoria...">
+                    <input id="nuevo-rol" class="selector" type="search" placeholder="Buscar categoria...">
                     <label for="rol">Rol (1):</label>
                   </div>
                 </div>
@@ -138,7 +138,7 @@
               <div class="form-foot">
                 <a class="btn btn-success">guardar</a>
                 <div class="f-row">
-                  <input class="check-switch" type="checkbox" checked>
+                  <input id="nuevo-estado" class="check-switch" type="checkbox" checked>
                   <label>estado</label>
                 </div>
               </div>
@@ -159,35 +159,34 @@
             <form>
               <div class="form-body">
                 <div class="form-col">
-                  <input type="hidden" name="id">
                   <div class="input-box">
-                    <input name="nombres" type="text" oninput="inputCapitalize(this, 50)" required>
+                    <input id="editar-nombres" name="nombres" type="text" oninput="inputCapitalize(this, 50)" required>
                     <label for="nombres">Nombre (50):</label>
                   </div>
                   <div class="input-box">
-                    <input name="apellidos" type="text" oninput="inputCapitalize(this, 50)" required>
+                    <input id="editar-apellidos" name="apellidos" type="text" oninput="inputCapitalize(this, 50)" required>
                     <label for="apellidos">Apellidos (50):</label>
                   </div>
                   <div class="input-box">
-                    <input name="usuario" type="text" oninput="inputNoSpace(this, 50)" required>
+                    <input id="editar-usuario" name="usuario" type="text" oninput="inputNoSpace(this, 50)" required>
                     <label for="usuario">Usuario (50):</label>
                   </div>
                   <div class="input-box">
-                    <input name="telefono" type="text" oninput="inputInt(this, 20); inputLimit(this, 20)" required>
+                    <input id="editar-telefono" name="telefono" type="text" oninput="inputInt(this, 20); inputLimit(this, 20)" required>
                     <label for="telefono">Telefono (20):</label>
                   </div>
                   <div class="input-box">
-                    <input name="email" type="email" oninput="inputNoSpace(this, 50)" required>
+                    <input id="editar-email" name="email" type="text" oninput="inputNoSpace(this, 50)" required>
                     <label for="email">Email (50):</label>
                   </div>
                 </div>
                 <div class="form-col">
                   <div class="input-box">
-                    <input class="selector" type="search" placeholder="Buscar categoria...">
+                    <input id="editar-rol" class="selector" type="search" placeholder="Buscar categoria...">
                     <label for="rol">Rol (1):</label>
                   </div>
                   <div class="input-box">
-                    <input class="imagen-unic" type="file" accept=".jpg, .jpeg, .png" disabled>
+                    <input id="editar-imagen" class="imagen-unic" type="file" accept=".jpg, .jpeg, .png" disabled>
                     <label for="fotos">Avatar (1):</label>
                   </div>
                 </div>

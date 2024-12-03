@@ -8,14 +8,14 @@ const CHARACTERS = {
   s: '!@#$%^&*()_+-=[]{}|;:,.<>?'
 }
 
-/** 
+/**
  * @type {{
  *   numeric?: boolean,
  *   letters?: boolean | {upper: boolean, lower:true},
  *   symbol?: boolean,
  *   include?: string,
  *   exclude?: string
- * }} 
+ * }}
  */
 let IdOption = {
   numeric: false,

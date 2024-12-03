@@ -1,9 +1,9 @@
 /**
- * @param {string} msg 28 caracteres antes del salto de linea 
- * @param {HTMLDivElement} box 
+ * @param {string} msg 28 caracteres antes del salto de linea
+ * @param {HTMLInputElement} input
 */
-function formError(msg = '', box, delay = 3000) {
-  if (!box.ELEMENT_NODE)
+function formError(msg = '', input, delay = 3000) {
+  if (!input.ELEMENT_NODE)
     return;
 
   let divPop = document.createElement('div');
@@ -12,15 +12,35 @@ function formError(msg = '', box, delay = 3000) {
   let spanMsg = document.createElement('span');
   divPop.append(spanMsg);
 
-  let boxPosNow = box.style.position;
-  box.style.position = 'relativa';
-  box.append(divPop);
+  let inputPosNow = input.style.position;
+  input.style.position = 'relativa';
+  input.before(divPop);
   spanMsg.innerText = msg;
 
-  setTimeout(() => {
+  let remove = () => {
     divPop.remove()
-    box.style.position = boxPosNow;
-  }, delay);
+    input.style.position = inputPosNow;
+  }
+  setTimeout(remove, delay);
 
-  throw msg;
+  let label = input?.parentNode?.querySelector('label')
+  if (label) {
+    label.style.fontWeight = 'bold';
+    label.style.color = 'red';
+  }
+
+  input.parentElement.style.borderColor = 'red';
+  input.style.color = 'red';
+
+  input.addEventListener('input', () => {
+    remove();
+    if (label) {
+      label.style.fontWeight = '';
+      label.style.color = '';
+    }
+
+    input.parentElement.style.borderColor = '';
+    input.style.color = '';
+  }, { once: true })
+  return divPop;
 }

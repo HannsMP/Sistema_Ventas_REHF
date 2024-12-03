@@ -4,7 +4,7 @@
   }
 
   function restoreCursorPosition(input, position=0) {
-    input.setSelectionRange(position, position);
+    input?.setSelectionRange(position, position);
   }
 
   window.autoHeight = function (input) {

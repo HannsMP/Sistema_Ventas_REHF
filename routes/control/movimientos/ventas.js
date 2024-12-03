@@ -4,19 +4,18 @@ const { resolve } = require('path');
 /** @typedef {import('../../../utils/SocketNode')} SocketNode */
 /** @typedef {Array.<(this: App, req: import('express').Request, res: import('express').Response, next: import('express').NextFunction)=>void>} routeArr */
 
-/** 
+/**
  * @type {{
- *   load:boolean, 
- *   route:string, 
- *   viewLayoutPath:string, 
- *   viewRenderPath:string, 
- *   viewErrorPath:string, 
- *   use: routeArr, 
- *   get: routeArr, 
+ *   load:boolean,
+ *   route:string,
+ *   viewLayoutPath:string,
+ *   viewRenderPath:string,
+ *   viewErrorPath:string,
+ *   use: routeArr,
+ *   get: routeArr,
  *   post: routeArr,
- *   nodeOption: {last:boolean, tagsName:boolean, collector:boolean},
- *   nodeRoute: (this: App, node: SocketNode)=>void
- * }} 
+ *   nodeRoute: {last:boolean, tagsName:boolean, collector:boolean} | (this: App, node: SocketNode)=>void
+ * }}
 */
 module.exports = {
   load: true,
@@ -38,12 +37,12 @@ module.exports = {
       res.render(module.exports.viewRenderPath, { session, userLayout });
     },
   ],
-  nodeOption: {
-    last: true
-  },
   nodeRoute: function (node) {
-    node.option.tagsName = true;
-
+    node.setOption({
+      last: true,
+      tagsName: true
+    })
+    
     /** @param {import('datatables.net-dt').AjaxData} tableReq @param {(res:import('datatables.net-dt').AjaxResponse)=>void} res */
     let readTable = async (myId, tableReq, res) => {
       let result = {
@@ -71,7 +70,7 @@ module.exports = {
     /** @param {number} myId @param {()=>void} res */
     let insertTable = async (myId, data, res) => {
       try {
-        let permiso = await this.model.tb_permisos.userPathDelete(myId, module.exports.route);
+        let permiso = await this.model.tb_permisos.userPathAdd(myId, module.exports.route);
         if (!permiso) return res('No tienes Permisos para controlar la creacion de las ventas.');
 
         let {
@@ -110,12 +109,6 @@ module.exports = {
           _ => listVentas
         )
 
-        for (let { producto_id, cantidad } of listVentas  ) {
-          this.model.tb_productos.updateIdBussines(producto_id, {
-            stock_disponible: -cantidad,
-          })
-        }
-
         if (result.affectedRows) res();
       } catch (e) {
         this.logError.writeStart(e.message, e.stack)
@@ -137,7 +130,7 @@ module.exports = {
     let readSalePriceIdProducto = async (id, res) => {
       try {
         let data = await this.model.tb_productos.readPriceId(id);
-        res(data.venta)
+        res(data)
       } catch (e) {
         this.logError.writeStart(e.message, e.stack)
       }

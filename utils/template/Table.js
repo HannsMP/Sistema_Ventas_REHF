@@ -10,8 +10,8 @@ class Table {
   app;
   /** @type {Columns} */
   columns
-  /** 
-   * @param {string} name 
+  /**
+   * @param {string} name
    */
   constructor(name) {
     this.name = name;
@@ -34,8 +34,8 @@ class Table {
       }
     })
   }
-  /** 
-   * @param {number} id 
+  /**
+   * @param {number} id
    * @returns {Promise<T>}
    */
   readIdAll(id) {
@@ -43,7 +43,7 @@ class Table {
       try {
         this.constraint('id', id);
 
-        let [result] = await this.app.model.poolValues(`
+        let [result] = await this.app.model.pool(`
           SELECT
             *
           FROM
@@ -61,15 +61,15 @@ class Table {
     })
   }
   /**
-   * @param {number[]} [noIds] 
-   * @param {(T extends { estado: any } ? boolean : undefined)} active 
+   * @param {number[]} [noIds]
+   * @param {(T extends { estado: any } ? boolean : undefined)} active
    * @returns {Promise<number>}
    */
   readCount(noIds, active) {
     return new Promise(async (res, rej) => {
       try {
         let query = `
-          SELECT 
+          SELECT
             COUNT(1) AS cantidad
           FROM
             ${this.name}
@@ -85,13 +85,13 @@ class Table {
                 ${active ? 'AND estado = 1' : ''}
             `
 
-          let [result] = await this.app.model.poolValues(query, noIds);
+          let [result] = await this.app.model.pool(query, noIds);
           res(result[0].cantidad);
         }
         else {
           if (active)
             query += `
-              WHERE 
+              WHERE
                 estado = 1
             `
 
@@ -103,11 +103,11 @@ class Table {
       }
     })
   }
-  /** 
+  /**
    * @template C
-   * @param {C & keyof T} column 
+   * @param {C & keyof T} column
    * @param {T[C]} data
-   * @param {{unic: boolean}} compute  
+   * @param {{unic: boolean}} compute
    */
   constraint(column, data, compute) {
     if (!this.isColumn(column))
@@ -185,10 +185,10 @@ class Table {
     }
   };
 
-  /** 
-   * @param {any} value 
-   * @param {DataColumn} column  
-   * @returns {TypeColumn} 
+  /**
+   * @param {any} value
+   * @param {DataColumn} column
+   * @returns {TypeColumn}
    */
   _isTypeMatch(value, column) {
     let typeFun = this.optionType[typeof value];
@@ -204,12 +204,12 @@ class Table {
     return this.isColumn(column_name)
       && Boolean(this.columns[column_name].unic);
   }
-  /** 
+  /**
    * @template C
-   * @param {C & keyof T} column 
-   * @param {T[C]} value 
-   * @param {number} [id] 
-   * @returns {Promise<boolean>} 
+   * @param {C & keyof T} column
+   * @param {T[C]} value
+   * @param {number} [id]
+   * @returns {Promise<boolean>}
    */
   isUnic(column, value, id) {
     return new Promise(async (res, rej) => {
@@ -217,13 +217,13 @@ class Table {
 
       if (typeof id === 'number') {
         query = `
-        SELECT 
+        SELECT
           EXISTS (
-            SELECT 
-              1 
-            FROM 
-              ${this.name} 
-            WHERE 
+            SELECT
+              1
+            FROM
+              ${this.name}
+            WHERE
               ${column} = ?
               AND id != ?
           ) AS isExists
@@ -231,28 +231,28 @@ class Table {
         params = [value, id];
       } else {
         query = `
-        SELECT 
+        SELECT
           EXISTS (
-            SELECT 
-              1 
-            FROM 
-              ${this.name} 
-            WHERE 
+            SELECT
+              1
+            FROM
+              ${this.name}
+            WHERE
               ${column} = ?
           ) AS isExists
       `;
         params = [value];
       }
 
-      let [result] = await this.app.model.poolValues(query, params);
+      let [result] = await this.app.model.pool(query, params);
 
       res(result[0].isExists == 1 ? false : true);
     });
   }
   /**
-   * @param {keyof errorMessages} code 
-   * @param {string} message 
-   * @param {string} [syntax] 
+   * @param {keyof errorMessages} code
+   * @param {string} message
+   * @param {string} [syntax]
    */
   error(code, message, syntax) {
     return new ModelError(code, message, this.name, syntax);

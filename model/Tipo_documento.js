@@ -8,7 +8,7 @@ const columns = {
   estado: { name: 'estado', null: false, type: 'Integer', limit: 1 }
 }
 
-/** 
+/**
  * @typedef {{
  *   id: number,
  *   nombre: string,
@@ -24,13 +24,13 @@ class Tipo_documento extends Table {
     this.columns = columns;
     this.app = app;
   }
-  /* 
+  /*
     ====================================================================================================
     =============================================== Tabla ===============================================
     ====================================================================================================
   */
   /**
-   * @param {import('datatables.net-dt').AjaxData} option 
+   * @param {import('datatables.net-dt').AjaxData} option
    * @returns {Promise<COLUMNS_TIPO_DOCUMENTO[]>}
    */
   readInParts(option) {
@@ -39,7 +39,7 @@ class Tipo_documento extends Table {
         let { order, start, length, search } = option;
 
         let query = `
-          SELECT 
+          SELECT
             id,
             nombre,
             descripcion,
@@ -88,7 +88,7 @@ class Tipo_documento extends Table {
         `;
         queryParams.push(length, start);
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
 
         res(result);
       } catch (e) {
@@ -97,7 +97,7 @@ class Tipo_documento extends Table {
     })
   }
   /**
-   * @param {import('datatables.net-dt').AjaxData} option 
+   * @param {import('datatables.net-dt').AjaxData} option
    * @returns {Promise<number>}
    */
   readInPartsCount(option) {
@@ -106,7 +106,7 @@ class Tipo_documento extends Table {
         let { search } = option;
 
         let query = `
-          SELECT 
+          SELECT
             COUNT(id) AS cantidad
           FROM
             tipo_documento
@@ -125,7 +125,7 @@ class Tipo_documento extends Table {
           );
         }
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
 
         res(result[0].cantidad);
       } catch (e) {
@@ -133,13 +133,13 @@ class Tipo_documento extends Table {
       }
     })
   }
-  /* 
+  /*
     ====================================================================================================
     ============================================== Selector ==============================================
     ====================================================================================================
   */
   /**
-   * @param {SelectorRequest} option 
+   * @param {SelectorRequest} option
    * @returns {Promise<COLUMNS_TIPO_DOCUMENTO[]>}
    */
   SelectorInParts(option) {
@@ -148,13 +148,13 @@ class Tipo_documento extends Table {
         let { order, start, length, search, byId, noInclude } = option;
 
         let query = `
-          SELECT 
+          SELECT
             id,
             nombre AS name
           FROM
             tipo_documento
           WHERE
-            estado = 1 
+            estado = 1
         `, queryParams = [];
 
         if (search) {
@@ -194,7 +194,7 @@ class Tipo_documento extends Table {
 
         queryParams.push(length, start);
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
 
         res(result);
       } catch (e) {
@@ -203,7 +203,7 @@ class Tipo_documento extends Table {
     })
   }
   /**
-   * @param {SelectorRequest} option 
+   * @param {SelectorRequest} option
    * @returns {Promise<number>}
    */
   SelectorInPartsCount(option) {
@@ -212,12 +212,12 @@ class Tipo_documento extends Table {
         let { search, noInclude } = option;
 
         let query = `
-          SELECT 
+          SELECT
             COUNT(id) AS cantidad
           FROM
             tipo_documento
           WHERE
-            estado = 1 
+            estado = 1
         `, queryParams = [];
 
         if (typeof search == 'string' && search != '') {
@@ -235,7 +235,7 @@ class Tipo_documento extends Table {
           queryParams.push(...noInclude);
         }
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
 
         res(result[0].cantidad);
       } catch (e) {
@@ -243,31 +243,31 @@ class Tipo_documento extends Table {
       }
     })
   }
-  /* 
+  /*
     ====================================================================================================
     ============================================== Grafico ==============================================
     ====================================================================================================
   */
-  /** 
+  /**
    * @returns {Promise<{label:string[], data:number[]}>}
    */
   chartCountTypeDocument() {
     return new Promise(async (res, rej) => {
       try {
         let [result] = await this.app.model.pool(`
-          SELECT 
+          SELECT
             td.nombre AS nombre,
             COALESCE(COUNT(c.id), 0) AS cantidad_tipo_cliente
-          FROM 
+          FROM
             tipo_documento AS td
-          LEFT JOIN 
+          LEFT JOIN
             tb_clientes AS c
-            ON 
+            ON
               c.tipo_cliente_id = td.id
-          WHERE 
+          WHERE
             td.id IN (1, 2, 3)
             AND c.estado = 1
-          GROUP BY 
+          GROUP BY
             td.nombre;
           `)
 

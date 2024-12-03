@@ -1,6 +1,6 @@
 $('.content-body').ready(async () => {
 
-  /* 
+  /*
     ==================================================
     ================== CARDS ACCESO ==================
     ==================================================
@@ -19,7 +19,7 @@ $('.content-body').ready(async () => {
   let accesoCantidad = document.querySelector('#acceso-cantidad small');
   accesoCantidad.textContent = cantidad_accesos;
 
-  /* 
+  /*
     ==================================================
     ================ GRAFICOS ACCESO  ================
     ==================================================
@@ -48,7 +48,7 @@ $('.content-body').ready(async () => {
     }
   });
 
-  /* 
+  /*
     ==================================================
     ================= CARDS USUARIOS =================
     ==================================================
@@ -68,7 +68,7 @@ $('.content-body').ready(async () => {
   usuariosInsercionFecha.textContent = formatTime('YYYY / MM / DD', new Date(max_creacion));
   usuariosInsercionHora.textContent = formatTime('hh : mm tt', new Date(max_creacion));
 
-  /* 
+  /*
     ==================================================
     =============== GRAFICOS USUARIOS  ===============
     ==================================================
@@ -102,7 +102,7 @@ $('.content-body').ready(async () => {
     }
   });
 
-  /* 
+  /*
     ==================================================
     ================= CARDS USUARIOS =================
     ==================================================
@@ -144,7 +144,7 @@ $('.content-body').ready(async () => {
 
   cardBot.classList.remove('load-spinner');
 
-  /* 
+  /*
     ==================================================
     ================== GRAFICOS BOT  ==================
     ==================================================

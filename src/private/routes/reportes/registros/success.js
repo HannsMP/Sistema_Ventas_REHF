@@ -3,18 +3,7 @@ $('.content-body').ready(async () => {
 
     let bytesToKb = (bit) => (bit / (1024 ** 2)).toFixed(2);
 
-    /* 
-      ==================================================
-      =============== QUERY DATA SUCCESS ===============
-      ==================================================
-    */
-
-    let resSuccess = await query.post.cookie("/api/logguer/success/read");
-
-    /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-    let { text: textSuccess, stat: statSuccess } = await resSuccess.json();
-
-    /* 
+    /*
       ==================================================
       ======================= DOM =======================
       ==================================================
@@ -30,37 +19,39 @@ $('.content-body').ready(async () => {
 
     let clearSuccess = cardSuccess.querySelector('#clear');
 
-    let codeSuccess = new Code('.log', boxSuccess, textSuccess);
-
-    sizeSuccess.textContent = bytesToKb(statSuccess.size);
-
-    downloadSuccess.addEventListener('click', () => codeSuccess.download());
-
-    clearSuccess.addEventListener('click', async _ => {
-      let resClear = await query.post.cookie("/api/logguer/success/clear");
-
-      /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-      let { err } = await resClear.json();
-
-      if (err)
-        return alarm.error(`Registro no Eliminada`);
-
-      codeSuccess.empty();
-
-      alarm.success(`Registro eliminada`);
-    })
-
-    /* 
+    /*
       ==================================================
-      ===================== SOCKET =====================
+      =============== QUERY DATA SUCCESS ===============
       ==================================================
     */
 
-    socket.on('/logger/success/writeStart', data => {
-      codeSuccess.addStart(data.log);
-      sizeSuccess.textContent = bytesToKb(data.stat.size);
-    })
+    socket.emit('/read/success', (text, stat, exist) => {
+      let code = new Code('.log', boxSuccess, text);
+      downloadSuccess.addEventListener('click', () => code.download());
+      sizeSuccess.textContent = bytesToKb(stat.size);
 
+      /*
+        ==================================================
+        ===================== SOCKET =====================
+        ==================================================
+      */
+
+      clearSuccess.addEventListener('click', async _ => {
+        socket.emit('/clear/success', (err) => {
+          if (err)
+            return alarm.error(err);
+
+          code.empty();
+          alarm.success(`Registro eliminada`);
+        })
+      })
+
+      socket.on('/logger/success/writeStart', data => {
+        code.addStart(data.log);
+        sizeSuccess.textContent = bytesToKb(data.stat.size);
+      })
+    })
+    
   } catch ({ message, stack }) {
     socket.emit('/err/client', { message, stack, url: window.location.href })
   }

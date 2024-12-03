@@ -1,10 +1,10 @@
-/** 
+/**
  * @typedef {string | URL | globalThis.Request} Response
  * @typedef {(input: Response, option: RequestInit)=> Promise<Response>} queryFun
  * @typedef {(input: Response)=> Promise<Response>} methodFun
  * @typedef {(input: Response, data: FormData)=> Promise<Response>} FormFun
  * @typedef {(input: Response, data: JSON)=> Promise<Response>} JsonFun
- * 
+ *
  * @type {queryFun & {
  *   get: methodFun & {
  *     form: FormFun & { cookie: FormFun },
@@ -16,13 +16,13 @@
  *     json: JsonFun & { cookie: JsonFun },
  *     cookie: methodFun
  *   },
- * }} 
+ * }}
  */
 
 let query = async (url, option) => fetch(url, option);
 
 /*
-  ========================= GET POST =========================  
+  ========================= GET POST =========================
 */
 
 query.get = (url) => query(url, {
@@ -34,7 +34,7 @@ query.post = (url) => query(url, {
 })
 
 /*
-  ========================= FORM  JSON =========================  
+  ========================= FORM  JSON =========================
 */
 
 query.get.form = (url, formData) => query(url, {
@@ -61,7 +61,7 @@ query.post.json = (url, data) => query(url, {
 })
 
 /*
-========================= COOKIE =========================  
+========================= COOKIE =========================
 */
 
 query.get.cookie = (url) => query(url, {

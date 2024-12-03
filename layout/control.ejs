@@ -9,6 +9,14 @@
 
   <title>REHF</title>
 
+  <% if(session?.usuario?.rol_id == 1){ %>
+  <!---------------------- ADMIN ---------------------->
+
+  <link rel="stylesheet" href="/src/private/document/console/console.min.css">
+  <script src="/src/private/document/console/console.min.js"></script>
+
+  <% } %>
+
   <!---------------------- CSS ---------------------->
 
   <!-- lib global -->
@@ -51,8 +59,6 @@
 
   <!-- layout -->
   <script src="/src/private/layout/js/control.js"></script>
-
-  <!---------------------- Charge ---------------------->
 </head>
 
 <body style="height: 100vh !important; height: 100dvh !important;" class="load-spinner">
@@ -64,7 +70,7 @@
         </div>
       </div>
     </div>
-    <div class="sidebar">
+    <div class="sidebar scroll-y">
       <div class="navbar">
         <a class="nav-item nav-link" href="/control/inicio" <% if(!userLayout['/control/inicio']?.ver){ %> style="display: none" <% } %>>
           <div class="brand">
@@ -225,18 +231,9 @@
           <div class="menu">
             <div class="nav-item" <% if(!userLayout['/control/administracion/acceso']?.ver){ %> style="display: none" <% } %>>
               <div class="nav-icon">
-                <i class="bx bx-paint-roll"></i>
+                <i class="bx bx-food-menu"></i>
                 <a class="nav-link" href="/control/administracion/acceso">
                   <span> Acceso </span>
-                </a>
-              </div>
-            </div>
-
-            <div class="nav-item" <% if(!userLayout['/control/administracion/tipos']?.ver){ %> style="display: none" <% } %>>
-              <div class="nav-icon">
-                <i class="bx bxs-paint-roll"></i>
-                <a class="nav-link" href="/control/administracion/tipos">
-                  <span> Tipos </span>
                 </a>
               </div>
             </div>
@@ -255,6 +252,15 @@
                 <i class="bx bx-bot"></i>
                 <a class="nav-link" href="/control/administracion/bot">
                   <span> Bot </span>
+                </a>
+              </div>
+            </div>
+
+            <div class="nav-item" <% if(!userLayout['/control/administracion/tipos']?.ver){ %> style="display: none" <% } %>>
+              <div class="nav-icon">
+                <i class="bx bx-paint-roll"></i>
+                <a class="nav-link" href="/control/administracion/tipos">
+                  <span> Tipos </span>
                 </a>
               </div>
             </div>
@@ -306,6 +312,14 @@
             <span class="nav-tittle">Ajustes</span>
           </div>
           <div class="menu">
+            <% if(session?.usuario?.rol_id == 1){ %>
+            <div class="nav-item">
+              <div class="nav-link">
+                <input class="check-checked" type="checkbox" onchange="document.getElementById('consoleContainer').style.display = this.checked ? '': 'none'" checked>
+                <span>Consola</span>
+              </div>
+            </div>
+            <% } %>
             <div class="nav-item">
               <div class="nav-icon">
                 <a class="nav-link" href="/auth/logout">

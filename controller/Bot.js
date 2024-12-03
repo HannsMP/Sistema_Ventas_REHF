@@ -7,7 +7,7 @@ const { readdirSync } = require('fs');
 const deletePath = require('../utils/function/deletePath');
 
 /** @typedef {import('../app')} App  */
-/** @typedef {(this: App, phone: string, msg: import('whatsapp-web.js').Message, arg: string[], complete: (err: Error?)=>void)=>void} Run */
+/** @typedef {(this: App, phone: string, msg: import('whatsapp-web.js').Message, arg: string[], complete: (err: Error?)=>void)=>Promise} Run */
 /** @typedef {{use:number, load: boolean, name: string, cooldown: number, onColldown: {}, description:string, run: Run}} CommandFile */
 /** @typedef {{[command: string]: CommandFile}} CollectionCommands */
 
@@ -66,7 +66,7 @@ class Bot {
 
     this._LoadCommands();
 
-    this.client.on('message', msg => {
+    this.client.on('message', async msg => {
       try {
         let { from, body } = msg;
 
@@ -114,7 +114,7 @@ class Bot {
           return onColldown[phone].intent++;
         }
 
-        run(phone, msg, argumentsArray, complete);
+        await run(phone, msg, argumentsArray, complete);
       } catch (e) {
         this.app.logError.writeStart(e.message, e.stack);
       }
@@ -149,14 +149,14 @@ class Bot {
   }
   /**
    * @returns {
-   * 'UNDEFINED' | 
-   * 'READY'| 
-   * 'PUPPETTER_ERROR'| 
-   * 'CONNECTED'| 
-   * 'DISCONNECTED'| 
-   * 'LOGOUT'| 
-   * 'AUTHENTICATING'| 
-   * 'AUTHENTICATION_FAILURE'| 
+   * 'UNDEFINED' |
+   * 'READY'|
+   * 'PUPPETTER_ERROR'|
+   * 'CONNECTED'|
+   * 'DISCONNECTED'|
+   * 'LOGOUT'|
+   * 'AUTHENTICATING'|
+   * 'AUTHENTICATION_FAILURE'|
    * 'UNDEFINED'
    * }
    */

@@ -1,7 +1,7 @@
 $('.content-body').ready(async () => {
   try {
 
-    /* 
+    /*
       ==================================================
       ================== VARIABLES DOM ==================
       ==================================================
@@ -13,7 +13,7 @@ $('.content-body').ready(async () => {
     let $tableDocumento = new Tables('#table-documento');
     let $tableRoles = new Tables('#table-roles');
 
-    /* 
+    /*
       ==================================================
       ===================== ESTADO =====================
       ==================================================
@@ -42,7 +42,7 @@ $('.content-body').ready(async () => {
     //   this.disabled = false;
     // }
 
-    /* 
+    /*
       ==================================================
       ==================== DATATABLE ====================
       ==================================================
@@ -119,7 +119,8 @@ $('.content-body').ready(async () => {
         {
           name: 'descripcion',
           className: 'dtr-description',
-          targets: 2
+          targets: 2,
+          render: data => '<div class="scroll-y">' + (data || '-') + '</div>'
         },
         {
           name: 'estado',
@@ -167,7 +168,8 @@ $('.content-body').ready(async () => {
         {
           name: 'descripcion',
           className: 'dtr-description',
-          targets: 2
+          targets: 2,
+          render: data => '<div class="scroll-y">' + (data || '-') + '</div>'
         },
         {
           name: 'estado',
@@ -215,7 +217,8 @@ $('.content-body').ready(async () => {
         {
           name: 'descripcion',
           className: 'dtr-description',
-          targets: 2
+          targets: 2,
+          render: data => '<div class="scroll-y">' + (data || '-') + '</div>'
         },
         {
           name: 'estado',
@@ -263,7 +266,8 @@ $('.content-body').ready(async () => {
         {
           name: 'descripcion',
           className: 'dtr-description',
-          targets: 2
+          targets: 2,
+          render: data => '<div class="scroll-y">' + (data || '-') + '</div>'
         },
         {
           name: 'estado',

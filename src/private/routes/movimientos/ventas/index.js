@@ -7,7 +7,7 @@ $('.content-body').ready(async () => {
       return div.children;
     }
 
-    /* 
+    /*
       ==================================================
       ================== VARIABLES DOM ==================
       ==================================================
@@ -31,7 +31,7 @@ $('.content-body').ready(async () => {
 
     let $tableHistory = new Tables('#table-historial');
 
-    /* 
+    /*
       ==================================================
       =================== WITGETTABLE ===================
       ==================================================
@@ -48,7 +48,7 @@ $('.content-body').ready(async () => {
       drop: true
     });
 
-    /* 
+    /*
       ==================================================
       ==================== SELECTOR ====================
       ==================================================
@@ -62,7 +62,7 @@ $('.content-body').ready(async () => {
     /* ===================== SOCKET ===================== */
 
 
-    /* 
+    /*
       ==================================================
       ==================== SELECTOR ====================
       ==================================================
@@ -94,7 +94,7 @@ $('.content-body').ready(async () => {
       dataSelectorClientes.delete(data.id);
     })
 
-    /* 
+    /*
       ==================================================
       ==================== SELECTOR ====================
       ==================================================
@@ -126,7 +126,7 @@ $('.content-body').ready(async () => {
       dataSelectorProductos.delete(data.id);
     })
 
-    /* 
+    /*
       ==================================================
       ================== SELECTOR UNIC ==================
       ==================================================
@@ -143,7 +143,7 @@ $('.content-body').ready(async () => {
       { justChange: true }
     );
 
-    /* 
+    /*
       ==================================================
       ============== SELECTOR METODO PAGO ==============
       ==================================================
@@ -173,7 +173,7 @@ $('.content-body').ready(async () => {
       inputIgv.valueIgv = undefined;
     })
 
-    /* 
+    /*
       ==================================================
       ================== REFRESH DATA RESULT ==================
       ==================================================
@@ -196,7 +196,7 @@ $('.content-body').ready(async () => {
         = importeTotal;
     }
 
-    /* 
+    /*
       ==================================================
       ================== CLICK ADD ROW ==================
       ==================================================
@@ -204,12 +204,15 @@ $('.content-body').ready(async () => {
 
     let clickAddRow = _ => {
       let inputBoxCount = textToHtml(`
-          <div class="input-box" style="width: 100%">
+          <div class="input-box f-row" style="width: 100%">
+            <span>0/</span>
             <input type="text" oninput="inputInt(this, 10);" value="1" placeholder="Cantidad?">
           </div>
         `)[0];
       let inputCount = inputBoxCount.querySelector('input');
+      let spanStock = inputBoxCount.querySelector('span');
       inputBoxCount.inputElement = inputCount;
+      inputBoxCount.spanElement = spanStock;
 
       let inputBoxSelect = textToHtml(`
           <div class="input-box" style="width: 100%; padding:0">
@@ -228,16 +231,24 @@ $('.content-body').ready(async () => {
         cantidad: inputBoxCount,
         producto: inputBoxSelect
       })
-      row.tr.setAttribute('ignore', true)
+
+      row.tr.removeAttribute('id');
+      row.tr.setAttribute('ignore', true);
 
       let salePriceValue = 0;
+      let stockValue = 0;
       selector.on('selected', async dataSelected => {
         let producto_id = dataSelected.id
-        socket.emit('/readSalePriceId/producto', producto_id, res => {
-          salePriceValue = res;
-          row.set.precio(res?.toFixed(2) || 0);
+        socket.emit('/readSalePriceId/producto', producto_id, data => {
+          row.tr.setAttribute('id', producto_id);
+          row.tr.removeAttribute('ignore');
 
-          row.tr.removeAttribute('ignore')
+          stockValue = data.stock_disponible;
+          spanStock.innerText = data.stock_disponible + '/';
+
+          salePriceValue = data.venta;
+          row.set.precio(data.venta?.toFixed(2) || 0);
+
           row.set.total((salePriceValue * (Number(inputCount.value) || 0)).toFixed(2));
           refresh();
         })
@@ -247,6 +258,10 @@ $('.content-body').ready(async () => {
         let countValue = Number(inputCount.value) || 0;
         if (countValue == 0)
           return row.tr.setAttribute('ignore', true);
+        if (stockValue < countValue) {
+          row.tr.setAttribute('ignore', true);
+          return formError('Exediste el stock', inputCount);
+        }
         row.set.total((salePriceValue * countValue).toFixed(2));
         refresh();
       })
@@ -282,7 +297,7 @@ $('.content-body').ready(async () => {
 
     btnAddRow.addEventListener('click', clickAddRow)
 
-    /* 
+    /*
       ==================================================
       =================== CLICK CLEAR ===================
       ==================================================
@@ -306,7 +321,7 @@ $('.content-body').ready(async () => {
     btnClear.addEventListener('click', clickClear);
     clickClear();
 
-    /* 
+    /*
       ==================================================
       =================== CLICK SAVE ===================
       ==================================================
@@ -316,11 +331,11 @@ $('.content-body').ready(async () => {
       let jsonData = {};
 
       let metodoPagoData = metodoPagoSelectorUnic.selected[0];
-      if (!metodoPagoData) return formError('Selecciona un metodo de pago.', inputSelectorMetodoPago.parentNode);
+      if (!metodoPagoData) return formError('Selecciona un metodo de pago.', inputSelectorMetodoPago);
       jsonData.metodo_pago_id = metodoPagoData.id;
 
       let clienteData = clientesSelectorUnic.selected[0];
-      if (!clienteData) return formError('Selecciona un Ciente o desconicido.', inputSelectorCliente.parentNode);
+      if (!clienteData) return formError('Selecciona un Ciente o desconicido.', inputSelectorCliente);
       jsonData.cliente_id = clienteData.id;
 
       jsonData.productos = witgetTable.dataTable.map(({ data, tr }) => {
@@ -333,7 +348,7 @@ $('.content-body').ready(async () => {
 
       let importe_total = Number(inputImporteTotal.value);
       if (importe_total == 0)
-        return formError('No hay productos?', inputImporteTotal.parentNode);
+        return formError('No hay productos?', inputImporteTotal);
 
       jsonData.importe_total = importe_total;
 
@@ -349,7 +364,7 @@ $('.content-body').ready(async () => {
       })
     })
 
-    /* 
+    /*
       ==================================================
       ==================== DATATABLE ====================
       ==================================================
@@ -410,22 +425,28 @@ $('.content-body').ready(async () => {
     })
     $tableHistory.buttons('.tables-utils .download');
 
-    /* 
+    /*
       ==================================================
       ===================== SOCKET =====================
       ==================================================
     */
 
-    socket.on('/transacciones_ventas/data/insert', data => {
-      $tableHistory.datatable.draw(data);
+    socket.on('/transacciones_ventas/data/insert', () => {
+      $tableHistory.datatable.draw();
     })
 
-    socket.on('/transacciones_ventas/data/updateId', (data) => {
-      $tableHistory.datatable.draw(data);
+    socket.on('/transacciones_ventas/data/updateId', data => {
+      if (!$tableHistory.get('#' + data.id)) return;
+      $tableHistory.datatable.draw();
     })
 
     socket.on('/transacciones_ventas/data/deleteId', data => {
-      $tableHistory.datatable.draw(data);
+      if (!$tableHistory.get('#' + data.id)) return;
+      $tableHistory.datatable.draw();
+    })
+
+    socket.on('/productos/data/updateIdBussines', () => {
+      $tableHistory.datatable.draw();
     })
 
   } catch ({ message, stack }) {

@@ -11235,11 +11235,11 @@ float cbrt(float x) {
 }
 
 float cosh(float x) {
-  return (pow(${Math.E}, x) + pow(${Math.E}, -x)) / 2.0; 
+  return (pow(${Math.E}, x) + pow(${Math.E}, -x)) / 2.0;
 }
 
 float expm1(float x) {
-  return pow(${Math.E}, x) - 1.0; 
+  return pow(${Math.E}, x) - 1.0;
 }
 
 float fround(highp float x) {
@@ -11270,7 +11270,7 @@ float tanh(float x) {
 
 float trunc(float x) {
   if (x >= 0.0) {
-    return floor(x); 
+    return floor(x);
   } else {
     return ceil(x);
   }
@@ -11292,7 +11292,7 @@ int modi(int x, int y) {
 int bitwiseOr(int a, int b) {
   int result = 0;
   int n = 1;
-  
+
   for (int i = 0; i < BIT_COUNT; i++) {
     if ((modi(a, 2) == 1) || (modi(b, 2) == 1)) {
       result += n;
@@ -11309,7 +11309,7 @@ int bitwiseOr(int a, int b) {
 int bitwiseXOR(int a, int b) {
   int result = 0;
   int n = 1;
-  
+
   for (int i = 0; i < BIT_COUNT; i++) {
     if ((modi(a, 2) == 1) != (modi(b, 2) == 1)) {
       result += n;
@@ -11342,10 +11342,10 @@ int bitwiseAnd(int a, int b) {
 int bitwiseNot(int a) {
   int result = 0;
   int n = 1;
-  
+
   for (int i = 0; i < BIT_COUNT; i++) {
     if (modi(a, 2) == 0) {
-      result += n;    
+      result += n;
     }
     a = a / 2;
     n = n * 2;
@@ -11611,7 +11611,7 @@ vec3 getMemoryOptimizedVec3(sampler2D tex, ivec2 texSize, ivec3 texDim, int z, i
   int readY = vectorIndex / texSize.x;
   int readX = vectorIndex - readY * texSize.x;
   vec4 tex1 = texture2D(tex, (vec2(readX, readY) + 0.5) / vec2(texSize));
-  
+
   if (vectorOffset == 0) {
     return tex1.xyz;
   } else if (vectorOffset == 1) {
@@ -15959,7 +15959,7 @@ float cbrt(float x) {
 }
 
 float expm1(float x) {
-  return pow(${Math.E}, x) - 1.0; 
+  return pow(${Math.E}, x) - 1.0;
 }
 
 float fround(highp float x) {
@@ -15996,7 +15996,7 @@ int modi(int x, int y) {
 int bitwiseOr(int a, int b) {
   int result = 0;
   int n = 1;
-  
+
   for (int i = 0; i < BIT_COUNT; i++) {
     if ((modi(a, 2) == 1) || (modi(b, 2) == 1)) {
       result += n;
@@ -16013,7 +16013,7 @@ int bitwiseOr(int a, int b) {
 int bitwiseXOR(int a, int b) {
   int result = 0;
   int n = 1;
-  
+
   for (int i = 0; i < BIT_COUNT; i++) {
     if ((modi(a, 2) == 1) != (modi(b, 2) == 1)) {
       result += n;
@@ -16046,10 +16046,10 @@ int bitwiseAnd(int a, int b) {
 int bitwiseNot(int a) {
   int result = 0;
   int n = 1;
-  
+
   for (int i = 0; i < BIT_COUNT; i++) {
     if (modi(a, 2) == 0) {
-      result += n;    
+      result += n;
     }
     a = a / 2;
     n = n * 2;
@@ -18529,7 +18529,7 @@ highp float nrand(highp vec2 n) {
   highp float result = fract(sin(dot((n.xy + 1.0) * vec2(randomSeed1 * slide, randomSeed2 * randomSeedShift), vec2(12.9898, 78.233))) * 43758.5453);
   randomSeedShift = result;
   if (randomSeedShift > 0.5) {
-    slide += 0.00009; 
+    slide += 0.00009;
   } else {
     slide += 0.0009;
   }
@@ -22204,7 +22204,7 @@ class BaseLayer {
   get weights() {
     return this._weights;
   }
- 
+
   set weights(value) {
     if (value) {
       if (value.dimensions) {
@@ -22225,11 +22225,11 @@ class BaseLayer {
     }
     this._weights = value;
   }
- 
+
   get deltas() {
     return this._deltas;
   }
- 
+
   set deltas(value) {
     if (value) {
       if (value.dimensions) {

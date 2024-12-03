@@ -4,19 +4,18 @@ const { resolve } = require('path');
 /** @typedef {import('../../../utils/SocketNode')} SocketNode */
 /** @typedef {Array.<(this: App, req: import('express').Request, res: import('express').Response, next: import('express').NextFunction)=>void>} routeArr */
 
-/** 
+/**
  * @type {{
- *   load:boolean, 
- *   route:string, 
- *   viewLayoutPath:string, 
- *   viewRenderPath:string, 
- *   viewErrorPath:string, 
- *   use: routeArr, 
- *   get: routeArr, 
+ *   load:boolean,
+ *   route:string,
+ *   viewLayoutPath:string,
+ *   viewRenderPath:string,
+ *   viewErrorPath:string,
+ *   use: routeArr,
+ *   get: routeArr,
  *   post: routeArr,
- *   nodeOption: {last:boolean, tagsName:boolean, collector:boolean},
- *   nodeRoute: (this: App, node: SocketNode)=>void
- * }} 
+ *   nodeRoute: {last:boolean, tagsName:boolean, collector:boolean} | (this: App, node: SocketNode)=>void
+ * }}
 */
 module.exports = {
   load: true,
@@ -37,10 +36,11 @@ module.exports = {
       res.render(module.exports.viewRenderPath, { session: { usuario, permiso }, userLayout });
     },
   ],
-  nodeOption: {
-    last: true,
-  },
   nodeRoute: function (node) {
+    node.setOption({
+      last: true,
+      tagsName: true
+    })
 
     /** @param {import('datatables.net-dt').AjaxData} tableReq @param {(res:import('datatables.net-dt').AjaxResponse)=>void} res */
     let readTable = async (myId, tableReq, res) => {
@@ -66,6 +66,114 @@ module.exports = {
       res(result);
     }
 
+    /** @param {number} id @param {()=>void} res */
+    let readIdTable = async (myId, id, res) => {
+      try {
+        let permiso = await this.model.tb_permisos.userPathUpdate(myId, module.exports.route);
+        if (!permiso) return res('No tienes Permisos para controlar la edicion de los usuarios.');
+
+        let data = await this.model.tb_usuarios.readJoinId(id);
+        res(data)
+      } catch (e) {
+        this.logError.writeStart(e.message, e.stack)
+      }
+    }
+
+    /** @param {number} myId @param {()=>void} res */
+    let insertTable = async (myId, data, res) => {
+      try {
+        let permiso = await this.model.tb_permisos.userPathAdd(myId, module.exports.route);
+        if (!permiso) return res('No tienes Permisos para controlar la creacion de los usuarios.');
+
+        let {
+          nombres,
+          apellidos,
+          usuario,
+          telefono,
+          email,
+          rol_id,
+          estado
+        } = data;
+
+        let result = await this.model.tb_usuarios.register({
+          nombres,
+          apellidos,
+          usuario,
+          telefono,
+          email,
+          estado: Number(estado),
+          rol_id: Number(rol_id),
+          clave: '12345678'
+        });
+
+        if (result.affectedRows) res();
+      } catch (e) {
+        this.logError.writeStart(e.message, e.stack)
+        res('Ocurrio un error, ponte en contacto con el administrador.');
+      }
+    }
+
+    /** @param {number} myId @param {number} myRolId @param {()=>void} res */
+    let updateIdTable = async (myId, myRolId, data, res) => {
+      try {
+        let permiso = await this.model.tb_permisos.userPathUpdate(myId, module.exports.route);
+        if (!permiso) return res('No tienes Permisos para controlar la edicion de los usuarios.');
+
+        let {
+          id,
+          nombres,
+          apellidos,
+          usuario,
+          telefono,
+          email,
+          rol_id
+        } = data;
+
+        let result = await this.model.tb_usuarios.updateId(Number(id), {
+          nombres,
+          apellidos,
+          usuario,
+          telefono,
+          email,
+          rol_id: Number(rol_id)
+        }, myRolId);
+
+        if (result.affectedRows) res();
+      } catch (e) {
+        this.logError.writeStart(e.message, e.stack)
+        res('Ocurrio un error, ponte en contacto con el administrador.');
+      }
+    }
+
+    /** @param {number} myId @param {number} myRolId @param {number} id @param {()=>void} res */
+    let stateIdTable = async (myId, myRolId, id, estado, res) => {
+      try {
+        let permiso = await this.model.tb_permisos.userPathHide(myId, module.exports.route);
+        if (!permiso) return res('No tienes Permisos para controlar el estado de los usuarios.');
+
+        let result = await this.model.tb_usuarios.updateIdState(id, estado ? 1 : 0, myRolId);
+        if (result.affectedRows) res();
+      } catch (e) {
+        this.logError.writeStart(e.message, e.stack)
+        res('Ocurrio un error, ponte en contacto con el administrador.');
+      }
+    }
+
+    /** @param {number} myId @param {number} id @param {()=>void} res */
+    let deleteIdTable = async (myId, id, res) => {
+      try {
+        let permiso = await this.model.tb_permisos.userPathDelete(myId, module.exports.route);
+        if (!permiso) return res('No tienes Permisos para controlar la eliminacion de los usuarios.');
+
+        let result = await this.model.tb_usuarios.deleteId(Number(id));
+
+        if (result.affectedRows) res();
+      } catch (e) {
+        this.logError.writeStart(e.message, e.stack)
+        res('Ocurrio un error, ponte en contacto con el administrador.');
+      }
+    }
+
     /** @param {{column: string, value: any, id?: number}} req @param {(valid: boolean)=>void} res */
     let readUnic = async (req, res) => {
       try {
@@ -88,9 +196,9 @@ module.exports = {
       }
 
       try {
-        let data = this.model.tipo_rol.SelectorInParts(selectorReq, myRolId);
-        let recordsFiltered = this.model.tipo_rol.SelectorInPartsCount(selectorReq, myRolId);
-        let recordsTotal = this.model.tipo_rol.readCount();
+        let data = this.model.tipo_roles.SelectorInParts(selectorReq, myRolId);
+        let recordsFiltered = this.model.tipo_roles.SelectorInPartsCount(selectorReq, myRolId);
+        let recordsTotal = this.model.tipo_roles.readCount();
 
         result.data = await data;
         result.recordsFiltered = await recordsFiltered;
@@ -107,6 +215,11 @@ module.exports = {
       let myRolId = socket.session.rol_id;
 
       socket.on('/read/table', readTable.bind(null, myId))
+      socket.on('/readId/table', readIdTable.bind(null, myId))
+      socket.on('/insert/table', insertTable.bind(null, myId))
+      socket.on('/updateId/table', updateIdTable.bind(null, myId, myRolId))
+      socket.on('/stateId/table', stateIdTable.bind(null, myId, myRolId))
+      socket.on('/deleteId/table', deleteIdTable.bind(null, myId))
       socket.on('/read/unic', readUnic)
       socket.on('/selector/rol', selectorRol.bind(null, myRolId))
     })

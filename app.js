@@ -49,7 +49,11 @@ class App {
     this.socket = new Socket(this);
     this.model = new Model(this);
 
-    this.nodeControl = this.socket.node.selectNode('/control');
+    this.nodeControl = this.socket.node.selectNode('/control', {
+      collector: true,
+      tagsName: true
+    });
+
     this.neuralNetwork = new NeuralNetwork(this);
 
     /* Utils */
@@ -100,7 +104,7 @@ class App {
   _Route(data) {
     if (data.constructor.name != 'Object') return;
 
-    let { load, route, use, get, post, nodeRoute, nodeOption } = data;
+    let { load, route, use, get, post, nodeRoute } = data;
     this.routesMap.set(route, data);
 
     if (!load) return;
@@ -123,12 +127,14 @@ class App {
       this.logSuccess.writeStart(`[POST] Routes: http://${this.ip}:${this.cache.configJSON.readJSON().SERVER.port}${data.route} (${data.post.length})`);
     }
 
-    if (nodeOption)
-      this.socket.node.createNode(route, nodeOption);
-
-    if (nodeRoute) {
+    if (typeof nodeRoute == 'object' || typeof nodeRoute == 'function') {
       let node = this.socket.node.selectNode(route, true);
-      nodeRoute.call(this, node);
+
+      if (typeof nodeRoute == 'object')
+        node?.setOption(nodeRoute);
+      else
+        nodeRoute.call(this, node);
+
       this.logSuccess.changeColor('brightYellow');
       this.logSuccess.writeStart(`[SKT] Routes: http://${this.ip}:${this.cache.configJSON.readJSON().SERVER.port}${data.route}`);
     }

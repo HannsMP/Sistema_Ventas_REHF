@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.documentElement.setAttribute('theme', themeAfter);
   })
 
-  /* 
+  /*
     ==================================================
     ==================== NAV ITEMS ====================
     ==================================================
@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   navItemMap.get(navItemCurrent)?.classList?.add('active');
 
-  /* 
+  /*
     ==================================================
     ===================== SOCKET =====================
     ==================================================

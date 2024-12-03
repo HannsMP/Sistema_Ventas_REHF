@@ -7,7 +7,7 @@ module.exports = {
   name: 'server',
   cooldown: 30 * 1000,
   onColldown: {},
-  description: `Permite controlar el estado del servidor. 
+  description: `Permite controlar el estado del servidor.
   Uso: */server [accion]*
   si no se especifica accion: retorna informacion del servidor.
   accion:

@@ -1,6 +1,6 @@
 $('.content-body').ready(async () => {
   try {
-    /* 
+    /*
       ==================================================
       ==================== SELECTOR ====================
       ==================================================
@@ -32,7 +32,7 @@ $('.content-body').ready(async () => {
       dataSelectorCategorias.delete(data.id);
     })
 
-    /* 
+    /*
       ==================================================
       ===================== FILTRO =====================
       ==================================================
@@ -40,13 +40,21 @@ $('.content-body').ready(async () => {
 
     let tableNuevo = document.getElementById('categoria-filtro');
     let cardBody = tableNuevo.querySelector('.card-body')
-    let filtroCodigo = tableNuevo.querySelector('input[name=codigo]');
-    let filtroProducto = tableNuevo.querySelector('input[name=producto]');
-    let filtroSelector = tableNuevo.querySelector('input.selector');
-    let filtroRange = tableNuevo.querySelector('#range-box');
+    /** @type {HTMLInputElement} */
+    let filtroCodigo = document.getElementById('filtro-codigo');
+    /** @type {HTMLInputElement} */
+    let filtroProducto = document.getElementById('filtro-nombre');
+    /** @type {HTMLInputElement} */
+    let filtroSelector = document.getElementById('filtro-categorias');
+    /** @type {HTMLDivElement} */
+    let filtroRange = document.getElementById('range-box');
+    /** @type {HTMLAnchorElement} */
     let btnFiltro = tableNuevo.querySelector('.btn');
 
-    /* 
+    /** @type {HTMLDivElement} */
+    let catalogoBox = document.getElementById('catalogo');
+
+    /*
       ==================================================
       =================== RANGE INPUT ===================
       ==================================================
@@ -57,7 +65,7 @@ $('.content-body').ready(async () => {
       { min: 0, max: 500, step: 5, gap: 10 }
     );
 
-    /* 
+    /*
       ==================================================
       ================= SELECTOR MULTI =================
       ==================================================
@@ -69,22 +77,22 @@ $('.content-body').ready(async () => {
       { multi: true }
     );
 
-    /* 
+    /*
       ==================================================
       ==================== CATALOGUE ====================
       ==================================================
     */
 
-    let catalogoBox = document.getElementById('catalogo');
-
     let catalogo = new Catalogue(
       catalogoBox,
-      (req, end) => socket.emit('/read/catalogue', req, res => end(res)),
+      (req, end) => {
+        socket.emit('/read/catalogue', req, res => end(res))
+      },
       data => `
-        <div class="product">
+        <div class="product ${data.stock_disponible == 0 ? 'out' : ''}">
           <div class="product-imagen">
             <img src="${data.src}" class="imagen">
-            <span class="product-counter">${data.stock_disponible}</span>
+            <span class="product-counter">${data.stock_disponible == 0 ? 'sin stock' : data.stock_disponible}</span>
           </div>
           <div class="product-details">
             <span class="detail-name">${data.producto}</span>
@@ -100,7 +108,7 @@ $('.content-body').ready(async () => {
       20
     );
 
-    /* 
+    /*
       ==================================================
       ==================== filtro ====================
       ==================================================
@@ -110,7 +118,15 @@ $('.content-body').ready(async () => {
     catalogo.ev.on('load', () => cardBody.classList.add('load-spinner'));
     catalogo.ev.on('complete', () => cardBody.classList.remove('load-spinner'));
 
-    let updUrl = (producto, codigo, selected) => {
+    let updateUrl = () => {
+      let producto = filtroProducto.value.trim();
+      let codigo = filtroCodigo.value.trim();
+      let selected = filtroSelectorMulti.selected.map(s => Number(s.id));
+      let rangeMax = filtroPriceRange.max;
+      let rangeMin = filtroPriceRange.min;
+      let visibility = catalogo.visibilityGet;
+      let order = catalogo.orderGet;
+
       let url = new URL(window.location.href);
 
       if (producto) {
@@ -131,7 +147,7 @@ $('.content-body').ready(async () => {
       else
         url.searchParams.delete('codigo');
 
-      if (selected.size) {
+      if (selected?.length) {
         if (url.searchParams.has('selected'))
           url.searchParams.set('selected', [...selected].join(','));
         else
@@ -140,56 +156,110 @@ $('.content-body').ready(async () => {
       else
         url.searchParams.delete('selected');
 
+      if (0 < rangeMin) {
+        if (url.searchParams.has('precio_min'))
+          url.searchParams.set('precio_min', rangeMin);
+        else
+          url.searchParams.append('precio_min', rangeMin);
+      }
+      else
+        url.searchParams.delete('precio_min');
+
+      if (rangeMax < 500) {
+        if (url.searchParams.has('precio_max'))
+          url.searchParams.set('precio_max', rangeMax);
+        else
+          url.searchParams.append('precio_max', rangeMax);
+      }
+      else
+        url.searchParams.delete('precio_max');
+
+      if (visibility) {
+        if (url.searchParams.has('visibility'))
+          url.searchParams.set('visibility', visibility);
+        else
+          url.searchParams.append('visibility', visibility);
+      }
+      else
+        url.searchParams.delete('visibility');
+
+      if (order) {
+        if (url.searchParams.has('order'))
+          url.searchParams.set('order', order);
+        else
+          url.searchParams.append('order', order);
+      }
+      else
+        url.searchParams.delete('order');
+
       history.pushState({}, '', url.toString());
     }
 
-    let search = (change = true) => {
-      /** @type {string} */
-      let findProducto = filtroProducto.value;
-      /** @type {string} */
-      let findCodigo = filtroCodigo.value;
-      /** @type {number[]} */
-      let findSelected = filtroSelectorMulti.selected.map(s => Number(s.id));
+    filtroProducto.addEventListener('input', updateUrl);
+    filtroCodigo.addEventListener('input', updateUrl);
+    filtroSelectorMulti.on('selected', updateUrl);
+    filtroSelectorMulti.on('deselected', updateUrl);
+    filtroPriceRange.ev.on('changeMax', updateUrl);
+    filtroPriceRange.ev.on('changeMin', updateUrl);
+    catalogo.ev.on('visibility', updateUrl);
+    catalogo.ev.on('order', updateUrl);
 
-      if (change)
-        updUrl(findProducto, findCodigo, findSelected);
-
+    let filter = () => {
       catalogo.filter({
-        value: findProducto,
-        code: findCodigo,
-        nameTags: findSelected,
+        code: filtroProducto.value || '',
+        value: filtroCodigo.value || '',
+        nameTags: filtroSelectorMulti.selected.map(s => Number(s.id)),
         rangeMax: filtroPriceRange.max,
         rangeMin: filtroPriceRange.min
-      });
+      }).draw();
     }
 
-    btnFiltro.addEventListener('click', () => search());
-    document.addEventListener('keydown', ({ key }) => key == 'Enter' && search());
+    btnFiltro.addEventListener('click', filter);
+    document.addEventListener('keydown', ({ key }) => key == 'Enter' && catalogo.draw());
 
-    /* 
+    /*
       ==================================================
       ====================== href ======================
       ==================================================
     */
 
-    let url = new URL(window.location.href);
-    let hasproducto = url.searchParams.has('producto');
-    let hascodigo = url.searchParams.has('codigo');
-    let hasselected = url.searchParams.has('selected');
-
-    if (hasproducto || hascodigo || hasselected) {
+    let initReadUrl = async () => {
+      let url = new URL(window.location.href);
+      let hasProducto = url.searchParams.has('producto');
+      let hasCodigo = url.searchParams.has('codigo');
+      let hasSelected = url.searchParams.has('selected');
+      let hasPrecio_min = url.searchParams.get('precio_min');
+      let hasPrecio_max = url.searchParams.get('precio_max');
+      let hasVisibility = url.searchParams.get('visibility');
+      let hasOrder = url.searchParams.get('order');
 
       let Producto = url.searchParams.get('producto') || '';
-      if (hasproducto) filtroProducto.value = Producto;
+      if (hasProducto) filtroProducto.value = Producto;
 
       let Codigo = url.searchParams.get('codigo') || '';
-      if (hascodigo) filtroCodigo.value = Codigo;
+      if (hasCodigo) filtroCodigo.value = Codigo;
 
       let Selected = url.searchParams.get('selected')?.split(',') || [];
-      if (hasselected) Selected.forEach(id => filtroSelectorMulti.select(id));
+      if (hasSelected)
+        for (let id of Selected)
+          await filtroSelectorMulti.select(id);
 
-      search(false);
+      let rangeMin = url.searchParams.get('precio_min') || '';
+      if (hasPrecio_min) filtroPriceRange.min = Number(rangeMin);
+
+      let rangeMax = url.searchParams.get('precio_max') || '';
+      if (hasPrecio_max) filtroPriceRange.max = Number(rangeMax);
+
+      let visibility = url.searchParams.get('visibility') || '';
+      if (hasVisibility) catalogo.visibility = (visibility == 'true');
+
+      let order = url.searchParams.get('order') || '';
+      if (hasOrder) catalogo.order = order;
+
+      filter();
     }
+
+    initReadUrl()
 
     /* ===================== SOCKET ===================== */
 
@@ -211,6 +281,9 @@ $('.content-body').ready(async () => {
     })
 
     socket.on('/productos/data/updateIdBussines', data => {
+      if (!data.id)
+        return catalogo.draw();
+
       catalogo.set(data.id, d => {
         if (0 < data.stock_disponible)
           d.venta = data.venta
@@ -235,7 +308,6 @@ $('.content-body').ready(async () => {
       else
         data.data.forEach(d => catalogo.delete(d.id))
     })
-
   } catch ({ message, stack }) {
     socket.emit('/err/client', { message, stack, url: window.location.href })
   }

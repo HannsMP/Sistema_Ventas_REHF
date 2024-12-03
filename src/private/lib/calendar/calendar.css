@@ -66,7 +66,7 @@
       font-weight: bold;
       background-color: rgb(var(--color-3));
     }
-    
+
     td.select {
       border-color: rgb(var(--color-8));
       background-color: rgb(var(--secundary));

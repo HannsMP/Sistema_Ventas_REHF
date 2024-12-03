@@ -1,7 +1,7 @@
 $('.content-body').ready(async () => {
   try {
 
-    /* 
+    /*
       ==================================================
       ================== VARIABLES DOM ==================
       ==================================================
@@ -20,7 +20,7 @@ $('.content-body').ready(async () => {
     let $table = new Tables('#table-main');
     let $TableImport = new Tables('#table-import');
 
-    /* 
+    /*
       ==================================================
       ==================== DATATABLE ====================
       ==================================================
@@ -55,7 +55,8 @@ $('.content-body').ready(async () => {
         {
           name: 'y.mensaje',
           className: 'dtr-description',
-          targets: 3
+          targets: 3,
+          render: data => '<div class="scroll-y">' + (data || '-') + '</div>'
         },
         {
           name: 'y.fecha',
@@ -97,7 +98,7 @@ $('.content-body').ready(async () => {
     }
 
     /**
-     * @param {HTMLAnchorElement} btn 
+     * @param {HTMLAnchorElement} btn
      */
     window.dropRow = function (btn) {
       let row = $TableImport.datatable.row(btn.closest('tr'));
@@ -129,7 +130,8 @@ $('.content-body').ready(async () => {
         {
           name: 'mensaje',
           className: 'dtr-description',
-          targets: 3
+          targets: 3,
+          render: data => '<div class="scroll-y">' + (data || '-') + '</div>'
         },
         {
           name: 'fecha',
@@ -151,7 +153,7 @@ $('.content-body').ready(async () => {
       ],
     })
 
-    /* 
+    /*
       ==================================================
       ================== UPLOAD TABLE ==================
       ==================================================
@@ -175,16 +177,16 @@ $('.content-body').ready(async () => {
       let firstSheetName = workbook.SheetNames[0];
       let worksheet = workbook.Sheets[firstSheetName];
 
-      /** 
+      /**
        * @type {{
        *   id: number,
-       *   tipo:'GIRASTE'|'PAGASTE'|'TE PAGO', 
-       *   emisor: string, 
-       *   receptor: string, 
-       *   monto: string, 
+       *   tipo:'GIRASTE'|'PAGASTE'|'TE PAGO',
+       *   emisor: string,
+       *   receptor: string,
+       *   monto: string,
        *   mensaje: string,
        *   fecha: string
-       * }[]} 
+       * }[]}
        */
       let matrix = XLSX.utils.sheet_to_json(worksheet, {
         header: ["tipo", "emisor", "receptor", "monto", "mensaje", "fecha"],
@@ -214,7 +216,7 @@ $('.content-body').ready(async () => {
       console.log($TableImport.datatable.rows().data().toArray());
     })
 
-    /* 
+    /*
       ==================================================
       ===================== SOCKET =====================
       ==================================================

@@ -1,6 +1,16 @@
 class InputRange {
+  /**
+   * @type {EventListener<{
+   *   changeMin: number,
+   *   changeMax: number,
+   * }>}
+   */
+  ev = new EventListener;
+
   #option;
   #values;
+  #isMoving = false;
+
   /**
    * @param {HTMLDivElement} divBox
    * @param {{ min: number, max: number, step: number, gap?: number }} [option]
@@ -18,20 +28,7 @@ class InputRange {
       max: this.#option.max,
     };
 
-    divBox.innerHTML = `
-      <div class="wrapper">
-        <div class="values">
-          <input type="text" id="range1" value="${this.#option.min}" oninput="inputInt(this)">
-          <span>&dash;</span>
-          <input type="text" id="range2" value="${this.#option.max}" oninput="inputInt(this)">
-        </div>
-        <div class="container-input">
-          <div class="slider-track"></div>
-          <div class="circle" id="circle-1"></div>
-          <div class="circle" id="circle-2"></div>
-        </div>
-      </div>
-    `;
+    divBox.innerHTML = `<div class="wrapper"><div class="values"><input type="text" id="range1" value="${this.#option.min}" oninput="inputInt(this)"><span>&dash;</span><input type="text" id="range2" value="${this.#option.max}" oninput="inputInt(this)"></div><div class="container-input"><div class="slider-track"></div><div class="circle" id="circle-1"></div><div class="circle" id="circle-2"></div></div></div>`;
 
     this.displayValOne = divBox.querySelector("#range1");
     this.displayValTwo = divBox.querySelector("#range2");
@@ -59,31 +56,50 @@ class InputRange {
     return this.#values.max;
   }
 
+  set min(value) {
+    value = Math.max(this.#option.min, Math.min(value, this.#values.max - this.#option.gap));
+    if (this.#values.min !== value) {
+      this.displayValOne.value = value;
+      this.#values.min = value;
+      this.#updateCircles();
+      if (!this.#isMoving) this.ev.emit("changeMin", value);
+    }
+  }
+
+  set max(value) {
+    value = Math.min(this.#option.max, Math.max(value, this.#values.min + this.#option.gap));
+    if (this.#values.max !== value) {
+      this.displayValTwo.value = value;
+      this.#values.max = value;
+      this.#updateCircles();
+      if (!this.#isMoving) this.ev.emit("changeMax", value);
+    }
+  }
+
   #handleInputChange(isMin) {
     let input = isMin ? this.displayValOne : this.displayValTwo;
     let value = parseInt(input.value, 10);
 
-    if (isNaN(value))
-      return input.value = isMin ? this.#values.min : this.#values.max;
+    if (isNaN(value)) {
+      input.value = isMin ? this.#values.min : this.#values.max;
+      return;
+    }
 
     value = Math.round(value / this.#option.step) * this.#option.step;
 
-    if (isMin)
-      this.#values.min
-        = value
-        = Math.max(this.#option.min, Math.min(value, this.#values.max - this.#option.gap));
-    else
-      this.#values.max
-        = value
-        = Math.min(this.#option.max, Math.max(value, this.#values.min + this.#option.gap));
-
+    if (isMin) {
+      this.min = value;
+    } else {
+      this.max = value;
+    }
 
     input.value = value;
-    this.#updateCircles();
   }
 
   #handleMoveCircle(isMin, isTouch = false) {
-    let onMove = (e) => {
+    this.#isMoving = true;
+
+    const onMove = (e) => {
       let clientX = isTouch ? e.touches[0].clientX : e.clientX;
       let rect = this.sliderTrack.getBoundingClientRect();
       let percent = Math.min(
@@ -92,22 +108,23 @@ class InputRange {
       );
       let rawValue = ((percent / 100) * (this.#option.max - this.#option.min)) + this.#option.min;
 
-      // Ajustar al step más cercano
       let value = Math.round(rawValue / this.#option.step) * this.#option.step;
 
-      if (isMin)
-        this.displayValOne.value
-          = this.#values.min
-          = Math.min(value, this.#values.max - this.#option.gap);
-      else
-        this.displayValTwo.value
-          = this.#values.max
-          = Math.max(value, this.#values.min + this.#option.gap);
-
-      this.#updateCircles();
+      if (isMin) {
+        this.min = Math.min(value, this.#values.max - this.#option.gap);
+      } else {
+        this.max = Math.max(value, this.#values.min + this.#option.gap);
+      }
     };
 
-    let onEnd = () => {
+    const onEnd = () => {
+      this.#isMoving = false;
+      if (isMin) {
+        this.ev.emit("changeMin", this.#values.min);
+      } else {
+        this.ev.emit("changeMax", this.#values.max);
+      }
+
       document.removeEventListener(isTouch ? "touchmove" : "mousemove", onMove);
       document.removeEventListener(isTouch ? "touchend" : "mouseup", onEnd);
     };

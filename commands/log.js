@@ -30,7 +30,7 @@ module.exports = {
   name: 'log',
   cooldown: 30 * 1000,
   onColldown: {},
-  description: `Permite controlar el los logs del dispositivo. 
+  description: `Permite controlar el los logs del dispositivo.
   Uso: */log [selector] [accion?]*
   selector:
     *success*: registros satisfactorios.

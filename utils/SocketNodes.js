@@ -4,8 +4,8 @@
 
 class SocketNodes {
   /**
-   * @param {string[]} paths 
-   * @param {SocketNode[]} nodes 
+   * @param {string[]} paths
+   * @param {SocketNode[]} nodes
    */
   constructor(paths, nodes) {
     this.paths = paths;
@@ -20,10 +20,10 @@ class SocketNodes {
 
   /**
  * @template T
- * @param {string} eventName 
- * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data 
- * @param {(socketClient:SocketClient, dataSend: T)=>void} [each] 
- * @returns {Promise<T>} 
+ * @param {string} eventName
+ * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data
+ * @param {(socketClient:SocketClient, dataSend: T)=>void} [each]
+ * @returns {Promise<T>}
  */
   async emitSocket(eventName, data, each) {
     if (!this.sizesSocket) return
@@ -46,12 +46,12 @@ class SocketNodes {
   }
 
   /**
-   * @param {tagsName[]} tags 
+   * @param {tagsName[]} tags
    * @template T
-   * @param {string} eventName 
-   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data 
-   * @param {(socketClient:SocketClient, dataSend: T)=>void} [each] 
-   * @returns {Promise<T>} 
+   * @param {string} eventName
+   * @param {T | Promise<T> | (() => Promise<T>) | (() => T)} data
+   * @param {(socketClient:SocketClient, dataSend: T)=>void} [each]
+   * @returns {Promise<T>}
    */
   async emitTag(tags, eventName, data, each) {
     if (!this.sizesTag) return

@@ -11,7 +11,7 @@ const columns = {
   estado: { name: 'estado', null: false, type: 'Integer', limit: 1 }
 }
 
-/** 
+/**
  * @typedef {{
  *   id: number,
  *   nombre: string,
@@ -38,13 +38,13 @@ class Tb_categorias extends Table {
       '/control/mantenimiento/inventario',
     );
   }
-  /* 
+  /*
     ====================================================================================================
     =============================================== Tabla ===============================================
     ====================================================================================================
   */
   /**
-   * @param {import('datatables.net-dt').AjaxData} option 
+   * @param {import('datatables.net-dt').AjaxData} option
    * @returns {Promise<COLUMNS_CATEGORIAS[]>}
    */
   readInParts(option) {
@@ -53,7 +53,7 @@ class Tb_categorias extends Table {
         let { order, start, length, search } = option;
 
         let query = `
-          SELECT 
+          SELECT
             c.id,
             c.nombre,
             c.codigo,
@@ -86,7 +86,7 @@ class Tb_categorias extends Table {
         }
 
         query += `
-          GROUP BY 
+          GROUP BY
             c.id
         `;
 
@@ -117,7 +117,7 @@ class Tb_categorias extends Table {
         `;
         queryParams.push(length, start);
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
 
         res(result);
       } catch (e) {
@@ -126,7 +126,7 @@ class Tb_categorias extends Table {
     })
   }
   /**
-   * @param {import('datatables.net-dt').AjaxData} option 
+   * @param {import('datatables.net-dt').AjaxData} option
    * @returns {Promise<number>}
    */
   readInPartsCount(option) {
@@ -135,7 +135,7 @@ class Tb_categorias extends Table {
         let { search } = option;
 
         let query = `
-          SELECT 
+          SELECT
             COUNT(c.id) AS cantidad
           FROM
             tb_categorias AS c
@@ -158,7 +158,7 @@ class Tb_categorias extends Table {
           );
         }
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
 
         res(result[0].cantidad);
       } catch (e) {
@@ -166,8 +166,8 @@ class Tb_categorias extends Table {
       }
     })
   }
-  /** 
-   * @param {COLUMNS_CATEGORIAS} data 
+  /**
+   * @param {COLUMNS_CATEGORIAS} data
    * @returns {Promise<import('mysql').OkPacket>}
    */
   insert(data) {
@@ -185,7 +185,7 @@ class Tb_categorias extends Table {
         this.constraint('descripcion', descripcion);
         this.constraint('estado', estado);
 
-        let [result] = await this.app.model.poolValues(`
+        let [result] = await this.app.model.pool(`
           INSERT INTO
             tb_categorias (
               nombre,
@@ -223,46 +223,8 @@ class Tb_categorias extends Table {
       }
     })
   }
-  /** 
-   * @returns {Promise<{
-   *   id: number,
-   *   nombre: string,
-   *   codigo: string,
-   *   descripcion: string,
-   *   creacion: string,
-   *   estado: string,
-   *   producto_cantidad: number,
-   * }[]>}
-   */
-  readCountAll() {
-    return new Promise(async (res, rej) => {
-      try {
-        let [result] = await this.app.model.pool(`
-          SELECT 
-            c.id,
-            c.nombre,
-            c.codigo,
-            c.descripcion,
-            c.creacion,
-            c.estado,
-            COALESCE(COUNT(p.id), 0) AS producto_cantidad
-          FROM
-            tb_categorias AS c
-          LEFT JOIN
-            tb_productos AS p
-            ON p.categoria_id = c.id
-          GROUP BY
-            c.id;
-        `);
-
-        res(result);
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
   /**
-   * @param {number} id 
+   * @param {number} id
    * @returns {Promise<{
    *   id: number,
    *   nombre: string,
@@ -279,8 +241,8 @@ class Tb_categorias extends Table {
 
         this.constraint('id', id);
 
-        let [result] = await this.app.model.poolValues(`
-          SELECT 
+        let [result] = await this.app.model.pool(`
+          SELECT
             c.id,
             c.nombre,
             c.codigo,
@@ -307,9 +269,9 @@ class Tb_categorias extends Table {
       }
     })
   }
-  /** 
-   * @param {number} id 
-   * @param {COLUMNS_CATEGORIAS} data 
+  /**
+   * @param {number} id
+   * @param {COLUMNS_CATEGORIAS} data
    * @returns {Promise<import('mysql').OkPacket>}
    */
   updateId(id, data) {
@@ -324,13 +286,13 @@ class Tb_categorias extends Table {
         this.constraint('nombre', nombre, { unic: id });
         this.constraint('descripcion', descripcion);
 
-        let [result] = await this.app.model.poolValues(`
-          UPDATE 
+        let [result] = await this.app.model.pool(`
+          UPDATE
             tb_categorias
           SET
             nombre = ?,
             descripcion = ?
-          WHERE 
+          WHERE
             id = ?
         `, [
           nombre,
@@ -353,9 +315,9 @@ class Tb_categorias extends Table {
       }
     })
   }
-  /** 
-   * @param {number} id 
-   * @param {number} estado 
+  /**
+   * @param {number} id
+   * @param {number} estado
    * @returns {Promise<import('mysql').OkPacket>}
    */
   updateIdState(id, estado) {
@@ -365,12 +327,12 @@ class Tb_categorias extends Table {
         this.constraint('id', id);
         this.constraint('estado', estado);
 
-        let [result] = await this.app.model.poolValues(`
-          UPDATE 
+        let [result] = await this.app.model.pool(`
+          UPDATE
             tb_categorias
           SET
             estado = ?
-          WHERE 
+          WHERE
             id = ?;
         `, [
           estado,
@@ -388,18 +350,18 @@ class Tb_categorias extends Table {
       }
     })
   }
-  /** 
-   * @param {number} id 
+  /**
+   * @param {number} id
    * @returns {Promise<import('mysql').OkPacket>}
    */
   deleteId(id) {
     return new Promise(async (res, rej) => {
       try {
 
-        let [result] = await this.app.model.poolValues(`
-          DELETE FROM 
-            tb_categorias 
-          WHERE 
+        let [result] = await this.app.model.pool(`
+          DELETE FROM
+            tb_categorias
+          WHERE
             id = ?
         `, [
           id
@@ -416,8 +378,8 @@ class Tb_categorias extends Table {
       }
     })
   }
-  /** 
-   * @param {number} id 
+  /**
+   * @param {number} id
    * @returns {Promise<import('mysql').OkPacket>}
    */
   deleteAllId(id) {
@@ -425,19 +387,19 @@ class Tb_categorias extends Table {
       try {
         this.constraint('id', id);
 
-        await this.app.model.poolValues(`
-          DELETE FROM 
+        await this.app.model.pool(`
+          DELETE FROM
             tb_productos
-          WHERE 
+          WHERE
             categoria_id = ?
         `, [
           id
         ]);
 
-        let [result] = await this.app.model.poolValues(`
-          DELETE FROM 
-            tb_categorias 
-          WHERE 
+        let [result] = await this.app.model.pool(`
+          DELETE FROM
+            tb_categorias
+          WHERE
             id = ?
         `, [
           id
@@ -458,13 +420,13 @@ class Tb_categorias extends Table {
       }
     })
   }
-  /* 
+  /*
     ====================================================================================================
     ============================================== Selector ==============================================
     ====================================================================================================
   */
   /**
-   * @param {SelectorRequest} option 
+   * @param {SelectorRequest} option
    * @returns {Promise<COLUMNS_CATEGORIAS[]>}
    */
   SelectorInParts(option) {
@@ -473,13 +435,13 @@ class Tb_categorias extends Table {
         let { order, start, length, search, byId, noInclude } = option;
 
         let query = `
-          SELECT 
+          SELECT
             id,
             nombre AS name
           FROM
             tb_categorias
           WHERE
-            estado = 1 
+            estado = 1
         `, queryParams = [];
 
         if (search) {
@@ -519,7 +481,7 @@ class Tb_categorias extends Table {
 
         queryParams.push(length, start);
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
 
         res(result);
       } catch (e) {
@@ -528,7 +490,7 @@ class Tb_categorias extends Table {
     })
   }
   /**
-   * @param {SelectorRequest} option 
+   * @param {SelectorRequest} option
    * @returns {Promise<number>}
    */
   SelectorInPartsCount(option) {
@@ -537,12 +499,12 @@ class Tb_categorias extends Table {
         let { search, noInclude } = option;
 
         let query = `
-          SELECT 
+          SELECT
             COUNT(id) AS cantidad
           FROM
             tb_categorias
           WHERE
-            estado = 1 
+            estado = 1
         `, queryParams = [];
 
         if (typeof search == 'string' && search != '') {
@@ -560,7 +522,7 @@ class Tb_categorias extends Table {
           queryParams.push(...noInclude);
         }
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
 
         res(result[0].cantidad);
       } catch (e) {
@@ -568,12 +530,12 @@ class Tb_categorias extends Table {
       }
     })
   }
-  /* 
+  /*
     ====================================================================================================
     ============================================== codigo ==============================================
     ====================================================================================================
   */
-  /** 
+  /**
    * @returns {Promise<string>}
    */
   getCodigo() {
@@ -584,12 +546,12 @@ class Tb_categorias extends Table {
         while (existKey) {
           uniqueKey = this.id.generate();
 
-          let [result] = await this.app.model.poolValues(`
-          SELECT 
+          let [result] = await this.app.model.pool(`
+          SELECT
               1
-          FROM 
+          FROM
             tb_categorias
-          WHERE 
+          WHERE
               codigo = ?
           `, [
             uniqueKey
@@ -604,21 +566,21 @@ class Tb_categorias extends Table {
       }
     })
   }
-  /* 
+  /*
     ====================================================================================================
     ============================================== Cards ==============================================
     ====================================================================================================
   */
-  /** 
+  /**
    * @returns {Promise<string>}
    */
   cardLastCreation() {
     return new Promise(async (res, rej) => {
       try {
         let [result] = await this.app.model.pool(`
-          SELECT 
+          SELECT
             MAX(STR_TO_DATE(creacion, '%Y-%m-%d')) AS max_creacion
-          FROM 
+          FROM
             tb_categorias
           WHERE
             estado = 1
@@ -630,16 +592,16 @@ class Tb_categorias extends Table {
       }
     })
   }
-  /** 
+  /**
    * @returns {Promise<string>}
    */
   cardCount() {
     return new Promise(async (res, rej) => {
       try {
         let [result] = await this.app.model.pool(`
-            SELECT 
+            SELECT
               COALESCE(COUNT(id), 0) AS cantidad_accesos
-            FROM 
+            FROM
               tb_categorias
             WHERE
               estado = 1
@@ -651,31 +613,31 @@ class Tb_categorias extends Table {
       }
     })
   }
-  /* 
+  /*
     ====================================================================================================
     ============================================== Grafico ==============================================
     ====================================================================================================
   */
-  /** 
+  /**
    * @returns {Promise<{label:string[], data:number[]}>}
    */
   chartCountCategory() {
     return new Promise(async (res, rej) => {
       try {
         let [result] = await this.app.model.pool(`
-          SELECT 
+          SELECT
             c.nombre AS categoria_nombre,
             COALESCE(COUNT(p.id), 0) AS cantidad_productos
-          FROM 
+          FROM
             tb_categorias AS c
-          LEFT JOIN 
+          LEFT JOIN
             tb_productos AS p
-            ON 
+            ON
               p.categoria_id = c.id
           WHERE
             c.estado = 1
             AND p.estado = 1
-          GROUP BY 
+          GROUP BY
             c.nombre;
           `)
 

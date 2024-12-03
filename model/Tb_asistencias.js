@@ -8,7 +8,7 @@ const columns = {
   desconeccion: { name: 'desconeccion', null: false, type: 'String', limit: 25 }
 }
 
-/** 
+/**
  * @typedef {{
  *   id: number,
  *   usuario_id: number,
@@ -27,13 +27,13 @@ class Tb_asistencias extends Table {
 
     this.io = app.socket.node.selectNode('/control/reportes/asistencia', true);
   }
-  /* 
+  /*
     ====================================================================================================
     =============================================== Tabla ===============================================
     ====================================================================================================
   */
   /**
-   * @param {import('datatables.net-dt').AjaxData} option 
+   * @param {import('datatables.net-dt').AjaxData} option
    * @returns {Promise<COLUMNS_ASISTENCIAS[]>}
    */
   readInParts(option) {
@@ -42,7 +42,7 @@ class Tb_asistencias extends Table {
         let { order, start, length, search } = option;
 
         let query = `
-          SELECT 
+          SELECT
             a.id,
             u.usuario,
             u.telefono,
@@ -52,15 +52,15 @@ class Tb_asistencias extends Table {
             DATE_FORMAT(a.desconeccion, '%r') AS hora_desconeccion
           FROM
             tb_asistencias AS a
-          LEFT 
-            JOIN 
+          LEFT
+            JOIN
               tb_usuarios AS u
-            ON 
+            ON
               u.id = a.usuario_id
-          LEFT 
-            JOIN 
+          LEFT
+            JOIN
               tipo_rol AS r
-            ON 
+            ON
               r.id = u.rol_id
         `, queryParams = [];
 
@@ -110,7 +110,7 @@ class Tb_asistencias extends Table {
         `;
         queryParams.push(length, start);
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
 
         res(result);
       } catch (e) {
@@ -119,7 +119,7 @@ class Tb_asistencias extends Table {
     })
   }
   /**
-   * @param {import('datatables.net-dt').AjaxData} option 
+   * @param {import('datatables.net-dt').AjaxData} option
    * @returns {Promise<number>}
    */
   readInPartsCount(option) {
@@ -128,19 +128,19 @@ class Tb_asistencias extends Table {
         let { search } = option;
 
         let query = `
-          SELECT 
+          SELECT
             COUNT(a.id) AS cantidad
           FROM
             tb_asistencias AS a
-          LEFT 
-            JOIN 
+          LEFT
+            JOIN
               tb_usuarios AS u
-            ON 
+            ON
               u.id = a.usuario_id
-          LEFT 
-            JOIN 
+          LEFT
+            JOIN
               tipo_rol AS r
-            ON 
+            ON
               r.id = u.rol_id
         `, queryParams = [];
 
@@ -161,7 +161,7 @@ class Tb_asistencias extends Table {
           );
         }
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
 
         res(result[0].cantidad);
       } catch (e) {
@@ -169,8 +169,8 @@ class Tb_asistencias extends Table {
       }
     })
   }
-  /** 
-   * @param {number} data 
+  /**
+   * @param {number} data
    * @returns {Promise<import('mysql').OkPacket>}
    */
   insertUserId(usuario_id) {
@@ -178,19 +178,19 @@ class Tb_asistencias extends Table {
       try {
         this.constraint('usuario_id', usuario_id);
 
-        let [result] = await this.app.model.poolValues(`
-          INSERT INTO 
+        let [result] = await this.app.model.pool(`
+          INSERT INTO
             tb_asistencias (
               usuario_id,
               creacion
             )
           SELECT ?, CURRENT_TIMESTAMP()
           WHERE NOT EXISTS (
-              SELECT 
+              SELECT
                 1
-              FROM 
+              FROM
                 tb_asistencias
-              WHERE 
+              WHERE
                 usuario_id = ?
                 AND DATE(creacion) = CURDATE()
           );
@@ -202,7 +202,7 @@ class Tb_asistencias extends Table {
         if (result.affectedRows)
           this.io.sockets.emit(
             '/asistencias/data/insert',
-            _ => this.readIdJoin(result.insertId)
+            _ => this.readJoinId(result.insertId)
           )
 
         res(result);
@@ -225,7 +225,7 @@ class Tb_asistencias extends Table {
     return new Promise(async (res, rej) => {
       try {
         let [result] = await this.app.model.pool(`
-          SELECT 
+          SELECT
             a.id,
             u.usuario,
             u.telefono,
@@ -235,15 +235,15 @@ class Tb_asistencias extends Table {
             DATE_FORMAT(a.desconeccion, '%r') AS hora_desconeccion
           FROM
             tb_asistencias AS a
-          LEFT 
-            JOIN 
+          LEFT
+            JOIN
               tb_usuarios AS u
-            ON 
+            ON
               u.id = a.usuario_id
-          LEFT 
-            JOIN 
+          LEFT
+            JOIN
               tipo_rol AS r
-            ON 
+            ON
               r.id = u.rol_id
         `);
 
@@ -254,7 +254,7 @@ class Tb_asistencias extends Table {
     })
   }
   /**
-   * @param {number} id 
+   * @param {number} id
    * @returns {Promise<{
    *   usuario: string,
    *   telefono: string,
@@ -263,14 +263,14 @@ class Tb_asistencias extends Table {
    *   hora_desconeccion: string
    * }>}
    */
-  readIdJoin(id) {
+  readJoinId(id) {
     return new Promise(async (res, rej) => {
       try {
 
         this.constraint('id', id);
 
-        let [result] = await this.app.model.poolValues(`
-          SELECT 
+        let [result] = await this.app.model.pool(`
+          SELECT
             a.id,
             u.usuario,
             u.telefono,
@@ -280,15 +280,15 @@ class Tb_asistencias extends Table {
             DATE_FORMAT(a.desconeccion, '%r') AS hora_desconeccion
           FROM
             tb_asistencias AS a
-          LEFT 
-            JOIN 
+          LEFT
+            JOIN
               tb_usuarios AS u
-            ON 
+            ON
               u.id = a.usuario_id
-          LEFT 
-            JOIN 
+          LEFT
+            JOIN
               tipo_rol AS r
-            ON 
+            ON
               r.id = u.rol_id
           WHERE
             a.id = ?
@@ -305,7 +305,7 @@ class Tb_asistencias extends Table {
     })
   }
   /**
-   * @param {Date | string | number} date 
+   * @param {Date | string | number} date
    * @returns {Promise<{
    *   usuario: string,
    *   telefono: string,
@@ -321,25 +321,25 @@ class Tb_asistencias extends Table {
           ? date
           : new Date(date);
 
-        let [result] = await this.app.model.poolValues(`
-          SELECT 
+        let [result] = await this.app.model.pool(`
+          SELECT
             u.usuario,
             u.telefono,
             r.nombre AS rol_nombre,
             a.creacion
           FROM
             tb_asistencias AS a
-          LEFT 
-            JOIN 
+          LEFT
+            JOIN
               tb_usuarios AS u
-            ON 
+            ON
               u.id = a.usuario_id
-          LEFT 
-            JOIN 
+          LEFT
+            JOIN
               tipo_rol AS r
-            ON 
+            ON
               r.id = u.rol_id
-          WHERE 
+          WHERE
             DATE(a.creacion) = ?
         `, [
           this.app.time.format('YYYY-MM-DD', date)
@@ -352,7 +352,7 @@ class Tb_asistencias extends Table {
     })
   }
   /**
-   * @param {number} usuario_id 
+   * @param {number} usuario_id
    * @returns {Promise<COLUMNS_ASISTENCIAS>}
    */
   readTodayUser(usuario_id) {
@@ -360,12 +360,12 @@ class Tb_asistencias extends Table {
       try {
         this.app.model.tb_usuarios.constraint('id', usuario_id);
 
-        let [result] = await this.app.model.poolValues(`
+        let [result] = await this.app.model.pool(`
           SELECT
             *
-          FROM 
+          FROM
             tb_asistencias
-          WHERE 
+          WHERE
             usuario_id = ?
             AND DATE(creacion) = CURDATE();
         `, [
@@ -378,8 +378,8 @@ class Tb_asistencias extends Table {
       }
     })
   }
-  /** 
-   * @param {number} data 
+  /**
+   * @param {number} data
    * @returns {Promise<import('mysql').OkPacket>}
    */
   updateUserId(usuario_id) {
@@ -387,12 +387,12 @@ class Tb_asistencias extends Table {
       try {
         this.constraint('usuario_id', usuario_id);
 
-        let [result] = await this.app.model.poolValues(`
-          UPDATE 
+        let [result] = await this.app.model.pool(`
+          UPDATE
             tb_asistencias
-          SET 
+          SET
             desconeccion = CURRENT_TIMESTAMP()
-          WHERE 
+          WHERE
             usuario_id = ?
             AND DATE(creacion) = CURDATE();
         `, [

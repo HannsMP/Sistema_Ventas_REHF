@@ -15,7 +15,7 @@ const columns = {
   creacion: { name: 'creacion', null: false, type: 'String', limit: 25 }
 }
 
-/** 
+/**
  * @typedef {{
  *   id: number,
  *   codigo: string,
@@ -42,13 +42,13 @@ class Tb_transacciones_ventas extends Table {
 
     this.io = app.socket.node.selectNode('/control/reportes/ventas', true);
   }
-  /* 
+  /*
     ====================================================================================================
     =============================================== Tabla ===============================================
     ====================================================================================================
   */
   /**
-   * @param {import('datatables.net-dt').AjaxData} option 
+   * @param {import('datatables.net-dt').AjaxData} option
    * @returns {Promise<COLUMNS_TRANSACCIONES_VENTAS[]>}
    */
   readInParts(option) {
@@ -57,11 +57,11 @@ class Tb_transacciones_ventas extends Table {
         let { order, start, length, search } = option;
 
         let query = `
-          SELECT 
+          SELECT
             tv.id,
             tv.usuario_id,
             u.usuario,
-            tv.metodo_pago_id, 
+            tv.metodo_pago_id,
             mp.nombre AS metodo_pago_nombre,
             tv.cliente_id,
             c.nombres,
@@ -69,17 +69,17 @@ class Tb_transacciones_ventas extends Table {
             tv.importe_total,
             tv.descuento,
             tv.creacion
-          FROM 
+          FROM
             tb_transacciones_ventas AS tv
-          INNER 
+          INNER
             JOIN tb_usuarios AS u
-              ON 
+              ON
                 tv.usuario_id = u.id
-          INNER 
+          INNER
             JOIN tipo_metodo_pago AS mp
               ON
                 tv.metodo_pago_id = mp.id
-          INNER 
+          INNER
             JOIN tb_clientes AS c
               ON
                 tv.cliente_id = c.id
@@ -135,7 +135,7 @@ class Tb_transacciones_ventas extends Table {
         `;
         queryParams.push(length, start);
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
 
         res(result);
       } catch (e) {
@@ -144,7 +144,7 @@ class Tb_transacciones_ventas extends Table {
     })
   }
   /**
-   * @param {import('datatables.net-dt').AjaxData} option 
+   * @param {import('datatables.net-dt').AjaxData} option
    * @returns {Promise<COLUMNS_TRANSACCIONES_VENTAS[]>}
    */
   readInPartsCount(option) {
@@ -153,19 +153,19 @@ class Tb_transacciones_ventas extends Table {
         let { search } = option;
 
         let query = `
-          SELECT 
+          SELECT
             COUNT(tv.id) AS cantidad
-          FROM 
+          FROM
             tb_transacciones_ventas AS tv
-          INNER 
+          INNER
             JOIN tb_usuarios AS u
-              ON 
+              ON
                 tv.usuario_id = u.id
-          INNER 
+          INNER
             JOIN tipo_metodo_pago AS mp
               ON
                 tv.metodo_pago_id = mp.id
-          INNER 
+          INNER
             JOIN tb_clientes AS c
               ON
                 tv.cliente_id = c.id
@@ -192,7 +192,7 @@ class Tb_transacciones_ventas extends Table {
           );
         }
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
 
         res(result[0].cantidad);
       } catch (e) {
@@ -200,8 +200,8 @@ class Tb_transacciones_ventas extends Table {
       }
     })
   }
-  /** 
-   * @param {COLUMNS_TRANSACCIONES_VENTAS} data 
+  /**
+   * @param {COLUMNS_TRANSACCIONES_VENTAS} data
    * @returns {Promise<import('mysql').OkPacket>}
    */
   insert(data) {
@@ -239,7 +239,7 @@ class Tb_transacciones_ventas extends Table {
         if (serie) values.push(serie);
         if (comentario) values.push(comentario);
 
-        let [result] = await this.app.model.poolValues(`
+        let [result] = await this.app.model.pool(`
           INSERT INTO
             tb_transacciones_ventas (
               codigo,
@@ -278,116 +278,15 @@ class Tb_transacciones_ventas extends Table {
     })
   }
   /**
+   * @param {Date | string | number} date
    * @returns {Promise<{
-   *   id: number, 
-   *   usuario_id: number,   
-   *   usuario: string,   
-   *   metodo_pago_id: number,   
-   *   metodo_pago_nombre: string,
-   *   codigo: string, 
-   *   importe_total: number, 
-   *   descuento: number, 
-   *   creacion: string 
-   * }[]>}
-   */
-  readAllJoin() {
-    return new Promise(async (res, rej) => {
-      try {
-        let [result] = await this.app.model.pool(`
-          SELECT 
-            tv.id,
-            tv.usuario_id,
-            u.usuario,
-            tv.metodo_pago_id, 
-            mp.nombre AS metodo_pago_nombre,
-            tv.cliente_id,
-            c.nombres,
-            tv.codigo,
-            tv.importe_total,
-            tv.descuento,
-            tv.creacion
-          FROM 
-            tb_transacciones_ventas AS tv
-          INNER 
-            JOIN tb_usuarios AS u
-              ON 
-                tv.usuario_id = u.id
-          INNER 
-            JOIN tipo_metodo_pago AS mp
-              ON
-                tv.metodo_pago_id = mp.id
-          INNER 
-            JOIN tb_clientes AS c
-              ON
-                tv.cliente_id = c.id
-         `);
-
-        res(result);
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
-  /**
-   * @param {number} usuario_id 
-   * @returns {Promise<{
-   *   id: number, 
-   *   usuario_id: number,   
-   *   metodo_pago_id: number,   
-   *   metodo_pago_nombre: string,
-   *   codigo: string, 
-   *   importe_total: number, 
-   *   descuento: number, 
-   *   hora: string 
-   * }[]>}
-   */
-  readAllJoinUser(usuario_id) {
-    return new Promise(async (res, rej) => {
-      try {
-        let [result] = await this.app.model.poolValues(`
-          SELECT 
-            tv.id,
-            tv.metodo_pago_id, 
-            tv.codigo,
-            tv.importe_total,
-            tv.descuento,
-            mp.nombre AS metodo_pago_nombre,
-            tv.cliente_id,
-            c.nombres AS cliente_nombres,
-            DATE_FORMAT(tv.creacion, '%r') AS hora
-          FROM 
-            tb_transacciones_ventas AS tv
-          INNER 
-            JOIN tipo_metodo_pago AS mp
-              ON
-                tv.metodo_pago_id = mp.id
-          INNER 
-            JOIN tb_clientes AS c
-              ON
-                tv.cliente_id = c.id
-          WHERE 
-            DATE(tv.creacion) = CURDATE()
-            AND tv.usuario_id = ?;
-         `, [
-          usuario_id
-        ]);
-
-        res(result);
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
-  /**
-   * @param {Date | string | number} date 
-   * @returns {Promise<{
-   *   id: number, 
-   *   usuario: string,   
-   *   nombre: string, 
-   *   codigo: string, 
-   *   importe_total: number, 
-   *   descuento: number, 
-   *   creacion: string 
+   *   id: number,
+   *   usuario: string,
+   *   nombre: string,
+   *   codigo: string,
+   *   importe_total: number,
+   *   descuento: number,
+   *   creacion: string
    * }[]>}
    */
   readDate(date) {
@@ -397,8 +296,8 @@ class Tb_transacciones_ventas extends Table {
           ? date
           : new Date(date);
 
-        let [result] = await this.app.model.poolValues(`
-          SELECT 
+        let [result] = await this.app.model.pool(`
+          SELECT
             u.usuario,
             mp.nombre,
             tv.id,
@@ -406,17 +305,17 @@ class Tb_transacciones_ventas extends Table {
             tv.importe_total,
             tv.descuento,
             tv.creacion
-          FROM 
+          FROM
             tb_transacciones_ventas AS tv
-          INNER 
+          INNER
             JOIN tb_usuarios AS u
-              ON 
+              ON
                 tv.usuario_id = u.id
-          INNER 
+          INNER
             JOIN tipo_metodo_pago AS mp
-              ON 
+              ON
                 tv.metodo_pago_id = mp.id
-          WHERE 
+          WHERE
             DATE(tv.creacion) = ?;
         `, [
           this.app.time.format('YYYY-MM-DD', date)
@@ -429,8 +328,8 @@ class Tb_transacciones_ventas extends Table {
     })
   }
   /**
-   * @param {number} id 
-   * @param {COLUMNS_TRANSACCIONES_VENTAS} data 
+   * @param {number} id
+   * @param {COLUMNS_TRANSACCIONES_VENTAS} data
    * @returns {Promise<import('mysql').OkPacket>}
    */
   updateId(id, data) {
@@ -450,14 +349,14 @@ class Tb_transacciones_ventas extends Table {
 
         let dataEmitBefore = await this.readJoinId(id);
 
-        let [result] = await this.app.model.poolValues(`
+        let [result] = await this.app.model.pool(`
           UPDATE
             tb_transacciones_ventas
           SET
             usuario_id = ?,
             importe_total = ?,
             metodo_pago_id = ?
-          WHERE 
+          WHERE
             id = ?;
         `, [
           usuario_id,
@@ -495,7 +394,7 @@ class Tb_transacciones_ventas extends Table {
     })
   }
   /**
-   * @param {number} id 
+   * @param {number} id
    * @returns {Promise<import('mysql').OkPacket>}
    */
   deleteId(id) {
@@ -503,16 +402,30 @@ class Tb_transacciones_ventas extends Table {
       try {
         this.constraint('id', id);
 
-        await this.app.model.poolValues(`
-          DELETE FROM 
-            tb_ventas 
-          WHERE 
+        await this.app.model.pool(`
+          UPDATE
+            tb_productos p
+          JOIN
+            tb_ventas v
+          ON
+            p.id = v.producto_id
+          SET
+            p.stock_disponible = p.stock_disponible + v.cantidad
+          WHERE v.transaccion_id = ?;
+        `, [
+          id
+        ]);
+
+        await this.app.model.pool(`
+          DELETE FROM
+            tb_ventas
+          WHERE
             transaccion_id = ?
         `, [
           id
         ]);
 
-        let [result] = await this.app.model.poolValues(`
+        let [result] = await this.app.model.pool(`
           DELETE FROM
             tb_transacciones_ventas
           WHERE
@@ -539,48 +452,15 @@ class Tb_transacciones_ventas extends Table {
   }
   /**
    * @returns {Promise<{
-   *   codigo: string, 
-   *   importe_total: number, 
-   *   descuento: number, 
-   *   creacion: string 
-   * }>}
-   */
-  readId(id) {
-    return new Promise(async (res, rej) => {
-      try {
-        this.constraint('id', id);
-
-        let [result] = await this.app.model.poolValues(`
-          SELECT 
-            codigo,
-            importe_total,
-            descuento,
-            creacion
-          FROM 
-            tb_transacciones_ventas
-          WHERE
-            id = ?
-        `, [
-          id
-        ]);
-
-        res(result[0]);
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
-  /**
-   * @returns {Promise<{
-   *   id: number, 
-   *   usuario_id: number,   
-   *   usuario: string,   
-   *   metodo_pago_id: number,   
+   *   id: number,
+   *   usuario_id: number,
+   *   usuario: string,
+   *   metodo_pago_id: number,
    *   metodo_pago_nombre: string,
-   *   codigo: string, 
-   *   importe_total: number, 
-   *   descuento: number, 
-   *   creacion: string 
+   *   codigo: string,
+   *   importe_total: number,
+   *   descuento: number,
+   *   creacion: string
    * }>}
    */
   readJoinId(id) {
@@ -588,32 +468,32 @@ class Tb_transacciones_ventas extends Table {
       try {
         this.constraint('id', id);
 
-        let [result] = await this.app.model.poolValues(`
-          SELECT 
+        let [result] = await this.app.model.pool(`
+          SELECT
             tv.id,
             tv.usuario_id,
             u.usuario,
             tv.cliente_id,
             c.nombres AS cliente_nombres,
-            tv.metodo_pago_id, 
+            tv.metodo_pago_id,
             mp.nombre AS metodo_pago_nombre,
             tv.codigo,
             tv.importe_total,
             tv.descuento,
             tv.creacion
-          FROM 
+          FROM
             tb_transacciones_ventas AS tv
-          INNER 
+          INNER
             JOIN tb_clientes AS c
-              ON 
+              ON
                 tv.cliente_id = c.id
-          INNER 
+          INNER
             JOIN tb_usuarios AS u
-              ON 
+              ON
                 tv.usuario_id = u.id
-          INNER 
+          INNER
             JOIN tipo_metodo_pago AS mp
-              ON 
+              ON
                 tv.metodo_pago_id = mp.id
           WHERE
             tv.id = ?
@@ -627,12 +507,12 @@ class Tb_transacciones_ventas extends Table {
       }
     })
   }
-  /* 
+  /*
     ====================================================================================================
     ============================================== codigo ==============================================
     ====================================================================================================
   */
-  /** 
+  /**
    * @returns {Promise<string>}
    */
   getCodigo() {
@@ -643,7 +523,7 @@ class Tb_transacciones_ventas extends Table {
         while (existKey) {
           uniqueKey = this.id.generate();
 
-          let [result] = await this.app.model.poolValues(`
+          let [result] = await this.app.model.pool(`
             SELECT
               1
             FROM
@@ -663,13 +543,13 @@ class Tb_transacciones_ventas extends Table {
       }
     })
   }
-  /* 
+  /*
     ====================================================================================================
     ============================================== process ==============================================
     ====================================================================================================
   */
   /**
-   * @param {number} id 
+   * @param {number} id
    * @returns {Promise<{
    *   descuento: number
    * }>}
@@ -677,88 +557,97 @@ class Tb_transacciones_ventas extends Table {
   refreshId(id) {
     return new Promise(async (res, rej) => {
       try {
-
-        let transaccion = await this.readJoinId(id);
-
+        let transaccion = await this.readIdAll(id);
         if (!transaccion) return;
 
-        let productos = await this.app.model.tb_ventas.readBusinessId(id);
+        let asyncVentas = this.app.model.tb_ventas.readBusinessId(id);
+        let asyncMetodoTransaccion = this.app.model.tipo_metodo_pago.readId(transaccion.metodo_pago_id);
 
-        let { igv } = await this.app.model.tipo_metodo_pago.readId(transaccion.metodo_pago_id);
+        let ventas = await asyncVentas;
+        let { igv } = await asyncMetodoTransaccion;
 
-        let idUniq = new Set();
-        /** @type {{[producto_id:string]: {id: number,producto_id: number,cantidad: number,descuento: number,importe: number}[]}} */
-        let dataDupli = {};
+        /* ========== CONTROLADORES ========== */
 
-        let productosUnicos = productos.filter(d => {
-          let has = idUniq.has(d.producto_id)
+        /** @type {Set<number>} */
+        let setProdutoId = new Set();
+        /** @type {Map<number, {id: number,producto_id: number,cantidad: number,descuento: number,importe: number}[]>} */
+        let mapProductos = new Map;
+        /** @type {number[]} */
+        let dltVentaId = [];
 
-          if (!has)
-            idUniq.add(d.producto_id);
-          else if (dataDupli[d.producto_id])
-            dataDupli[d.producto_id].push(d);
-          else
-            dataDupli[d.producto_id] = [d];
-
-          return !has;
-        })
+        /* ========== CALCULADOR ========== */
 
         let totalVentaReal = 0;
-        let idDlt = [];
 
-        productosUnicos.forEach(u => {
-          dataDupli[u.producto_id]?.forEach(d => {
-            u.importe += d.importe;
-            u.cantidad += d.cantidad;
-            idDlt.push(d.id)
-          })
-          totalVentaReal += u.importe;
+        let ventasFilter = ventas.filter(venta => {
+          totalVentaReal += venta.importe;
+
+          let has = setProdutoId.has(venta.producto_id);
+
+          if (!has) {
+            setProdutoId.add(venta.producto_id);
+            return false;
+          }
+
+          if (mapProductos.has(venta.producto_id))
+            mapProductos.get(venta.producto_id).push(venta);
+          else
+            mapProductos.set(venta.producto_id, venta);
+
+          dltVentaId.push(venta.id);
+          return true;
         })
 
         let importeReal = totalVentaReal + (totalVentaReal * igv);
-
         let descuento = importeReal - transaccion.importe_total;
+        let descuentoUnitario = descuento / ventas.length;
 
-        let descuentoUnitario = descuento / productos.length;
-
-        productosUnicos.forEach(p => {
-          this.app.model.poolValues(`
-            UPDATE
-              tb_ventas
-            SET
-              cantidad = ?,
-              importe = ?,
-              descuento = ?
-            WHERE 
-              id = ?;
-          `, [
-            p.cantidad,
-            p.importe,
-            descuentoUnitario,
-            p.id
-          ])
+        ventasFilter.forEach(ventaFilter => {
+          mapProductos.get(ventaFilter.producto_id)?.forEach(ventaDuplicate => {
+            ventaFilter.importe += ventaDuplicate.importe;
+            ventaFilter.cantidad += ventaDuplicate.cantidad;
+          })
         })
 
-        if (idDlt.length)
-          this.app.model.pool(`
-            DELETE FROM 
-              tb_ventas 
-            WHERE 
-              id IN (${idDlt.join(',')})
-          `)
-
-        let [result] = await this.app.model.poolValues(`
+        let [r1] = await this.app.model.pool(`
           UPDATE
             tb_transacciones_ventas
           SET
             descuento = ?
-          WHERE 
+          WHERE
             id = ?;
         `, [
           descuento,
           id
         ]);
 
+        if (r1.affectedRows) {
+          if (dltVentaId.length)
+            this.app.model.pool(`
+            DELETE FROM
+              tb_ventas
+            WHERE
+              id IN (${dltVentaId.join(',')})
+          `)
+
+          ventasFilter.forEach(ventaUpdate => {
+            this.app.model.pool(`
+            UPDATE
+              tb_ventas
+            SET
+              cantidad = ?,
+              importe = ?,
+              descuento = ?
+            WHERE
+              id = ?;
+          `, [
+              ventaUpdate.cantidad,
+              ventaUpdate.importe,
+              descuentoUnitario,
+              ventaUpdate.id
+            ])
+          })
+        }
         this.io.sockets.emit(
           '/transacciones_ventas/data/refreshId',
           { id, descuento }
@@ -771,16 +660,16 @@ class Tb_transacciones_ventas extends Table {
     })
   }
   /**
-   * @param {{producto_id:number, cantidad:number}[]} productos 
-   * @param {number} metodo_pago_id 
-   * @param {number} importe_total 
+   * @param {{producto_id:number, cantidad:number}[]} productos
+   * @param {number} metodo_pago_id
+   * @param {number} importe_total
    * @returns {Promise<{
    *   codigo: string,
-   *   descuento: number,  
+   *   descuento: number,
    *   importe_total: number,
    *   totalVentaReal: number,
    *   totalCompraReal: number,
-   *   descuentoUnitario: number,  
+   *   descuentoUnitario: number,
    *   listVentas: {
    *     producto_id: number,
    *     cantidad: number,

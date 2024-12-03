@@ -153,6 +153,12 @@
         left: 0;
       }
     }
+
+    small {
+      font-size: .7rem !important;
+      color: gray;
+      padding-left: 1rem;
+    }
   }
 
   .form-drop {

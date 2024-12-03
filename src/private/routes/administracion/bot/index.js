@@ -1,7 +1,7 @@
 $('.content-body').ready(async () => {
   try {
 
-    /* 
+    /*
       ==================================================
       ======================= DOM =======================
       ==================================================
@@ -29,7 +29,7 @@ $('.content-body').ready(async () => {
     let dateQr = botQr.querySelector('#date-qr')
     let boxQr = botQr.querySelector('.code')
 
-    /* 
+    /*
       ==================================================
       ==================== BOT INFO ====================
       ==================================================
@@ -80,88 +80,86 @@ $('.content-body').ready(async () => {
 
       boxAvatar.classList.add('load-spinner');
 
-      let resBotAvatar = await query.post.cookie("/api/bot/profile/avatar");
+      socket.emit('/imagen/bot', (err, avatar) => {
+        if (err)
+          return alarm.error(err);
 
-      /** @type {{avatar: string}}  */
-      let { avatar } = await resBotAvatar.json();
+        if (avatar)
+          botFoto.setAttribute('src', avatar);
+        else
+          botFoto.removeAttribute('src');
 
-      if (avatar)
-        botFoto.setAttribute('src', avatar);
-      else
-        botFoto.removeAttribute('src');
-
-      boxAvatar.classList.remove('load-spinner');
-
+        boxAvatar.classList.remove('load-spinner');
+      })
     }
 
-    /* 
+    /*
       ==================================================
       ====================== INIT ======================
       ==================================================
     */
 
-    let resBot = await query.post.cookie("/api/bot/profile/info");
+    socket.emit('/info/bot', (err, { state, name, phone }) => {
+      if (err)
+        return alarm.error(err);
 
-    /** @type {{state: string, name: string, phone: string}}  */
-    let { state, name, phone } = await resBot.json();
+      botInit({ state, name, phone });
+    })
 
-    botInit({ state, name, phone });
-
-    /* 
+    /*
       ==================================================
       ==================== STATE BOT ====================
       ==================================================
     */
 
-    if (botEstadoCheck) {
-      botEstadoCheck.addEventListener('change', async () => {
-        let state = botEstadoCheck.checked;
+    botEstadoCheck.addEventListener('change', async () => {
+      let state = botEstadoCheck.checked;
+      botEstadoCheck.checked = !state;
+      botEstadoCheck.disabled = true;
 
-        if (!state) {
-          botEstadoCheck.checked = true;
+      if (!state)
+        return Swal.fire({
+          title: "Está seguro?",
+          text: "Apagaras el bot y con el sus funcionalidades",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "rgb(13, 204, 242)",
+          cancelButtonColor: "rgb(220, 53, 69)",
+          confirmButtonText: "Apagar!",
+          cancelButtonText: "Cancelar",
+          background: 'rgb(24, 20, 47)',
+          color: 'rgb(255, 255, 255)',
+        })
+          .then(result => {
+            if (result.isConfirmed)
+              socket.emit('/state/bot', (err) => {
+                if (err)
+                  return alarm.error(err);
 
-          let { isConfirmed } = await Swal.fire({
-            title: "Está seguro?",
-            text: "Apagaras el bot y con el sus funcionalidades",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "rgb(13, 204, 242)",
-            cancelButtonColor: "rgb(220, 53, 69)",
-            confirmButtonText: "Apagar!",
-            cancelButtonText: "Cancelar",
-            background: 'rgb(24, 20, 47)',
-            color: 'rgb(255, 255, 255)',
+                botEstadoCheck.checked = false;
+                botEstadoCheck.disabled = false;
+              })
           })
 
-          if (!isConfirmed) return;
-
-          await query.post.json.cookie("/api/bot/profile/state");
-
-          botEstadoCheck.checked = false;
-          return
-        }
-
-        botEstadoCheck.checked = false;
-        botEstadoCheck.disabled = true;
-
-        await query.post.json.cookie("/api/bot/profile/state");
+      socket.emit('/state/bot', (err) => {
+        if (err)
+          return alarm.error(err);
 
         botEstadoCheck.checked = true;
         botEstadoCheck.disabled = false;
       })
-    }
+    })
 
-    /* 
+    /*
       ==================================================
       ===================== LOGOUT =====================
       ==================================================
     */
 
-    btnLogout && btnLogout.addEventListener('click', async () => {
-
+    btnLogout.addEventListener('click', async () => {
       if (btnLogout.style.display == 'none') return;
 
-      let { isConfirmed } = await Swal.fire({
+      Swal.fire({
         title: "Está seguro?",
         text: "Se borrara la session",
         icon: "warning",
@@ -173,13 +171,16 @@ $('.content-body').ready(async () => {
         background: 'rgb(24, 20, 47)',
         color: 'rgb(255, 255, 255)',
       })
-
-      if (!isConfirmed) return;
-
-      await query.post.cookie("/api/bot/profile/logout");
+        .then(async (result) => {
+          if (result.isConfirmed)
+            socket.emit('/stop/bot', id, err => {
+              if (err)
+                return alarm.error(err);
+            })
+        });
     })
 
-    /* 
+    /*
       ==================================================
       ===================== OPEN QR =====================
       ==================================================
@@ -192,31 +193,24 @@ $('.content-body').ready(async () => {
         menuSide.style.display = 'none';
     })
 
-    /* 
+    /*
       ==================================================
       ====================== CHART ======================
       ==================================================
     */
 
-    let resBotChart = await query.post.cookie("/api/bot/chart/mainPath");
-
-    /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-    let { chart } = await resBotChart.json();
-
     /** @type {HTMLCanvasElement} */
     let RxC = document.getElementById('chart-bot-x-comando')
       .getContext("2d");
 
-    let { label: labelRxC, data: dataRxC } = chart;
-
     let chartRxC = new Chart(RxC, {
       type: "line",
       data: {
-        labels: labelRxC,
+        labels: [],
         datasets: [{
           label: "Usos",
           backgroundColor: "rgba(255, 140, 0, .7)",
-          data: dataRxC
+          data: []
         }]
       },
       options: {
@@ -225,7 +219,15 @@ $('.content-body').ready(async () => {
       }
     });
 
-    /* 
+    socket.emit('/stop/bot', id, (err, labelRxC, dataRxC) => {
+      if (err)
+        return alarm.error(err);
+
+      chartRxC.data.labels = labelRxC;
+      chartRxC.data.datasets[0].data = dataRxC;
+    })
+
+    /*
       ==================================================
       ===================== SOCKET =====================
       ==================================================

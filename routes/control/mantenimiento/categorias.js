@@ -4,19 +4,18 @@ const { resolve } = require('path');
 /** @typedef {import('../../../utils/SocketNode')} SocketNode */
 /** @typedef {Array.<(this: App, req: import('express').Request, res: import('express').Response, next: import('express').NextFunction)=>void>} routeArr */
 
-/** 
+/**
  * @type {{
- *   load:boolean, 
- *   route:string, 
- *   viewLayoutPath:string, 
- *   viewRenderPath:string, 
- *   viewErrorPath:string, 
- *   use: routeArr, 
- *   get: routeArr, 
+ *   load:boolean,
+ *   route:string,
+ *   viewLayoutPath:string,
+ *   viewRenderPath:string,
+ *   viewErrorPath:string,
+ *   use: routeArr,
+ *   get: routeArr,
  *   post: routeArr,
- *   nodeOption: {last:boolean, tagsName:boolean, collector:boolean},
- *   nodeRoute: (this: App, node: SocketNode)=>void
- * }} 
+ *   nodeRoute: {last:boolean, tagsName:boolean, collector:boolean} | (this: App, node: SocketNode)=>void
+ * }}
 */
 module.exports = {
   load: true,
@@ -38,10 +37,10 @@ module.exports = {
       res.render(module.exports.viewRenderPath, { session, userLayout });
     },
   ],
-  nodeOption: {
-    last: true,
-  },
   nodeRoute: function (node) {
+    node.setOption({
+      last: true
+    })
 
     /** @param {import('datatables.net-dt').AjaxData} tableReq @param {(res:import('datatables.net-dt').AjaxResponse)=>void} res */
     let readTable = async (tableReq, res) => {
@@ -80,8 +79,8 @@ module.exports = {
     /** @param {number} myId @param {()=>void} res */
     let insertTable = async (myId, data, res) => {
       try {
-        let permiso = await this.model.tb_permisos.userPathDelete(myId, module.exports.route);
-        if (!permiso) return res('No tienes Permisos para controlar la creacion de las categoiras.');
+        let permiso = await this.model.tb_permisos.userPathAdd(myId, module.exports.route);
+        if (!permiso) return res('No tienes Permisos para controlar la creacion de las categorias.');
 
         let {
           nombre,
@@ -107,7 +106,7 @@ module.exports = {
     /** @param {number} myId @param {()=>void} res */
     let updateIdTable = async (myId, data, res) => {
       try {
-        let permiso = await this.model.tb_permisos.userPathDelete(myId, module.exports.route);
+        let permiso = await this.model.tb_permisos.userPathUpdate(myId, module.exports.route);
         if (!permiso) return res('No tienes Permisos para controlar la edicion de las categorias.');
 
         let {
@@ -131,7 +130,7 @@ module.exports = {
     let stateIdTable = async (myId, id, estado, res) => {
       try {
         let permiso = await this.model.tb_permisos.userPathHide(myId, module.exports.route);
-        if (!permiso) return res('No tienes Permisos para controlar el estado de los categorias.');
+        if (!permiso) return res('No tienes Permisos para controlar el estado de las categorias.');
 
         let result = await this.model.tb_categorias.updateIdState(id, estado ? 1 : 0);
         this.model.tb_productos.updateStateCategoriaId(Number(id), Number(estado));
@@ -146,7 +145,7 @@ module.exports = {
     let deleteIdTable = async (myId, id, res) => {
       try {
         let permiso = await this.model.tb_permisos.userPathDelete(myId, module.exports.route);
-        if (!permiso) return res('No tienes Permisos para controlar la eliminacion de los categorias.');
+        if (!permiso) return res('No tienes Permisos para controlar la eliminacion de las categorias.');
 
         let result
         let count = await this.model.tb_categorias.readIdCount(Number(id))

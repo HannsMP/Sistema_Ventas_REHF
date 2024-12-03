@@ -9,7 +9,7 @@ const columns = {
   disabled_id: { name: 'disabled_id', null: false, type: 'Integer', limit: 11 }
 }
 
-/** 
+/**
  * @typedef {{
  *   id: number,
  *   menu_id: number,
@@ -29,186 +29,12 @@ class Tb_acceso extends Table {
 
     this.io = app.socket.node.selectNode('/control/administracion/acceso', true);
   }
-  /* 
+  /*
     ====================================================================================================
     =============================================== Tabla ===============================================
     ====================================================================================================
   */
   /**
-   * @param {import('datatables.net-dt').AjaxData} option 
-   * @returns {Promise<COLUMNS_ACCESOS[]>}
-   */
-  readInParts(option) {
-    return new Promise(async (res, rej) => {
-      try {
-        let { order, start, length, search } = option;
-
-        let query = `
-          SELECT
-            a.id,
-            a.menu_id,
-            m.ruta AS menu_ruta,
-            m.principal AS menu_principal,
-            a.rol_id,
-            r.nombre AS rol_nombre,
-            a.permiso_id,
-            CASE
-              WHEN d.ver = 1 THEN -1
-              ELSE p.ver
-            END AS permiso_ver,
-            CASE 
-              WHEN d.agregar = 1 THEN -1 
-              ELSE p.agregar 
-            END AS permiso_agregar,
-            CASE 
-              WHEN d.editar = 1 THEN -1 
-              ELSE p.editar 
-            END AS permiso_editar,
-            CASE 
-              WHEN d.eliminar = 1 THEN -1 
-              ELSE p.eliminar 
-            END AS permiso_eliminar,
-            CASE 
-              WHEN d.ocultar = 1 THEN -1 
-              ELSE p.ocultar 
-            END AS permiso_ocultar,
-            CASE 
-              WHEN d.exportar = 1 THEN -1 
-              ELSE p.exportar 
-            END AS permiso_exportar
-          FROM
-            tb_acceso AS a
-          INNER 
-            JOIN 
-              tb_menus AS m
-            ON 
-              m.id = a.menu_id
-          INNER 
-            JOIN 
-              tipo_rol AS r
-            ON 
-              r.id = a.rol_id
-          INNER 
-            JOIN 
-              tb_permisos AS p
-            ON 
-              p.id = a.permiso_id
-          INNER 
-            JOIN 
-              tb_permisos AS d
-            ON 
-              d.id = a.disabled_id
-        `, queryParams = [];
-
-        if (search.value) {
-          query += `
-            WHERE
-              m.ruta LIKE ?
-              OR m.principal LIKE ?
-              OR r.nombre LIKE ?
-          `;
-
-          queryParams.push(
-            `%${search.value}%`,
-            `%${search.value}%`,
-            `%${search.value}%`
-          );
-        }
-
-        let columnsSet = new Set([
-          'm.ruta',
-          'm.principal',
-          'r.nombre'
-        ]);
-
-        order = order.filter(d => columnsSet.has(d.name));
-
-        if (order?.length) {
-          query += `
-            ORDER BY
-          `
-          order.forEach(({ dir, name }, index) => {
-            query += `
-              ${name} ${dir == 'asc' ? 'ASC' : 'DESC'}`;
-
-            if (index < order.length - 1)
-              query += ', ';
-          })
-        }
-
-        query += `
-          LIMIT ? OFFSET ?
-        `;
-        queryParams.push(length, start);
-
-        let [result] = await this.app.model.poolValues(query, queryParams);
-
-        res(result);
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
-  /**
-   * @param {import('datatables.net-dt').AjaxData} option 
-   * @returns {Promise<number>}
-   */
-  readInPartsCount(option) {
-    return new Promise(async (res, rej) => {
-      try {
-        let { search } = option;
-
-        let query = `
-          SELECT 
-            COUNT(a.id) AS cantidad
-          FROM
-            tb_acceso AS a
-          INNER 
-            JOIN 
-              tb_menus AS m
-            ON 
-              m.id = a.menu_id
-          INNER 
-            JOIN 
-              tipo_rol AS r
-            ON 
-              r.id = a.rol_id
-          INNER 
-            JOIN 
-              tb_permisos AS p
-            ON 
-              p.id = a.permiso_id
-          INNER 
-            JOIN 
-              tb_permisos AS d
-            ON 
-              d.id = a.disabled_id
-        `, queryParams = [];
-
-        if (search.value) {
-          query += `
-            WHERE
-              m.ruta LIKE ?
-              OR m.principal LIKE ?
-              OR r.nombre LIKE ?
-          `;
-
-          queryParams.push(
-            `%${search.value}%`,
-            `%${search.value}%`,
-            `%${search.value}%`
-          );
-        }
-
-        let [result] = await this.app.model.poolValues(query, queryParams);
-
-        res(result[0].cantidad);
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
-  /** 
    * @param {{
    *   menu_id: number,
    *   rol_id: number,
@@ -219,7 +45,7 @@ class Tb_acceso extends Table {
    *   permiso_eliminar: number,
    *   permiso_ocultar: number,
    *   permiso_exportar: number
-   * }} data 
+   * }} data
    * @returns {Promise<import('mysql').OkPacket>}
    */
   insert(data) {
@@ -250,7 +76,7 @@ class Tb_acceso extends Table {
           exportar: permiso_exportar,
         });
 
-        let [result] = await this.app.model.poolValues(`
+        let [result] = await this.app.model.pool(`
           INSERT INTO
             tb_acceso (
               menu_id,
@@ -271,11 +97,6 @@ class Tb_acceso extends Table {
           disabled_id
         ]);
 
-        this.io.sockets.emit(
-          '/accesos/permisos/insert',
-          _ => this.readIdJoin(result.insertId)
-        )
-
         res(result);
       } catch (e) {
         rej(e);
@@ -283,70 +104,7 @@ class Tb_acceso extends Table {
     })
   }
   /**
-   * @param {number} id 
-   * @param {{
-   *   disabled_id: number,
-   *   permiso_ver: number,
-   *   permiso_agregar: number,
-   *   permiso_editar: number,
-   *   permiso_eliminar: number,
-   *   permiso_ocultar: number,
-   *   permiso_exportar: number
-   * }} data 
-   * @returns {Promise<import('mysql').OkPacket>}
-   */
-  updateId(id, data) {
-    return new Promise(async (res, rej) => {
-      try {
-        let {
-          disabled_id,
-          permiso_ver,
-          permiso_agregar,
-          permiso_editar,
-          permiso_eliminar,
-          permiso_ocultar,
-          permiso_exportar,
-        } = data
-
-        this.constraint('id', id);
-        this.constraint('disabled_id', disabled_id);
-
-        let permiso_id = this.app.model.tb_permisos.computedPermisoId({
-          ver: permiso_ver,
-          agregar: permiso_agregar,
-          editar: permiso_editar,
-          eliminar: permiso_eliminar,
-          ocultar: permiso_ocultar,
-          exportar: permiso_exportar,
-        });
-
-        let result = await this.app.model.poolValues(`
-          UPDATE 
-            tb_acceso
-          SET
-            permiso_id = ?,
-            disabled_id = ?
-          WHERE 
-            id = ?;
-        `, [
-          permiso_id,
-          disabled_id,
-          id
-        ]);
-
-        this.io.sockets.emit(
-          '/accesos/permisos/updateId',
-          _ => this.readIdJoin(id)
-        )
-
-        res(result);
-      } catch (e) {
-        rej(e)
-      }
-    })
-  }
-  /**
-   * @param {number} id 
+   * @param {number} id
    * @param {{
    *   permiso_ver: number,
    *   permiso_agregar: number,
@@ -354,7 +112,7 @@ class Tb_acceso extends Table {
    *   permiso_eliminar: number,
    *   permiso_ocultar: number,
    *   permiso_exportar: number
-   * }} data 
+   * }} data
    * @returns {Promise<import('mysql').OkPacket>}
    */
   updateIdState(id, data) {
@@ -371,12 +129,12 @@ class Tb_acceso extends Table {
           exportar: data.permiso_exportar
         });
 
-        let [result] = await this.app.model.poolValues(`
-          UPDATE 
+        let [result] = await this.app.model.pool(`
+          UPDATE
             tb_acceso
           SET
             permiso_id = ?
-          WHERE 
+          WHERE
             id = ?;
         `, [
           permiso_id,
@@ -404,26 +162,19 @@ class Tb_acceso extends Table {
     })
   }
   /**
-   * @param {number} id 
+   * @param {number} id
    * @returns {Promise<import('mysql').OkPacket>}
    */
-  deleteMenusById(id) {
+  deleteMenusId(id) {
     return new Promise(async (res, rej) => {
       try {
         this.constraint('id', id);
 
-        let [result] = await this.app.model.poolValues(`
-          DELETE FROM 
+        let [result] = await this.app.model.pool(`
+          DELETE FROM
             tb_acceso
-          WHERE 
-            menu_id = (
-              SELECT 
-                menu_id 
-              FROM 
-                tb_acceso 
-              WHERE 
-                id = ?
-            )
+          WHERE
+            menu_id = ?
         `, [
           id
         ]);
@@ -434,251 +185,77 @@ class Tb_acceso extends Table {
       }
     })
   }
-  /** 
-   * @param {number} id 
+  /**
    * @returns {Promise<{
    *   id: number,
-   *   menu_id: number,
-   *   menu_ruta: string,
-   *   menu_principal: string,
    *   rol_id: number,
+   *   menu_id: number,
    *   rol_nombre: string,
-   *   permiso_id: number,
    *   permiso_ver: number,
    *   permiso_agregar: number,
    *   permiso_editar: number,
    *   permiso_eliminar: number,
    *   permiso_ocultar: number,
-   *   permiso_exportar: number,
-   * }>}
-   */
-  readIdJoin(id) {
-    return new Promise(async (res, rej) => {
-      try {
-
-        this.constraint('id', id);
-
-        let [result] = await this.app.model.poolValues(`
-            SELECT
-              a.id,
-              a.menu_id,
-              m.ruta AS menu_ruta,
-              m.principal AS menu_principal,
-              a.rol_id,
-              r.nombre AS rol_nombre,
-              a.permiso_id,
-              CASE
-                WHEN d.ver = 1 THEN -1
-                ELSE p.ver
-              END AS permiso_ver,
-              CASE 
-                WHEN d.agregar = 1 THEN -1 
-                ELSE p.agregar 
-              END AS permiso_agregar,
-              CASE 
-                WHEN d.editar = 1 THEN -1 
-                ELSE p.editar 
-              END AS permiso_editar,
-              CASE 
-                WHEN d.eliminar = 1 THEN -1 
-                ELSE p.eliminar 
-              END AS permiso_eliminar,
-              CASE 
-                WHEN d.ocultar = 1 THEN -1 
-                ELSE p.ocultar 
-              END AS permiso_ocultar,
-              CASE 
-                WHEN d.exportar = 1 THEN -1 
-                ELSE p.exportar 
-              END AS permiso_exportar
-            FROM
-              tb_acceso AS a
-            INNER 
-              JOIN 
-                tb_menus AS m
-              ON 
-                m.id = a.menu_id
-            INNER 
-              JOIN 
-                tipo_rol AS r
-              ON 
-                r.id = a.rol_id
-            INNER 
-              JOIN 
-                tb_permisos AS p
-              ON 
-                p.id = a.permiso_id
-            INNER 
-              JOIN 
-                tb_permisos AS d
-              ON 
-                d.id = a.disabled_id
-            WHERE
-              a.id = ?
-          `, [
-          id
-        ])
-
-        res(result[0]);
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
-  /** 
-   * @returns {Promise<{
-   *   id: number,
-   *   menu_id: number,
-   *   menu_ruta: string,
-   *   menu_principal: string,
-   *   rol_id: number,
-   *   rol_nombre: string,
-   *   permiso_id: number,
-   *   permiso_ver: number,
-   *   permiso_agregar: number,
-   *   permiso_editar: number,
-   *   permiso_eliminar: number,
-   *   permiso_ocultar: number,
-   *   permiso_exportar: number,
+   *   permiso_exportar: number
    * }[]>}
    */
-  readAllJoin() {
+  readJoinMenuId(menu_id) {
     return new Promise(async (res, rej) => {
       try {
+        this.app.model.tb_menus.constraint('id', menu_id);
+
         let [result] = await this.app.model.pool(`
-            SELECT
-              a.id,
-              a.menu_id,
-              m.ruta AS menu_ruta,
-              m.principal AS menu_principal,
-              a.rol_id,
-              r.nombre AS rol_nombre,
-              a.permiso_id,
-              CASE
-                WHEN d.ver = 1 THEN -1
-                ELSE p.ver
-              END AS permiso_ver,
-              CASE 
-                WHEN d.agregar = 1 THEN -1 
-                ELSE p.agregar 
-              END AS permiso_agregar,
-              CASE 
-                WHEN d.editar = 1 THEN -1 
-                ELSE p.editar 
-              END AS permiso_editar,
-              CASE 
-                WHEN d.eliminar = 1 THEN -1 
-                ELSE p.eliminar 
-              END AS permiso_eliminar,
-              CASE 
-                WHEN d.ocultar = 1 THEN -1 
-                ELSE p.ocultar 
-              END AS permiso_ocultar,
-              CASE 
-                WHEN d.exportar = 1 THEN -1 
-                ELSE p.exportar 
-              END AS permiso_exportar
-            FROM
-              tb_acceso AS a
-            INNER 
-              JOIN 
-                tb_menus AS m
-              ON 
-                m.id = a.menu_id
-            INNER 
-              JOIN 
-                tipo_rol AS r
-              ON 
-                r.id = a.rol_id
-            INNER 
-              JOIN 
-                tb_permisos AS p
-              ON 
-                p.id = a.permiso_id
-            INNER 
-              JOIN 
-                tb_permisos AS d
-              ON 
-                d.id = a.disabled_id
-          `)
-
-        res(result);
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
-  /** 
-   * @returns {Promise<COLUMNS_ACCESOS[]>}
-   */
-  readJoinMenuById(id) {
-    return new Promise(async (res, rej) => {
-      try {
-        this.constraint('id', id);
-
-        let [result] = await this.app.model.poolValues(`
-          SELECT 
+          SELECT
             a.id,
-            a.menu_id,
-            m.ruta AS menu_ruta,
-            m.principal AS menu_principal,
             a.rol_id,
+            a.menu_id,
             r.nombre AS rol_nombre,
             a.permiso_id,
-            CASE 
-              WHEN d.ver = 1 THEN -1 
-              ELSE p.ver 
+            CASE
+              WHEN d.ver = 1 THEN -1
+              ELSE p.ver
             END AS permiso_ver,
-            CASE 
-              WHEN d.agregar = 1 THEN -1 
-              ELSE p.agregar 
+            CASE
+              WHEN d.agregar = 1 THEN -1
+              ELSE p.agregar
             END AS permiso_agregar,
-            CASE 
-              WHEN d.editar = 1 THEN -1 
-              ELSE p.editar 
+            CASE
+              WHEN d.editar = 1 THEN -1
+              ELSE p.editar
             END AS permiso_editar,
-            CASE 
-              WHEN d.eliminar = 1 THEN -1 
-              ELSE p.eliminar 
+            CASE
+              WHEN d.eliminar = 1 THEN -1
+              ELSE p.eliminar
             END AS permiso_eliminar,
-            CASE 
-              WHEN d.ocultar = 1 THEN -1 
-              ELSE p.ocultar 
+            CASE
+              WHEN d.ocultar = 1 THEN -1
+              ELSE p.ocultar
             END AS permiso_ocultar,
-            CASE 
-              WHEN d.exportar = 1 THEN -1 
-              ELSE p.exportar 
+            CASE
+              WHEN d.exportar = 1 THEN -1
+              ELSE p.exportar
             END AS permiso_exportar
           FROM
             tb_acceso AS a
-          INNER 
-            JOIN 
-              tb_menus AS m
-            ON 
-              m.id = a.menu_id
-          INNER 
-            JOIN 
+          INNER
+            JOIN
               tipo_rol AS r
-            ON 
+            ON
               r.id = a.rol_id
-          INNER 
-            JOIN 
+          INNER
+            JOIN
               tb_permisos AS p
-            ON 
+            ON
               p.id = a.permiso_id
-          INNER 
-            JOIN 
+          INNER
+            JOIN
               tb_permisos AS d
-            ON 
+            ON
               d.id = a.disabled_id
-          WHERE 
-            menu_id = (
-              SELECT menu_id 
-              FROM tb_acceso 
-              WHERE id = ?
-            )
+          WHERE
+            menu_id = ?
         `, [
-          id
+          menu_id
         ]);
 
         res(result)
@@ -687,51 +264,21 @@ class Tb_acceso extends Table {
       }
     })
   }
-  /** 
-   * @returns {Promise<{id:number, menu_id:number}[]>}
-   */
-  readMenusById(id) {
-    return new Promise(async (res, rej) => {
-      try {
-        this.constraint('id', id);
-
-        let [result] = await this.app.model.poolValues(`
-          SELECT 
-            id,
-            menu_id
-          FROM 
-            tb_acceso 
-          WHERE 
-            menu_id = (
-              SELECT menu_id 
-              FROM tb_acceso 
-              WHERE id = ?
-            )
-        `, [
-          id
-        ]);
-
-        res(result)
-      } catch (e) {
-        rej(e)
-      }
-    })
-  }
-  /* 
+  /*
     ====================================================================================================
     ============================================== Cards ==============================================
     ====================================================================================================
   */
-  /** 
+  /**
    * @returns {Promise<string>}
    */
   cardCount() {
     return new Promise(async (res, rej) => {
       try {
         let [result] = await this.app.model.pool(`
-            SELECT 
+            SELECT
               COALESCE(COUNT(id), 0) AS cantidad_accesos
-            FROM 
+            FROM
               tb_acceso
           `)
 
@@ -741,30 +288,30 @@ class Tb_acceso extends Table {
       }
     })
   }
-  /* 
+  /*
     ====================================================================================================
     ============================================== Grafico ==============================================
     ====================================================================================================
   */
-  /** 
+  /**
    * @returns {Promise<COLUMNS_ACCESOS[]>}
    */
   chartCountPermits() {
     return new Promise(async (res, rej) => {
       try {
         let [result] = await this.app.model.pool(`
-            SELECT 
+            SELECT
               SUM(p.ver) AS ver,
               SUM(p.agregar) AS agregar,
               SUM(p.editar) AS editar,
               SUM(p.eliminar) AS eliminar,
               SUM(p.ocultar) AS ocultar,
               SUM(p.exportar) AS exportar
-            FROM 
+            FROM
               tb_acceso a
-            JOIN 
-              tb_permisos p 
-              ON 
+            JOIN
+              tb_permisos p
+              ON
                 a.permiso_id = p.id;
           `)
 

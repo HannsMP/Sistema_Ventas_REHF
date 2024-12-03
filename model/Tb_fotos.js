@@ -14,7 +14,7 @@ const columns = {
   creacion: { name: 'creacion', null: false, type: 'String', limit: 25 }
 }
 
-/** 
+/**
  * @typedef {{
 *   id: number,
 *   hash: string,
@@ -37,8 +37,8 @@ class Tb_fotos extends Table {
     this.app = app;
     deletePath(this.cacheImg);
   }
-  /** 
-   * @param {COLUMNS_FOTOS} data 
+  /**
+   * @param {COLUMNS_FOTOS} data
    * @returns {Promise<import('mysql').OkPacket>}
    */
   insert(data) {
@@ -60,8 +60,8 @@ class Tb_fotos extends Table {
         this.constraint('src', src);
         this.constraint('src_small', src_small);
 
-        let [result] = await this.app.model.poolValues(`
-          INSERT INTO 
+        let [result] = await this.app.model.pool(`
+          INSERT INTO
             tb_fotos (
               hash,
               nombre,
@@ -94,7 +94,7 @@ class Tb_fotos extends Table {
     })
   }
   /**
-   * @param {string} hash 
+   * @param {string} hash
    * @returns {Promise<COLUMNS_FOTOS>}
    */
   readHash(hash) {
@@ -102,10 +102,10 @@ class Tb_fotos extends Table {
       try {
         this.constraint('hash', hash);
 
-        let [result] = await this.app.model.poolValues(`
-          SELECT 
+        let [result] = await this.app.model.pool(`
+          SELECT
             *
-          FROM 
+          FROM
             tb_fotos
           WHERE
             hash = ?

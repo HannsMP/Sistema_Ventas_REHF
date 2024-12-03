@@ -4,19 +4,18 @@ const { resolve } = require('path');
 /** @typedef {import('../../../utils/SocketNode')} SocketNode */
 /** @typedef {Array.<(this: App, req: import('express').Request, res: import('express').Response, next: import('express').NextFunction)=>void>} routeArr */
 
-/** 
+/**
  * @type {{
- *   load:boolean, 
- *   route:string, 
- *   viewLayoutPath:string, 
- *   viewRenderPath:string, 
- *   viewErrorPath:string, 
- *   use: routeArr, 
- *   get: routeArr, 
+ *   load:boolean,
+ *   route:string,
+ *   viewLayoutPath:string,
+ *   viewRenderPath:string,
+ *   viewErrorPath:string,
+ *   use: routeArr,
+ *   get: routeArr,
  *   post: routeArr,
- *   nodeOption: {last:boolean, tagsName:boolean, collector:boolean},
- *   nodeRoute: (this: App, node: SocketNode)=>void
- * }} 
+ *   nodeRoute: {last:boolean, tagsName:boolean, collector:boolean} | (this: App, node: SocketNode)=>void
+ * }}
 */
 module.exports = {
   load: true,
@@ -38,7 +37,132 @@ module.exports = {
       res.render(module.exports.viewRenderPath, { session, userLayout });
     },
   ],
-  nodeOption: {
-    last: true,
+  nodeRoute: function (node) {
+    node.setOption({
+      last: true
+    })
+
+    /** @param {()=>void} res */
+    let readSuccess = async (res) => {
+      try {
+        let text = this.logSuccess.readFile();
+        let stat = this.logSuccess.statFile();
+        res(text, stat)
+      } catch (e) {
+        this.logError.writeStart(e.message, e.stack)
+      }
+    }
+
+    /** @param {number} myId @param {()=>void} res */
+    let clearSuccess = async (myId, res) => {
+      try {
+        let permiso = await this.model.tb_permisos.userPathDelete(myId, module.exports.route);
+        if (!permiso) return res('No tienes Permisos para controlar el borrado de registros satisfactorios.');
+
+        this.logSuccess.reset();
+        res();
+      } catch (e) {
+        this.logError.writeStart(e.message, e.stack)
+        res('Ocurrio un error, ponte en contacto con el administrador.');
+      }
+    }
+
+    /** @param {()=>void} res */
+    let readWarning = async (res) => {
+      try {
+        let text = this.logWarning.readFile();
+        let stat = this.logWarning.statFile();
+        res(text, stat)
+      } catch (e) {
+        this.logError.writeStart(e.message, e.stack)
+      }
+    }
+
+    /** @param {number} myId @param {()=>void} res */
+    let clearWarning = async (myId, res) => {
+      try {
+        let permiso = await this.model.tb_permisos.userPathDelete(myId, module.exports.route);
+        if (!permiso) return res('No tienes Permisos para controlar el borrado de registros satisfactorios.');
+
+        this.logWarning.reset();
+        res();
+      } catch (e) {
+        this.logError.writeStart(e.message, e.stack)
+        res('Ocurrio un error, ponte en contacto con el administrador.');
+      }
+    }
+
+    /** @param {()=>void} res */
+    let readError = async (res) => {
+      try {
+        let text = this.logError.readFile();
+        let stat = this.logError.statFile();
+        res(text, stat)
+      } catch (e) {
+        this.logError.writeStart(e.message, e.stack)
+      }
+    }
+
+    /** @param {number} myId @param {()=>void} res */
+    let clearError = async (myId, res) => {
+      try {
+        let permiso = await this.model.tb_permisos.userPathDelete(myId, module.exports.route);
+        if (!permiso) return res('No tienes Permisos para controlar el borrado de registros satisfactorios.');
+
+        this.logError.reset();
+        res();
+      } catch (e) {
+        this.logError.writeStart(e.message, e.stack)
+        res('Ocurrio un error, ponte en contacto con el administrador.');
+      }
+    }
+
+    /** @param {()=>void} res */
+    let readSystem = async (res) => {
+      try {
+        let text, stat, exist;
+
+        try {
+          text = this.logSystem.readFile();
+          stat = this.logSystem.statFile();
+          exist = true;
+        } catch {
+          text = '';
+          stat = { size: 0 };
+          exist = false;
+        }
+
+        res(text, stat, exist)
+      } catch (e) {
+        this.logError.writeStart(e.message, e.stack)
+      }
+    }
+
+    /** @param {number} myId @param {()=>void} res */
+    let clearSystem = async (myId, res) => {
+      try {
+        let permiso = await this.model.tb_permisos.userPathDelete(myId, module.exports.route);
+        if (!permiso) return res('No tienes Permisos para controlar el borrado de registros satisfactorios.');
+
+        this.logSystem.writeFile('');
+        res();
+      } catch (e) {
+        this.logError.writeStart(e.message, e.stack)
+        res('Ocurrio un error, ponte en contacto con el administrador.');
+      }
+    }
+
+    node.ev.on('connected', socket => {
+      let myId = socket.session.usuario_id;
+
+      socket.on('/read/success', readSuccess)
+      socket.on('/clear/success', clearSuccess.bind(null, myId))
+      socket.on('/read/warn', readWarning)
+      socket.on('/clear/warn', clearWarning.bind(null, myId))
+      socket.on('/read/error', readError)
+      socket.on('/clear/error', clearError.bind(null, myId))
+      socket.on('/read/sytem', readSystem)
+      socket.on('/clear/sytem', clearSystem.bind(null, myId))
+    })
   }
 }

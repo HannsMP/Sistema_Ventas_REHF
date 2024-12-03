@@ -8,7 +8,7 @@ const columns = {
   estado: { name: 'estado', null: false, type: 'Integer', limit: 1 }
 }
 
-/** 
+/**
  * @typedef {{
  *   id: number,
  *   nombre: string,
@@ -23,13 +23,13 @@ class Tipo_proveedor extends Table {
     this.columns = columns;
     this.app = app;
   }
-  /* 
+  /*
     ====================================================================================================
     =============================================== Tabla ===============================================
     ====================================================================================================
   */
   /**
-   * @param {import('datatables.net-dt').AjaxData} option 
+   * @param {import('datatables.net-dt').AjaxData} option
    * @returns {Promise<COLUMNS_TIPO_PROVEEDOR[]>}
    */
   readInParts(option) {
@@ -38,7 +38,7 @@ class Tipo_proveedor extends Table {
         let { order, start, length, search } = option;
 
         let query = `
-          SELECT 
+          SELECT
             id,
             nombre,
             descripcion,
@@ -87,7 +87,7 @@ class Tipo_proveedor extends Table {
         `;
         queryParams.push(length, start);
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
 
         res(result);
       } catch (e) {
@@ -96,7 +96,7 @@ class Tipo_proveedor extends Table {
     })
   }
   /**
-   * @param {import('datatables.net-dt').AjaxData} option 
+   * @param {import('datatables.net-dt').AjaxData} option
    * @returns {Promise<number>}
    */
   readInPartsCount(option) {
@@ -105,7 +105,7 @@ class Tipo_proveedor extends Table {
         let { search } = option;
 
         let query = `
-          SELECT 
+          SELECT
             COUNT(id) AS cantidad
           FROM
             tipo_proveedor
@@ -124,7 +124,7 @@ class Tipo_proveedor extends Table {
           );
         }
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
 
         res(result[0].cantidad);
       } catch (e) {
@@ -132,13 +132,13 @@ class Tipo_proveedor extends Table {
       }
     })
   }
-  /* 
+  /*
     ====================================================================================================
     ============================================== Selector ==============================================
     ====================================================================================================
   */
   /**
-   * @param {SelectorRequest} option 
+   * @param {SelectorRequest} option
    * @returns {Promise<COLUMNS_TIPO_PROVEEDOR[]>}
    */
   SelectorInParts(option) {
@@ -147,7 +147,7 @@ class Tipo_proveedor extends Table {
         let { order, start, length, search, byId, noInclude } = option;
 
         let query = `
-          SELECT 
+          SELECT
             id,
             nombre AS name
           FROM
@@ -197,7 +197,7 @@ class Tipo_proveedor extends Table {
 
         queryParams.push(length, start);
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
 
         res(result);
       } catch (e) {
@@ -206,7 +206,7 @@ class Tipo_proveedor extends Table {
     })
   }
   /**
-   * @param {SelectorRequest} option 
+   * @param {SelectorRequest} option
    * @returns {Promise<number>}
    */
   SelectorInPartsCount(option) {
@@ -215,7 +215,7 @@ class Tipo_proveedor extends Table {
         let { search, noInclude } = option;
 
         let query = `
-          SELECT 
+          SELECT
             COUNT(id) AS cantidad
           FROM
             tipo_proveedor
@@ -238,7 +238,7 @@ class Tipo_proveedor extends Table {
           queryParams.push(...noInclude);
         }
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
 
         res(result[0].cantidad);
       } catch (e) {
@@ -246,31 +246,31 @@ class Tipo_proveedor extends Table {
       }
     })
   }
-  /* 
+  /*
     ====================================================================================================
     ============================================== Grafico ==============================================
     ====================================================================================================
   */
-  /** 
+  /**
    * @returns {Promise<COLUMNS_TIPO_PROVEEDOR[]>}
    */
   chartCountTypeProvider() {
     return new Promise(async (res, rej) => {
       try {
         let [result] = await this.app.model.pool(`
-          SELECT 
+          SELECT
             tp.nombre AS nombre,
             COALESCE(COUNT(p.id), 0) AS cantidad_tipo_proveedor
-          FROM 
+          FROM
             tipo_proveedor AS tp
-          LEFT JOIN 
+          LEFT JOIN
             tb_proveedores AS p
-            ON 
+            ON
               p.tipo_proveedor_id = tp.id
-          WHERE 
+          WHERE
             tp.id IN (1, 2, 3, 4)
             AND p.estado = 1
-          GROUP BY 
+          GROUP BY
             tp.nombre;
           `)
 

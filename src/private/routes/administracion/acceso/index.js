@@ -1,7 +1,7 @@
 $('.content-body').ready(async () => {
   try {
 
-    /* 
+    /*
       ==================================================
       ================== VARIABLES DOM ==================
       ==================================================
@@ -12,6 +12,9 @@ $('.content-body').ready(async () => {
     let $cardMain = $('#card-main');
     let cardMain = $cardMain[0];
 
+    let $cardAccesos = $('#card-accesos');
+    let cardAccesos = $cardAccesos[0];
+
     let tblclose = document.querySelectorAll('#table-nuevo .card-close ,#table-editar .card-close');
     let tblNuevo = cardMain.querySelectorAll('.tbl-nuevo');
     let tblEditar = cardMain.querySelectorAll('.tbl-editar');
@@ -20,25 +23,30 @@ $('.content-body').ready(async () => {
 
     let $tableNuevo = $('#table-nuevo');
     let tableNuevo = $tableNuevo[0];
-    let inputNuevoText = tableNuevo?.querySelectorAll('.input-box input[type=text]');
-    let inputTableNuevo = tableNuevo?.querySelector('.table-acceso-side');
-    let tableCheckNuevo = tableNuevo?.querySelectorAll('tbody tr')
+    /** @type {HTMLInputElement} */
+    let inputNuevoPrincipal = document.getElementById('nuevo-principal');
+    /** @type {HTMLInputElement} */
+    let inputNuevoRuta = document.getElementById('nuevo-ruta');
+    /** @type {HTMLAnchorElement} */
     let btnNuevo = tableNuevo?.querySelector('.btn-success');
-    let btnNuevoTodo = tableNuevo?.querySelector('.btn-info');
-    let checkDisabledNuevo = tableNuevo?.querySelector('#check-disabled');
+    /** @type {HTMLAnchorElement} */
 
     let $tableEditar = $('#table-editar');
     let tableEditar = $tableEditar[0];
-    let inputEditarText = tableEditar?.querySelectorAll('.input-box input[type=text]');
-    let inputTableEditar = tableEditar?.querySelector('.table-acceso-side');
-    let tableCheckEditar = tableEditar?.querySelectorAll('tbody tr')
-    let btnEditar = tableEditar?.querySelector('.btn-success');
-    let btnEditarTodo = tableEditar?.querySelector('.btn-info');
-    let checkDisabledEditar = tableEditar?.querySelector('#check-disabled');
+    let checkDisabledPermisos = document.getElementById('check-disabled');
+
+    let currentMenuId = 0;
+    /** @type {HTMLInputElement} */
+    let inputEditarPrincipal = document.getElementById('editar-principal');
+    /** @type {HTMLInputElement} */
+    let inputEditarRuta = document.getElementById('editar-ruta');
+    /** @type {HTMLAnchorElement} */
+    let btnEditar = tableEditar.querySelector('.btn-success');
 
     let $table = new Tables('#table-main');
+    let $tablePermisos = new Tables('#table-accesos');
 
-    /* 
+    /*
       ==================================================
       ===================== ESTADO =====================
       ==================================================
@@ -47,27 +55,52 @@ $('.content-body').ready(async () => {
     /** @type {(this:HTMLInputElement, data:{id:number})=>void} */
     async function updatePermisoId(dataRow) {
       this.disabled = true;
+      let estado = this.checked;
 
-      let resAcceso = await query.post.json.cookie("/api/acceso/table/updatePermisoId", dataRow);
+      socket.emit('/updateId/accesos', dataRow, err => {
+        if (err) {
+          this.checked = !estado;
+          return alarm.error(err);
+        }
 
-      /** @type {{err: string, OkPacket: import('mysql').OkPacket, list:{[column:string]: string|number}[]}} */
-      let { err } = await resAcceso.json();
+        if (estado)
+          alarm.success(`${dataRow.rol_nombre} activado`);
+        else
+          alarm.success(`${dataRow.rol_nombre} desactivado`);
 
-      if (err) {
-        this.checked = !this.checked;
-        alarm.error(`${id} inaccesible`);
-        return
-      }
-
-      if (this.checked)
-        alarm.success(`${id} activado`);
-      else
-        alarm.success(`${id} desactivado`);
-
-      this.disabled = false;
+        this.disabled = false;
+      })
     }
 
-    /* 
+    let createCell = (data, row, name) => {
+      let div = document.createElement('div');
+      div.innerHTML = `<input name="disabled" class="check-checked check-danger" type="checkbox"><input name="permiso" class="check-checked" type="checkbox">`;
+      div.className = 'checked';
+      let [inputDisabled, inputState] = div.querySelectorAll('input');
+      if (permiso.ocultar) {
+        if (data == -1)
+          inputDisabled.checked = inputState.disabled = true;
+        else
+          inputState.checked = data;
+
+        inputDisabled.addEventListener('change', e => {
+          row[name] = inputDisabled.checked ? -1 : 0;
+          updatePermisoId.call(inputDisabled, row);
+          e.stopPropagation();
+        });
+        inputState.addEventListener('change', e => {
+          row[name] = inputState.checked ? 1 : 0;
+          updatePermisoId.call(inputState, row);
+          e.stopPropagation();
+        });
+      }
+      else {
+        inputState.checked = data == 1;
+        inputState.disabled = true;
+      }
+      return div;
+    }
+    /*
       ==================================================
       ==================== DATATABLE ====================
       ==================================================
@@ -78,252 +111,95 @@ $('.content-body').ready(async () => {
       ajax: (data, end) => {
         socket.emit('/read/table', data, res => end(res))
       },
-      pageLength: 25,
+      pageLength: 10,
       select: {
         style: 'single'
       },
-      order: [[8, 'asc'], [6, 'asc']],
+      order: [[1, 'asc']],
       columnDefs: [
         {
-          name: 'c.estado',
-          className: 'dtr-control',
-          orderable: false,
-          targets: 0,
-          render: (data, _, row) => {
-            let i = document.createElement('input');
-            i.classList.add('check-checked');
-            i.setAttribute('type', 'checkbox');
-            if (permiso.ocultar) {
-              if (data == -1)
-                i.disabled = true;
-              else {
-                i.addEventListener('change', _ => {
-                  row.permiso_ver = i.checked ? 1 : 0;
-                  updatePermisoId.call(i, row);
-                });
-                i.checked = data;
-              }
-            }
-            else {
-              i.checked = data == 1;
-              i.disabled = true;
-            }
-            return i;
-          }
-        },
-        {
-          name: 'c.estado',
-          className: 'dtr-control',
-          orderable: false,
-          targets: 1,
-          render: (data, _, row) => {
-            let i = document.createElement('input');
-            i.classList.add('check-checked');
-            i.setAttribute('type', 'checkbox');
-            if (permiso.ocultar) {
-              if (data == -1)
-                i.disabled = true;
-              else {
-                i.addEventListener('change', _ => {
-                  row.permiso_agregar = i.checked ? 1 : 0;
-                  updatePermisoId.call(i, row);
-                });
-                i.checked = data;
-              }
-            }
-            else {
-              i.checked = data == 1;
-              i.disabled = true;
-            }
-            return i;
-          }
-        },
-        {
-          name: 'c.estado',
-          className: 'dtr-control',
-          orderable: false,
-          targets: 2,
-          render: (data, _, row) => {
-            let i = document.createElement('input');
-            i.classList.add('check-checked');
-            i.setAttribute('type', 'checkbox');
-            if (permiso.ocultar) {
-              if (data == -1)
-                i.disabled = true;
-              else {
-                i.addEventListener('change', _ => {
-                  row.permiso_editar = i.checked ? 1 : 0;
-                  updatePermisoId.call(i, row);
-                });
-                i.checked = data;
-              }
-            }
-            else {
-              i.checked = data == 1;
-              i.disabled = true;
-            }
-            return i;
-          }
-        },
-        {
-          name: 'c.estado',
-          className: 'dtr-control',
-          orderable: false,
-          targets: 3,
-          render: (data, _, row) => {
-            let i = document.createElement('input');
-            i.classList.add('check-checked');
-            i.setAttribute('type', 'checkbox');
-            if (permiso.ocultar) {
-              if (data == -1)
-                i.disabled = true;
-              else {
-                i.addEventListener('change', _ => {
-                  row.permiso_eliminar = i.checked ? 1 : 0;
-                  updatePermisoId.call(i, row);
-                });
-                i.checked = data;
-              }
-            }
-            else {
-              i.checked = data == 1;
-              i.disabled = true;
-            }
-            return i;
-          }
-        },
-        {
-          name: 'c.estado',
-          className: 'dtr-control',
-          orderable: false,
-          targets: 4,
-          render: (data, _, row) => {
-            let i = document.createElement('input');
-            i.classList.add('check-checked');
-            i.setAttribute('type', 'checkbox');
-            if (permiso.ocultar) {
-              if (data == -1)
-                i.disabled = true;
-              else {
-                i.addEventListener('change', _ => {
-                  row.permiso_ocultar = i.checked ? 1 : 0;
-                  updatePermisoId.call(i, row);
-                });
-                i.checked = data;
-              }
-            }
-            else {
-              i.checked = data == 1;
-              i.disabled = true;
-            }
-            return i;
-          }
-        },
-        {
-          name: 'c.estado',
-          className: 'dtr-control',
-          orderable: false,
-          targets: 5,
-          render: (data, _, row) => {
-            let i = document.createElement('input');
-            i.classList.add('check-checked');
-            i.setAttribute('type', 'checkbox');
-            if (permiso.ocultar) {
-              if (data == -1)
-                i.disabled = true;
-              else {
-                i.addEventListener('change', _ => {
-                  row.permiso_exportar = i.checked ? 1 : 0;
-                  updatePermisoId.call(i, row);
-                });
-                i.checked = data;
-              }
-            }
-            else {
-              i.checked = data == 1;
-              i.disabled = true;
-            }
-            return i;
-          }
-        },
-        {
-          name: 'm.ruta',
-          targets: 6
-        },
-        {
-          name: 'm.principal',
-          targets: 7
-        },
-        {
-          name: 'r.nombre',
+          name: 'principal',
           className: 'dtr-tag',
-          targets: 8,
-          render: (data, _, row) => `<div>${row.rol_id} ${data}</div>`
+          targets: 0,
+          render: data => `<div>${data}</div>`
+        },
+        {
+          name: 'ruta',
+          className: 'dtr-code',
+          targets: 1
         }
       ],
       columns: [
+        { data: 'principal' },
+        { data: 'ruta' }
+      ],
+    })
+    if (permiso.exportar) $table.buttons();
+    else cardMainDownload.innerHTML = '';
+
+    $tablePermisos.init({
+      pageLength: 10,
+      order: [[0, 'asc']],
+      columnDefs: [
+        {
+          className: 'dtr-code',
+          targets: 0,
+        },
+        {
+          className: 'dtr-tag',
+          targets: 1,
+          render: data => `<div>${data}</div>`
+        },
+        {
+          className: 'dtr-control',
+          orderable: false,
+          targets: 2,
+          render: (d, _, r) => createCell(d, r, 'permiso_ver')
+        },
+        {
+          className: 'dtr-control',
+          orderable: false,
+          targets: 3,
+          render: (d, _, r) => createCell(d, r, 'permiso_agregar')
+        },
+        {
+          className: 'dtr-control',
+          orderable: false,
+          targets: 4,
+          render: (d, _, r) => createCell(d, r, 'permiso_editar')
+        },
+        {
+          className: 'dtr-control',
+          orderable: false,
+          targets: 5,
+          render: (d, _, r) => createCell(d, r, 'permiso_eliminar')
+        },
+        {
+          className: 'dtr-control',
+          orderable: false,
+          targets: 6,
+          render: (d, _, r) => createCell(d, r, 'permiso_ocultar')
+        },
+        {
+          className: 'dtr-control',
+          orderable: false,
+          targets: 7,
+          render: (d, _, r) => createCell(d, r, 'permiso_exportar')
+        },
+      ],
+      columns: [
+        { data: 'rol_id' },
+        { data: 'rol_nombre' },
         { data: 'permiso_ver' },
         { data: 'permiso_agregar' },
         { data: 'permiso_editar' },
         { data: 'permiso_eliminar' },
         { data: 'permiso_ocultar' },
         { data: 'permiso_exportar' },
-        { data: 'menu_ruta' },
-        { data: 'menu_principal' },
-        { data: 'rol_nombre' }
       ],
-    })
-    if (permiso.exportar) $table.buttons();
-    else cardMainDownload.innerHTML = '';
+    }, false)
 
-    /* 
-      ==================================================
-      ================= DISABLED INPUT =================
-      ==================================================
-    */
-
-    /** @type {(([HTMLInputElement, HTMLInputElement, number, string])[])[]} */
-    let checkTableNuevo = [];
-    tableCheckNuevo?.forEach(tr => {
-      let row = [];
-      tr.querySelectorAll('.checked').forEach((td, b) => {
-        let [d, p] = td.children;
-        d.addEventListener('change', () => {
-          if (!d.checked)
-            return p.disabled = false;
-          p.checked = false;
-          p.disabled = true;
-        })
-
-        row.push([p, d, 2 ** b, td.getAttribute('column')]);
-      })
-      row.rol_id = Number(tr.getAttribute('rol_id'));
-      row.rol_nombre = tr.getAttribute('rol_nombre');
-      checkTableNuevo.push(row);
-    })
-
-    /** @type {{rol_id:number, rol_nombre:string, permiso:([HTMLInputElement, HTMLInputElement, number, string])[]}[]} */
-    let checkTableEditar = [];
-    tableCheckEditar?.forEach(tr => {
-      let row = { permiso: [] };
-      tr.querySelectorAll('.checked').forEach((td, b) => {
-        let [d, p] = td.children;
-        d.addEventListener('change', _ => {
-          if (!d.checked)
-            return p.disabled = false;
-          p.checked = false;
-          p.disabled = true;
-        })
-
-        row.permiso.push([p, d, 2 ** b, td.getAttribute('column')]);
-      })
-      row.rol_nombre = tr.getAttribute('rol_nombre');
-
-      let rol_id = row.rol_id = Number(tr.getAttribute('rol_id'));
-      checkTableEditar[rol_id] = row;
-    })
-
-    /* 
+    /*
       ==================================================
       ====================== MENU ======================
       ==================================================
@@ -332,15 +208,15 @@ $('.content-body').ready(async () => {
     let toggleMenu = {
       now: 'table',
       nuevo() {
-        this.emptyNuevo();
         this.now = 'nuevo';
+        this.emptyNuevo();
         $tableNuevo.show('fast');
         tableEditar.style.display = 'none';
         sideContent.scrollTop = tableNuevo.offsetTop - sideContent.offsetTop - 100;
       },
       editar() {
-        this.emptyEditar();
         this.now = 'editar';
+        this.emptyEditar();
         $tableEditar.show('fast');
         tableNuevo.style.display = 'none';
         sideContent.scrollTop = tableEditar.offsetTop - sideContent.offsetTop - 100;
@@ -348,6 +224,7 @@ $('.content-body').ready(async () => {
       close() {
         this.emptyNuevo();
         this.emptyEditar();
+        this.cardAccesos();
         this.now = 'table';
         tableNuevo.style.display = 'none';
         tableEditar.style.display = 'none';
@@ -360,17 +237,46 @@ $('.content-body').ready(async () => {
       },
       emptyNuevo() {
         if (this.now != 'nuevo') return;
-        inputNuevoText && (inputNuevoText[0].value = '') && (inputNuevoText[1].value = '');
-        checkTableNuevo.forEach(tr => tr.forEach(([p, d]) => p.disabled = p.checked = d.checked = false));
+        inputNuevoPrincipal.value = '';
+        inputNuevoRuta.value = '';
       },
       emptyEditar() {
         if (this.now != 'editar') return;
-        inputEditarText && (inputEditarText[0].value = '') && (inputEditarText[1].value = '');
-        checkTableEditar.forEach(tr => tr.permiso.forEach(([p, d]) => p.disabled = p.checked = d.checked = false));
+        inputEditarPrincipal.value = '';
+        inputEditarRuta.value = '';
       },
+
+      cardAccesos(state) {
+        if (state) {
+          this.close();
+          $cardAccesos.show('fast');
+          sideContent.scrollTop = cardAccesos.offsetTop - sideContent.offsetTop - 100;
+        }
+        else {
+          currentMenuId = 0;
+          $cardAccesos.hide('fast');
+        }
+      }
     }
 
-    /* 
+    $table.datatable.on('select', (e, dt, type, indexes) => {
+      let data = $table.datatable.rows(indexes).data().toArray()[0];
+
+      socket.emit('/read/accesos', data.id, dataVentas => {
+        $tablePermisos.data(dataVentas);
+        toggleMenu.cardAccesos(true);
+      })
+    })
+    $table.datatable.on('deselect', _ => {
+      $tablePermisos.data([]);
+      toggleMenu.close();
+    })
+
+    $table.datatable.on('search', _ => {
+      toggleMenu.close();
+    })
+
+    /*
       ==================================================
       =================== CLOSE MENU ===================
       ==================================================
@@ -378,7 +284,7 @@ $('.content-body').ready(async () => {
 
     tblclose.forEach(btn => btn.addEventListener('click', () => toggleMenu.close()));
 
-    /* 
+    /*
       ==================================================
       ================= PERMISO AGREGAR =================
       ==================================================
@@ -386,35 +292,7 @@ $('.content-body').ready(async () => {
 
     if (!permiso.agregar) tblNuevo.forEach(t => t.style.display = 'none');
 
-    /* 
-      ==================================================
-      ================ DRAW ALL CHECKBOX ================
-      ==================================================
-    */
-
-    btnNuevoTodo.addEventListener('click', () => {
-      if (inputTableNuevo.getAttribute('option') == 'permiso')
-        checkTableNuevo.forEach(tr => tr.forEach(([p, d]) => {
-          p.checked = true
-          p.disabled = d.checked = false;
-        }));
-      else
-        checkTableNuevo.forEach(tr => tr.forEach(([p, d]) => {
-          p.checked = false
-          p.disabled = d.checked = true;
-        }));
-    });
-
-    let [inputNuevoPrincipal, inputNuevoRuta] = inputNuevoText;
-
-    checkDisabledNuevo.addEventListener(
-      'change',
-      () => checkDisabledNuevo.checked
-        ? inputTableNuevo.setAttribute('option', 'disabled')
-        : inputTableNuevo.setAttribute('option', 'permiso')
-    )
-
-    /* 
+    /*
       ==================================================
       ================= UNIQUE AGREGAR =================
       ==================================================
@@ -429,12 +307,12 @@ $('.content-body').ready(async () => {
           if (res)
             return inputNuevoRuta.except = null;
           inputNuevoRuta.except = `La ruta '${value}' ya existe.`;
-          formError(inputNuevoRuta.except, inputNuevoRuta.parentNode);
+          formError(inputNuevoRuta.except, inputNuevoRuta);
         }
       )
     })
 
-    /* 
+    /*
       ==================================================
       =================== OPEN NUEVO ===================
       ==================================================
@@ -442,52 +320,34 @@ $('.content-body').ready(async () => {
 
     tblNuevo.forEach(btn => btn.addEventListener('click', () => toggleMenu.nuevo()));
 
-    /* 
+    /*
       ==================================================
       =================== NUEVA DATA ===================
       ==================================================
     */
     btnNuevo.addEventListener('click', async () => {
-      let jsonData = { accesoData: [] };
-      let principal = jsonData.principal = inputNuevoPrincipal.value;
-      if (!principal) return formError(`Se requiere un valor para Principal`, inputNuevoPrincipal.parentNode);
+      if (inputNuevoRuta.except) return formError(inputNuevoRuta.except, inputNuevoRuta);
 
-      if (inputNuevoRuta.except) return formError(inputNuevoRuta.except, inputNuevoRuta.parentNode);
-      let ruta = jsonData.ruta = inputNuevoRuta.value;
-      if (!ruta) return formError(`Se requiere un valor para la Ruta`, inputNuevoRuta.parentNode);
+      let jsonData = {};
 
-      checkTableNuevo.forEach(tr => {
-        let rol_id = tr.rol_id
-        let data = {
-          rol_id: rol_id,
-          permiso_id: 0,
-          disabled_id: 0,
-          menu_principal: principal,
-          menu_ruta: ruta,
-          rol_nombre: rol_id + tr.rol_nombre,
-        };
+      let principalValue = inputNuevoPrincipal.value;
+      if (!principalValue) return formError(`Se requiere un valor para Principal`, inputNuevoPrincipal);
+      jsonData.principal = principalValue;
 
-        tr.forEach(([p, d, increment, column]) => {
-          if (d.checked) return data[column] = -1, data.disabled_id += increment;
-          if (p.checked) return data[column] = 1, data.permiso_id += increment;
-          data[column] = 0;
-        })
+      let rutaValue = inputNuevoRuta.value;
+      if (!rutaValue) return formError(`Se requiere un valor para la Ruta`, inputNuevoRuta);
+      jsonData.ruta = rutaValue;
 
-        jsonData.accesoData.push(data);
+      socket.emit('/insert/table', jsonData, err => {
+        if (err)
+          return alarm.warn(err)
+
+        alarm.success(`Fila Agregada`);
+        toggleMenu.close();
       })
-
-      let resAccesoInsert = await query.post.json.cookie("/api/acceso/table/insert", jsonData);
-
-      /** @type {{err: string, OkPacket: import('mysql').OkPacket}} */
-      let { err } = await resAccesoInsert.json();
-
-      if (err)
-        return alarm.warn('No se pudo agregar')
-
-      alarm.success(`Filas Agregadas`);
     })
 
-    /* 
+    /*
       ==================================================
       ================= PERMISO EDITAR =================
       ==================================================
@@ -495,80 +355,76 @@ $('.content-body').ready(async () => {
 
     if (!permiso.editar) tblEditar.forEach(t => t.style.display = 'none');
 
-    /* 
+    /*
       ==================================================
       ================ DRAW ALL CHECKBOX ================
       ==================================================
     */
 
-    btnEditarTodo && btnEditarTodo
-      .addEventListener('click', () => {
-        if (inputTableEditar.getAttribute('option') == 'permiso')
-          checkTableEditar.forEach(tr => tr.permiso.forEach(([p, d]) => {
-            p.checked = true
-            p.disabled = d.checked = false;
-          }));
-        else
-          checkTableEditar.forEach(tr => tr.permiso.forEach(([p, d]) => {
-            p.checked = false
-            p.disabled = d.checked = true;
-          }));
-      });
-
-    let [inputEditarPrincipal, inputEditarRuta] = inputEditarText;
-
-    checkDisabledEditar.addEventListener(
+    checkDisabledPermisos.addEventListener(
       'change',
-      () => checkDisabledEditar.checked
-        ? inputTableEditar.setAttribute('option', 'disabled')
-        : inputTableEditar.setAttribute('option', 'permiso')
+      () => checkDisabledPermisos.checked
+        ? $tablePermisos.table.setAttribute('option', 'disabled')
+        : $tablePermisos.table.setAttribute('option', 'permiso')
     )
 
-    /* 
+    /*
+      ==================================================
+      ================ VALID CHANGE DATA ================
+      ==================================================
+    */
+
+    let validChangeData = () => {
+      let valid = false;
+      valid ||= inputEditarPrincipal.value != inputEditarPrincipal.currentValue;
+      valid ||= inputEditarRuta.value != inputEditarRuta.currentValue;
+
+      valid
+        ? btnEditar.classList.remove('disabled')
+        : btnEditar.classList.add('disabled');
+    }
+
+    inputEditarPrincipal.addEventListener('input', validChangeData);
+    inputEditarRuta.addEventListener('input', validChangeData);
+
+    /*
       ==================================================
       =================== OPEN EDITAR ===================
       ==================================================
     */
+
+    let defaultEditar = data => {
+      inputEditarPrincipal.currentValue
+        = inputEditarPrincipal.placeholder
+        = data.principal;
+
+      inputEditarRuta.currentValue
+        = inputEditarRuta.placeholder
+        = data.ruta;
+    }
+
+    let setterEditar = data => {
+      currentMenuId = data.id;
+
+      inputEditarPrincipal.value
+        = data.principal;
+
+      inputEditarRuta.value
+        = data.ruta;
+
+      defaultEditar(data);
+      btnEditar.classList.add('disabled');
+    }
 
     tblEditar.forEach(btn => btn.addEventListener('click', async () => {
       let id = $table.selected();
       if (!id) return alarm.warn('Selecciona una fila');
 
       toggleMenu.editar();
-
-      let resUsuarios = await query.post.json.cookie("/api/acceso/table/readId", { id });
-
-      /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-      let { list } = await resUsuarios.json();
-
-      inputEditarPrincipal.value = list[0].menu_principal;
-      inputEditarRuta.value = list[0].menu_ruta;
-      inputEditarRuta.ruta_id = list[0].menu_id;
-      inputEditarRuta.beforeValue = list[0].menu_ruta;
-
-      list.forEach(column => {
-        /** @type {number} */
-        let rol_id = column.rol_id;
-        let row = checkTableEditar[rol_id];
-
-        row.permiso.forEach(([p, d, i, c]) => {
-          let permiso = column[c]
-          if (permiso == -1)
-            return d.checked = 1, d.dispatchEvent(new Event('change'));
-          d.checked = 0, d.dispatchEvent(new Event('change'));
-          if (permiso == 1)
-            return p.checked = 1;
-          p.checked = 0;
-        })
-      })
-
-      let menu_id = list[0].menu_id;
-      let accesoRol = {};
-      list.forEach(({ rol_id, id }) => accesoRol[rol_id] = id)
-      btnEditar.memory = { menu_id, accesoRol };
+      socket.emit('/readId/table', id, setterEditar);
     }))
 
-    /* 
+    /*
       ==================================================
       ================== UNIQUE EDITAR ==================
       ==================================================
@@ -576,74 +432,50 @@ $('.content-body').ready(async () => {
 
     inputEditarRuta.addEventListener('input', () => {
       let value = inputEditarRuta.value;
-      let id = inputEditarRuta.ruta_id;
       socket.emit(
         '/read/unic',
-        { column: 'ruta', value, id },
+        { column: 'ruta', value, currentMenuId },
         res => {
           if (res)
             return inputEditarRuta.except = null;
           inputEditarRuta.except = `La ruta '${value}' ya existe.`;
-          formError(inputEditarRuta.except, inputEditarRuta.parentNode);
+          formError(inputEditarRuta.except, inputEditarRuta);
         }
       )
     })
 
-    /* 
+    /*
       ==================================================
       =================== EDITAR DATA ===================
       ==================================================
     */
 
     btnEditar.addEventListener('click', async () => {
-      let jsonData = { accesoData: [], menuData: {} };
+      if (inputEditarRuta.except) return formError(inputEditarRuta.except, inputEditarRuta);
 
-      let { menu_id, accesoRol } = btnEditar.memory;
-      jsonData.menuData.id = menu_id;
+      let jsonData = {};
 
-      let principal = jsonData.menuData.principal = inputEditarPrincipal.value;
-      if (!principal) return formError(`Se requiere un valor para Principal`, inputEditarPrincipal.parentNode);
+      jsonData.id = currentMenuId;
 
-      if (inputEditarRuta.except) return formError(inputEditarRuta.except, inputEditarRuta.parentNode);
-      let ruta = jsonData.menuData.ruta = inputEditarRuta.value;
-      if (!ruta) return formError(`Se requiere un valor para la Ruta`, inputEditarRuta.parentNode);
+      let principalValue = inputEditarPrincipal.value;
+      if (!principalValue) return formError(`Se requiere un valor para Principal`, inputEditarPrincipal);
+      jsonData.principal = principalValue;
 
-      checkTableEditar.forEach(tr => {
-        let rol_id = tr.rol_id
-        let data = {
-          id: accesoRol[rol_id],
-          rol_id: rol_id,
-          permiso_id: 0,
-          disabled_id: 0,
-          menu_id,
-          menu_principal: principal,
-          menu_ruta: ruta,
-          rol_nombre: rol_id + tr.rol_nombre,
-        };
+      let rutaValue = inputEditarRuta.value;
+      if (!rutaValue) return formError(`Se requiere un valor para la Ruta`, inputEditarRuta);
+      jsonData.ruta = rutaValue;
 
-        tr.permiso.forEach(([p, d, increment, column]) => {
-          if (d.checked) return data[column] = -1, data.disabled_id += increment;
-          if (p.checked) return data[column] = 1, data.permiso_id += increment;
-          data[column] = 0;
-        })
+      socket.emit('/updateId/table', jsonData, err => {
+        if (err)
+          return alarm.warn(err)
 
-        jsonData.accesoData.push(data);
+        alarm.success(`Filas Agregada`);
+        toggleMenu.close();
+        $table.datatable.rows().deselect();
       })
+    });
 
-      let resAccesoUpdate = await query.post.json.cookie("/api/acceso/table/updateId", jsonData);
-
-      /** @type {{err: string, OkPacket: import('mysql').OkPacket, list:{[column:string]: string|number}[]}} */
-      let { err } = await resAccesoUpdate.json();
-
-      if (err)
-        return alarm.warn('No se pudo agregar');
-
-      alarm.success(`Filas actualizadas`);
-      toggleMenu.close();
-      $table.datatable.rows().deselect();
-    })
-
-    /* 
+    /*
       ==================================================
       ================ PERMISO ELIMINAR ================
       ==================================================
@@ -651,13 +483,13 @@ $('.content-body').ready(async () => {
 
     if (!permiso.eliminar) tblEliminar.forEach(t => t.style.display = 'none');
 
-    /* 
+    /*
       ==================================================
       ================== ELIMINAR DATA ==================
       ==================================================
     */
 
-    tblEliminar.forEach(btn => btn.addEventListener('click', () => {
+    let deleteMenu = () => {
       let id = $table.selected();
       if (!id) return alarm.warn('Selecciona una fila');
 
@@ -674,81 +506,46 @@ $('.content-body').ready(async () => {
         color: 'rgb(255, 255, 255)',
       })
         .then(async (result) => {
-          if (result.isConfirmed) {
-            let resUsuarios = await query.post.json.cookie("/api/acceso/table/deleteId", { id });
-
-            /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-            let { err } = await resUsuarios.json();
-
-            if (err)
-              return alarm.error(`Filas no Eliminada`);
-
-            alarm.success(`Fila eliminada`);
-          }
+          if (result.isConfirmed)
+            socket.emit('/deleteId/table', id, err => {
+              if (err) return alarm.error(err);
+              alarm.success(`Fila eliminada`);
+            })
         });
-    }))
+    }
 
-    /* 
+    document.addEventListener('keydown', ({ key }) => key == 'Delete' && deleteMenu());
+    tblEliminar.forEach(btn => btn.addEventListener('click', deleteMenu))
+
+    /*
       ==================================================
       ===================== SOCKET =====================
       ==================================================
     */
 
-    socket.on('/accesos/permisos/insert', data => {
-      let row = $table.get('#' + data.id);
-      if (row) return;
-
-      $table.add({
-        id: data.id,
-        permiso_id: data.permiso_id,
-        menu_ruta: data.menu_ruta,
-        menu_principal: data.menu_principal,
-        rol_id: data.rol_id,
-        rol_nombre: data.rol_nombre,
-        permiso_id: data.permiso_id,
-        permiso_ver: data.permiso_ver,
-        permiso_agregar: data.permiso_agregar,
-        permiso_editar: data.permiso_editar,
-        permiso_eliminar: data.permiso_eliminar,
-        permiso_ocultar: data.permiso_ocultar,
-        permiso_exportar: data.permiso_exportar
-      });
+    socket.on('/menu/data/insert', () => {
+      $table.datatable.draw();
     })
 
-    socket.on('/accesos/permisos/updateId', data => {
-      let row = $table.get('#' + data.id);
-      if (!row) return;
-
-      $table.update('#' + data.id, {
-        menu_ruta: data.menu_ruta,
-        menu_principal: data.menu_principal,
-        permiso_id: data.permiso_id,
-        permiso_ver: data.permiso_ver,
-        permiso_agregar: data.permiso_agregar,
-        permiso_editar: data.permiso_editar,
-        permiso_eliminar: data.permiso_eliminar,
-        permiso_ocultar: data.permiso_ocultar,
-        permiso_exportar: data.permiso_exportar
-      });
+    socket.on('/menu/data/updateId', async data => {
+      if (currentMenuId == data.id) {
+        defaultEditar(data);
+        validChangeData();
+      }
+      if (!$table.get('#' + data.id)) return;
+      $table.datatable.draw();
     })
 
-    socket.on('/accesos/permisos/deleteId', data => {
-      $table.remove(...data.map(({ id }) => '#' + id));
+    socket.on('/menu/data/deleteId', data => {
+      if (!$table.get('#' + data.id)) return;
+      $table.datatable.draw();
     })
 
     socket.on('/accesos/permisos/state', data => {
-      let row = $table.get('#' + data.id);
+      let row = $tablePermisos.get('#' + data.id);
       if (!row) return;
 
-      $table.update('#' + data.id, {
-        permiso_id: data.permiso_id,
-        permiso_ver: data.permiso_ver,
-        permiso_agregar: data.permiso_agregar,
-        permiso_editar: data.permiso_editar,
-        permiso_eliminar: data.permiso_eliminar,
-        permiso_ocultar: data.permiso_ocultar,
-        permiso_exportar: data.permiso_exportar
-      });
+      $tablePermisos.update('#' + data.id, data);
     })
 
     socket.on('/session/acceso/state', data => {

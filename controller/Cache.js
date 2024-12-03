@@ -3,7 +3,7 @@ const FileJSON = require('../utils/FileJSON');
 const { resolve } = require('path');
 
 class Cache {
-  /** 
+  /**
    * @type {FileJSON<{
    *   name: string,
    *   version: string,
@@ -23,7 +23,6 @@ class Cache {
   configJSON = new FileJSON(resolve('.cache', 'config', 'config.json'), true, {
     DATABASE: {
       autoRun: true,
-      /** @type {import('mysql').PoolConfig} */
       owner: {
         connectionLimit: 2,
         host: 'localhost',
@@ -31,7 +30,6 @@ class Cache {
         password: '',
         database: 'rehf'
       },
-      /** @type {import('mysql').PoolConfig} */
       production: {
         connectionLimit: 25,
         host: 'localhost',
@@ -91,7 +89,7 @@ class Cache {
    *     creacion: String,
    *     estado: Number
    *   }
-   * }>} 
+   * }>}
    */
   apiKey = new Generador(
     '    -    -    -    ', // formato pantilla
@@ -109,7 +107,7 @@ class Cache {
   /** ----------------------------------------------------------------------------------------------------
    * @type {Generador<{
    *   phone: string
-   * }>} 
+   * }>}
    */
   codeRecovery = new Generador(
     '      ', // formato pantilla

@@ -19,7 +19,7 @@
       margin: 5px 0;
       transition: background-color 0.3s;
       cursor: pointer;
-      
+
       &:hover {
         background-color: rgba(var(--color-2), .1);
       }

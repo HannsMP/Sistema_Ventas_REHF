@@ -5,8 +5,8 @@
   ----------------------------------------------------
 */
 
-/** 
- * @typedef {{ 
+/**
+ * @typedef {{
 *   id: string,
 *   selectedBox: HTMLDivElement,
 *   closeAnchor: HTMLAnchorElement,
@@ -14,17 +14,17 @@
 * }} IndexSeleted
 */
 
-/** 
- * @typedef {{ 
+/**
+ * @typedef {{
  *   id:number
- *   name:string, 
+ *   name:string,
  *   src:string,
  *   selected:number,
  *   selectorBox: HTMLDivElement
  * }} IndexData
  */
 
-/** 
+/**
  * @typedef {{
  *   search: string,
  *   byId: boolean,
@@ -32,26 +32,26 @@
  *   length: number,
  *   order: 'asc'|'desc',
  *   noInclude: number[]
- * }} SelectorRequest 
+ * }} SelectorRequest
  */
 
-/** 
+/**
  * @typedef {(SelectorResponse: {
  *   data: IndexData[],
  *   recordsFiltered: number,
  *   recordsTotal: number
- * })=>void} SelectorEnd 
+ * })=>void} SelectorEnd
  */
 
 class OptionsServerside {
   #blocked = false;
-  /** 
+  /**
    * @type {EventListener<{
    *   click:IndexSeleted,
    *   select:IndexSeleted,
    *   close:IndexSeleted,
    *   search:string
-   * }>} 
+   * }>}
    */
   event = new EventListener();
 
@@ -68,9 +68,9 @@ class OptionsServerside {
   #currentSearch = '';
   #callback = _ => _;
 
-  /** 
-   * @param {(req:SelectorRequest, end:SelectorEnd)=>void} callback 
-   * @param {{showIndex:boolean|'img', noInclude?:boolean, order?:'asc'|'desc', associative?:boolean }} options 
+  /**
+   * @param {(req:SelectorRequest, end:SelectorEnd)=>void} callback
+   * @param {{showIndex:boolean|'img', noInclude?:boolean, order?:'asc'|'desc', associative?:boolean }} options
    */
   constructor(callback, options = {}) {
     this.#callback = callback;
@@ -109,9 +109,9 @@ class OptionsServerside {
     this.#selected.forEach(selectedData => selectedData.closeAnchor.click());
   }
 
-  /** 
-   * Realiza una búsqueda en el servidor con el valor proporcionado 
-   * @param {string} value 
+  /**
+   * Realiza una búsqueda en el servidor con el valor proporcionado
+   * @param {string} value
    */
   search(value = '') {
     this.#chunkCounter = 0;
@@ -124,7 +124,7 @@ class OptionsServerside {
   /**
    * vuelve a pintar todas las opciones y lo seleccionado relativo a la data guardada
    * @param {boolean} reboot verdadero para rememplazar por la data actual
-   * @returns 
+   * @returns
    */
   draw(reboot) {
     this.menuBox.innerHTML = '';
@@ -137,8 +137,8 @@ class OptionsServerside {
   }
 
   /**
-   *  Selecciona un elemento del servidor usando el ID 
-   * @param {number} id 
+   *  Selecciona un elemento del servidor usando el ID
+   * @param {number} id
    * @returns {Promise<IndexSeleted>}
    */
 
@@ -184,9 +184,9 @@ class OptionsServerside {
   }
 
   /**
-   * Actualiza un elemento en #data y en #selected, y actualiza el HTML si está seleccionado 
-   * @param {number} id 
-   * @param {IndexData} newData 
+   * Actualiza un elemento en #data y en #selected, y actualiza el HTML si está seleccionado
+   * @param {number} id
+   * @param {IndexData} newData
    */
   set(id, newData) {
     this.#data.set(id, newData);
@@ -197,9 +197,9 @@ class OptionsServerside {
     }
   }
 
-  /** 
-   * Elimina un elemento de #data y de #selected si existe en ambos 
-   * @param {number} id 
+  /**
+   * Elimina un elemento de #data y de #selected si existe en ambos
+   * @param {number} id
    */
   delete(id) {
     if (this.#selected.has(id)) {
@@ -296,7 +296,7 @@ class OptionsServerside {
   }
 }
 
-/** 
+/**
  * @extends {EventListener<{
  *   input: string,
  *   focusin: FocusEvent,
@@ -304,16 +304,16 @@ class OptionsServerside {
  *   change: IndexSeleted,
  *   deselected: IndexSeleted,
  *   selected: IndexSeleted,
- * }>} 
+ * }>}
  */
 class SelectorInput extends EventListener {
   /** @type {IndexSeleted[]} */
   selected = [];
 
-  /** 
-   * @param {HTMLInputElement} inputElement 
-   * @param {OptionsServerside} selectorClass  
-   * @param {{ autohide?: boolean, multi?: boolean, justChange?: boolean }} options 
+  /**
+   * @param {HTMLInputElement} inputElement
+   * @param {OptionsServerside} selectorClass
+   * @param {{ autohide?: boolean, multi?: boolean, justChange?: boolean }} options
    */
   constructor(inputElement, selectorClass, options = {}) {
     if (!(inputElement instanceof HTMLInputElement)) throw new TypeError('El elemento no es un input.');

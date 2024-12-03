@@ -9,9 +9,9 @@ module.exports = {
   name: 'asistencia',
   cooldown: 30 * 1000,
   onColldown: {},
-  description: `Muestra las asistencias en forma de tabla, de usuario y hora. 
-  Uso: */asistencia [fecha]* 
-  fecha: 
+  description: `Muestra las asistencias en forma de tabla, de usuario y hora.
+  Uso: */asistencia [fecha]*
+  fecha:
     * * : sin especificar muestra las asistencias del dia actual.
     *ayer*: muestra las asistencias de un dia anterior al actual.
 

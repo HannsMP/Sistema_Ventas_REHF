@@ -9,28 +9,11 @@ $('.content-body').ready(async () => {
       return `rgb(${r}, ${g}, ${b})`;
     }
 
-    /* 
-      ==================================================
-      =============== QUERY DATA SUCCESS ===============
-      ==================================================
-    */
-
-    let resPrecioVenta = await query.post.cookie("/api/cerebro/precio_venta/readJson");
-
-    /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-    let { data, option, prediccion } = await resPrecioVenta.json();
-
-    let resPrecios = await query.post.cookie('/api/productos/chart/readPrice');
-
-    let { data: dataPrecios } = await resPrecios.json()
-
-    /* 
+    /*
       ==================================================
       ======================= DOM =======================
       ==================================================
     */
-
-    let prediccionFun = new Function('return ' + prediccion)();
 
     let Ecard = document.querySelector('#precio_venta');
     let EiterationsTrain = Ecard.querySelector('#iterations_train');
@@ -55,19 +38,7 @@ $('.content-body').ready(async () => {
 
     let EbtnRecargar = Ecard.querySelector('#recargar');
 
-    EbtnRecargar.addEventListener('click', () => {
-      query.post.json.cookie("/api/cerebro/precio_venta/refresh", {
-        iterations: EiterationsTrain.value,
-        errorThresh: EerrorThreshTrain.value
-      })
-        .then(r => r.ok && Ecard.classList.add('load-spinner'))
-    })
-
-    EdataPoinTrain.addEventListener('input', () => {
-      EpredictedTrain.value = prediccionFun(EdataPoinTrain.value).toFixed(3);
-    })
-
-    /* 
+    /*
       ==================================================
       =================== CHART TEST ===================
       ==================================================
@@ -102,7 +73,7 @@ $('.content-body').ready(async () => {
       }
     });
 
-    /* 
+    /*
       ==================================================
       =============== CHART NEURAL RESULT ===============
       ==================================================
@@ -132,24 +103,28 @@ $('.content-body').ready(async () => {
       }
     })
 
-    /* 
+    /*
       ==================================================
       ===================== Render =====================
       ==================================================
     */
 
-    let render = async () => {
+    /** @type {(value: number)=>Promise<number>} */
+    let prediccionFun = (value) => new Promise(res => {
+      socket.emit('/predict/precioVenta', value, res)
+    });
+
+    let renderInput = (data) => {
       EiterationsTrain.value = data.iterations;
       EerrorThreshTrain.value = data.errorThresh;
       EiterationsTrain.placeholder = data.iterations;
       EerrorThreshTrain.placeholder = data.errorThresh;
+    }
 
-
-      /** -------------------- -------------------- */
-
+    let renderCard = async (data) => {
       EdataPoinTrain.value = data.limit.min_compra;
-      EpredictedTrain.value = prediccionFun(data.limit.min_compra).toFixed(3);
-
+      let predict_min_compra = await prediccionFun(data.limit.min_compra);
+      EpredictedTrain.value = predict_min_compra.toFixed(3);
       EcompraMinmaxTrain.textContent = `Min: ${data.limit.min_compra} - Max: ${data.limit.max_compra}`;
       EventaMinmaxTrain.textContent = `Min: ${data.limit.min_venta} - Max: ${data.limit.max_venta}`;
       EteracionesTrain.textContent = `Iteraciones: ${data.iterations}`;
@@ -157,15 +132,14 @@ $('.content-body').ready(async () => {
       ETamañoTrain.textContent = `Cantidad de Muestras: ${data.size}`;
 
       EcompraMinmaxResult.textContent = `Min: ${data.limit.min_compra} - Max: ${data.limit.max_compra}`;
-      EventaMinmaxResult.textContent = `Min: ${prediccionFun(data.limit.min_compra).toFixed(2)} - Max: ${prediccionFun(data.limit.max_compra).toFixed(2)}`;
+      let predict_max_compra = await prediccionFun(data.limit.max_compra);
+      EventaMinmaxResult.textContent = `Min: ${predict_min_compra.toFixed(2)} - Max: ${predict_max_compra.toFixed(2)}`;
       EteracionesResult.textContent = `Iteraciones: ${data.trainResult.iterations}`;
       EerrorResult.textContent = `Umbral de Error: ${data.trainResult.error.toFixed(7)}`;
       EcreacionResult.textContent = formatTime('YYYY/MM/DD hh:mm:ss tt', new Date(data.create))
+    }
 
-      /** -------------------- -------------------- */
-
-      let netJson = data.netJson;
-
+    let renderChartNet = (netJson) => {
       graficoNet.data.datasets[0].data = [
         netJson.layers[1].weights.flat(),
         netJson.layers[2].weights.flat(),
@@ -179,19 +153,19 @@ $('.content-body').ready(async () => {
       ];
 
       graficoNet.update();
+    }
 
-      /** -------------------- -------------------- */
-
+    let renderChartTest = (dataPrecios, limit) => {
       graficoTest.data.labels = [];
       graficoTest.data.datasets[0].data = [];
       graficoTest.data.datasets[1].data = [];
-      graficoTest.options.scales.y = { min: data.limit.min_venta, max: data.limit.max_venta };
+      graficoTest.options.scales.y = { min: limit.min_venta, max: limit.max_venta };
 
       let index = 0;
       let intervalId = setInterval(() => {
-        let { compra, venta } = dataPrecios[index];
-        graficoTest.data.labels.push(compra);
-        graficoTest.data.datasets[0].data.push(prediccionFun(compra));
+        let { predictVenta, compra_prom, venta } = dataPrecios[index];
+        graficoTest.data.labels.push(compra_prom);
+        graficoTest.data.datasets[0].data.push(predictVenta);
         graficoTest.data.datasets[1].data.push(venta);
 
         graficoTest.update();
@@ -201,23 +175,45 @@ $('.content-body').ready(async () => {
           clearInterval(intervalId);
 
       }, 1000 / dataPrecios.length);
-
-
     }
+    /*
+      ==================================================
+      ================== prediccionFun ==================
+      ==================================================
+    */
 
-    render();
+    EdataPoinTrain.addEventListener('input', async () => {
+      let predict = await prediccionFun(EdataPoinTrain.value);
+      EpredictedTrain.value = predict.toFixed(3);
+    })
 
-    /* 
+    EbtnRecargar.addEventListener('click', () => {
+      let iterations = Number(EiterationsTrain.value);
+      let errorThresh = Number(EerrorThreshTrain.value);
+
+      socket.emit('/train/precioVenta', iterations, errorThresh, err => {
+        if (err)
+          return availableMemory.error(err);
+
+        Ecard.classList.add('load-spinner');
+      });
+    })
+
+    socket.emit('/data/precioVenta', (save, data) => {
+      renderCard(save);
+      renderInput(save);
+      renderChartNet(save.netJson);
+      renderChartTest(data, save.limit);
+    });
+
+    /*
       ==================================================
       ===================== SOCKET =====================
       ==================================================
     */
 
     socket.on('/cerebro/data/precioVenta', d => {
-      prediccionFun = new Function('return ' + d.prediccion)();
-      option = d.optionNeural;
-      data = d.data;
-      render();
+      renderChartTest(d.data, d.limit);
       Ecard.classList.remove('load-spinner')
     })
 

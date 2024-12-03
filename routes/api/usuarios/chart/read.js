@@ -3,18 +3,18 @@
 /** @typedef {import('../../../../utils/SocketNode')} SocketNode */
 /** @typedef {Array.<(this: App, req: import('express').Request, res: import('express').Response, next: import('express').NextFunction)=>void>} routeArr */
 
-/** 
+/**
  * @type {{
-*   load:boolean, 
-*   route:string, 
-*   viewLayoutPath:string, 
-*   viewRenderPath:string, 
-*   viewErrorPath:string, 
-*   use: routeArr, 
-*   get: routeArr, 
+*   load:boolean,
+*   route:string,
+*   viewLayoutPath:string,
+*   viewRenderPath:string,
+*   viewErrorPath:string,
+*   use: routeArr,
+*   get: routeArr,
 *   post: routeArr,
-*   nodeRoute: (this: App, node: SocketNode)=>void
-* }} 
+*   nodeRoute: {last:boolean, tagsName:boolean, collector:boolean} | (this: App, node: SocketNode)=>void
+* }}
 */
 module.exports = {
   load: true,
@@ -30,7 +30,7 @@ module.exports = {
 
         let max_creacion = await this.model.tb_usuarios.cardLastCreation();
         let cantidad_usuarios = await this.model.tb_usuarios.cardCount();
-        let chart = await this.model.tipo_rol.chartCountRoles();
+        let chart = await this.model.tipo_roles.chartCountRoles();
 
         res.status(200).json({ card: { max_creacion, cantidad_usuarios }, chart })
       } catch (e) {

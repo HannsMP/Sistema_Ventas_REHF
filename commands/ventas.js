@@ -9,9 +9,9 @@ module.exports = {
   name: 'ventas',
   cooldown: 30 * 1000,
   onColldown: {},
-  description: `Muestra las ventas hechas en forma de tabla, con calculo de descriptivo. 
-  Uso: */ventas [fecha]* 
-  fecha: 
+  description: `Muestra las ventas hechas en forma de tabla, con calculo de descriptivo.
+  Uso: */ventas [fecha]*
+  fecha:
     * *: sin especificar muestra las ventas del dia actual.
     *ayer*: muestra las ventas de un dia anterior al actual.
 

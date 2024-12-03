@@ -6,12 +6,12 @@
     '"': '&quot;',
     "'": '&#039;'
   };
-  
+
   /** @type {{[formato:string]:(text:string, type: string, noDraw:boolean)=>{codeLine:HTMLSpanElement, row:HTMLSpanElement}}} */
   const formats = {
     '.log': (text, type, noDraw) => {
       let codeLine = document.createElement('span');
-  
+
       codeLine.classList.add('code-line');
       codeLine.innerHTML = `<span class="code-row"></span>`;
       if (!noDraw)
@@ -69,16 +69,16 @@
           );
       else
         codeLine.innerHTML += text;
-  
+
       if (type)
         codeLine.classList.add(type);
-  
+
       let row = codeLine.querySelector('.code-row');
       return { codeLine, row };
     },
     '.bash': (text, type, noDraw) => {
       let codeLine = document.createElement('span');
-  
+
       codeLine.classList.add('code-line');
       codeLine.innerHTML = `<span class="code-row"></span>`;
       if (!noDraw)
@@ -105,15 +105,15 @@
           );
       else
         codeLine.innerHTML += text;
-  
+
       if (type)
         codeLine.classList.add(type);
-  
+
       let row = codeLine.querySelector('.code-row');
       return { codeLine, row };
     }
   }
-  
+
   class Code {
     #divConteiner;
     #text = '';
@@ -129,24 +129,24 @@
       this.#format = formats[format];
       if (!this.#format) return;
       this.#ext = format;
-  
+
       if (divConteiner.nodeName != 'DIV') return;
       this.#divConteiner = divConteiner;
-  
+
       this.#divConteiner.addEventListener('scroll', () => {
         let { scrollTop, clientHeight, scrollHeight } = divConteiner;
         if (scrollTop + clientHeight < scrollHeight) return;
         this.#loadNextChunk();
         this.#renderIndexRow();
       });
-  
+
       if (typeof text != 'string') return;
-  
+
       this.#text = text;
       this.#lines = text.split('\n');
       this.#loadNextChunk();
       this.#renderIndexRow();
-  
+
     }
     addStart(text, type, noDraw) {
       if (typeof text != 'string') return;
@@ -168,7 +168,7 @@
       let l = this.#rows.length;
       this.#rows[l - 1].innerText = l;
       this.#divConteiner.scrollTop = this.#divConteiner.scrollHeight;
-      
+
       this.#renderIndexRow();
       this.#text += '\n' + text;
     }
@@ -186,33 +186,33 @@
       let start = this.#currentChunk * this.#chunkSize;
       let end = start + this.#chunkSize;
       let chunk = this.#lines?.slice(start, end);
-  
+
       chunk?.forEach(lineText => {
         let { codeLine, row } = this.#format(lineText);
         this.#divConteiner.append(codeLine);
         this.#rows.push(row);
       });
-  
+
       this.#currentChunk++;
     }
     download(filename = `${Date.now()}${this.#ext}`) {
       let blob = new Blob([this.#text], { type: 'text/plain' });
       let url = URL.createObjectURL(blob);
-  
+
       let a = document.createElement('a');
       a.href = url;
       a.download = filename;
-  
+
       document.body.appendChild(a);
       a.click();
-  
+
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
   }
-  
+
   window.Code = Code;
-  
+
   /** @typedef {{name:string, lower:string, box:HTMLDivElement}[]} SuggestionData */
   class Suggestion {
     #show = 0;
@@ -230,57 +230,57 @@
       this.test = test;
       this.sug = document.createElement('div');
       this.sug.className = 'input-suggestion';
-  
-      /* 
+
+      /*
         ==================================================
         ================== GLOBAL CLICK ==================
         ==================================================
       */
-  
+
       this.sug.addEventListener('click', ev => {
         /** @type {HTMLDivElement} */
         let option = ev.target;
         console.log(option);
-  
+
         if (!option?.classList?.contains('option')) return;
-  
+
         let value = input.value;
-  
+
         let beforeCursor = value.slice(0, input.selectionStart);
         beforeCursor = beforeCursor.replace(/\S+$/, '');
         let afterCursor = value.slice(input.selectionStart);
         afterCursor = afterCursor.replace(/^\S+/, '');
-  
+
         let name = option.textContent;
-  
+
         beforeCursor = beforeCursor + name;
-  
+
         input.value = beforeCursor + afterCursor;
-  
+
         input.setSelectionRange(beforeCursor.length, beforeCursor.length)
         option.classList.remove('selected');
         this.sug.remove();
         this.#show = 0;
       })
-  
-      /* 
+
+      /*
         ==================================================
         ===================== SCROLL =====================
         ==================================================
       */
-  
+
       this.sug.addEventListener('scroll', () => {
         let { scrollTop, clientHeight, scrollHeight } = this.sug;
         if (scrollTop + clientHeight < scrollHeight) return;
         this.#loadNextChunk();
       });
-  
-      /* 
+
+      /*
         ==================================================
         ===================== KEYDOWN =====================
         ==================================================
       */
-  
+
       input.addEventListener('keydown', ev => {
         let { ctrlKey, key, code } = ev;
         if (ctrlKey && code === 'Space') {
@@ -288,78 +288,78 @@
           input.after(this.sug);
           this.#show = 1;
         }
-  
+
         if (!this.#show) return;
         ev.stopPropagation()
-  
+
         if (key == 'Escape') {
           this.sug.remove();
           this.#show = 0;
         }
-  
+
         if (key == 'Enter') {
           let [box, index] = this.#selected;
           let value = input.value;
-  
+
           let beforeCursor = value.slice(0, input.selectionStart);
           beforeCursor = beforeCursor.replace(/\S+$/, '');
           let afterCursor = value.slice(input.selectionStart);
           afterCursor = afterCursor.replace(/^\S+/, '');
-  
+
           let name = this.#dataFilter[index].name;
-  
+
           beforeCursor = beforeCursor + name;
-  
+
           input.value = beforeCursor + afterCursor;
-  
+
           input.setSelectionRange(beforeCursor.length, beforeCursor.length)
           box.classList.remove('selected');
           this.sug.remove();
           this.#show = 0;
         }
-  
+
         if (key == 'ArrowDown') {
           let [box, index] = this.#selected;
           index++;
           let next = this.#dataFilter[index]
           if (!next) return;
-  
+
           next.box.classList.add('selected');
           box.classList.remove('selected');
-  
+
           this.#selected[0] = next.box;
           this.#selected[1]++;
-  
+
           this.sug.scrollTop = this.sug.scrollHeight - ((this.#dataFilter.length - index) * 20);
         }
-  
+
         if (key == 'ArrowUp') {
           let [box, index] = this.#selected;
           index--;
           let after = this.#dataFilter[index]
           if (!after) return;
-  
+
           after.box.classList.add('selected');
           box.classList.remove('selected');
-  
+
           this.#selected[0] = after.box;
           this.#selected[1]--;
-  
+
           this.sug.scrollTop = this.sug.scrollHeight - ((this.#dataFilter.length - index) * 20);
         }
       });
-  
-      /* 
+
+      /*
         ==================================================
         ====================== INPUT ======================
         ==================================================
       */
-  
+
       input.addEventListener('input', ev => {
         let value = input.value;
-  
+
         let beforeCursor = value.slice(0, input.selectionStart);
-  
+
         if (this.test?.test(beforeCursor)) {
           input.after(this.sug);
           this.#show = 1;
@@ -367,16 +367,16 @@
           this.sug.remove();
           this.#show = 0;
         }
-  
+
         let x = 5 + (beforeCursor.length * 6.59);
-  
+
         if (this.#show) this.sug.style.left = x + 'px';
-  
+
         let lastWord = /\S+$/.exec(beforeCursor);
-  
+
         if (lastWord && lastWord[0] != '') {
           this.#filter(lastWord[0]);
-  
+
           if (!this.#dataFilter.length) {
             this.sug.remove();
             return this.#show = 0;
@@ -384,33 +384,33 @@
         }
         else
           this.#dataFilter = this.#data;
-  
+
         this.#draw();
       })
-  
-      /* 
+
+      /*
         ==================================================
         ==================== FOCUSOUT ====================
         ==================================================
       */
-  
+
       input.addEventListener('focusout', _ => {
         setTimeout(() => {
           this.sug.remove();
           this.#show = 0;
         }, 100);
       });
-  
+
     }
     /** @param {string[]} data  */
     push(data) {
-  
+
       data = data?.map(name => {
         let box = document.createElement('div');
         box.textContent = name;
         box.className = 'option';
         let lower = name.toLowerCase()
-  
+
         return { name, lower, box };
       })
       this.#data = this.#order(data);
@@ -426,12 +426,12 @@
     /** @param {SuggestionData} values */
     #draw() {
       this.sug.innerHTML = '';
-  
+
       this.#chunk[1] = 0;
       this.#chunk[2] = this.#dataFilter.length;
-  
+
       this.#loadNextChunk();
-  
+
       let { box } = this.#dataFilter[0];
       box.classList.add('selected');
       this.#selected = [box, 0];
@@ -440,20 +440,20 @@
       let start = this.#chunk[0] * this.#chunk[1];
       let end = start + this.#chunk[0];
       if (this.#chunk[2] < start) return;
-  
+
       let chunk = this.#dataFilter.slice(start, end);
-  
+
       this.sug.append(...chunk.map(v => {
         v.box.classList.remove('selected');
         return v.box;
       }));
-  
+
       this.#chunk[1]++;
     }
   }
-  
+
   window.Suggestion = Suggestion;
-  
+
   /** @type {(input:HTMLInputElement)=>void} */
   window.inputBash = function (inputField) {
     inputField.previousElementSibling.innerHTML

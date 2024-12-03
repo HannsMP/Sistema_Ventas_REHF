@@ -4,19 +4,18 @@ const { resolve } = require('path');
 /** @typedef {import('../../utils/SocketNode')} SocketNode */
 /** @typedef {Array.<(this: App, req: import('express').Request, res: import('express').Response, next: import('express').NextFunction)=>void>} routeArr */
 
-/** 
+/**
  * @type {{
- *   load:boolean, 
- *   route:string, 
- *   viewLayoutPath:string, 
- *   viewRenderPath:string, 
- *   viewErrorPath:string, 
- *   use: routeArr, 
- *   get: routeArr, 
+ *   load:boolean,
+ *   route:string,
+ *   viewLayoutPath:string,
+ *   viewRenderPath:string,
+ *   viewErrorPath:string,
+ *   use: routeArr,
+ *   get: routeArr,
  *   post: routeArr,
- *   nodeOption: {last:boolean, tagsName:boolean, collector:boolean},
- *   nodeRoute: (this: App, node: SocketNode)=>void
- * }} 
+ *   nodeRoute: {last:boolean, tagsName:boolean, collector:boolean} | (this: App, node: SocketNode)=>void
+ * }}
 */
 module.exports = {
   load: true,
@@ -24,14 +23,37 @@ module.exports = {
   viewLayoutPath: resolve('layout', 'control.ejs'),
   viewErrorPath: resolve('view', 'error', '403.ejs'),
   use: [
-    function (req, res, next) {
+    async function (req, res, next) {
       let { apiKey } = req.cookies;
 
-      let existApikey = this.cache.apiKey.exist(apiKey);
+      if (!this.cache.apiKey.exist(apiKey)) {
 
-      if (!existApikey) {
-        req.session.returnLoad = req.originalUrl;
-        return res.redirect('/auth/login');
+        let { apiKey, login, remember } = req.cookies;
+
+        if (!remember)
+          return res.redirect('/auth/login');
+
+        let { usuario, clave } = login;
+
+        let data_Usuario = await this.model.tb_usuarios.login(usuario, clave);
+        this.model.tb_asistencias.insertUserId(data_Usuario.id);
+
+        let dataPackage = this.cache.packageJSON.readJSON();
+
+        apiKey = this.cache.apiKey.create({
+          theme: req.cookies['config-theme'] || 'purple',
+          usuario: data_Usuario,
+          version: dataPackage.version,
+          author: dataPackage.author
+        });
+
+        res.cookie('apiKey', apiKey, {
+          maxAge: 30 * 24 * 60 * 60 * 60 * 1000,
+          sameSite: 'Strict',
+          httpOnly: true
+        });
+
+        return res.redirect(req.originalUrl);
       }
 
       this.app.set('layout', module.exports.viewLayoutPath);
@@ -43,7 +65,7 @@ module.exports = {
       res.redirect("/control/productos");
     },
   ],
-  nodeOption: {
+  nodeRoute: {
     collector: true,
     tagsName: true
   }

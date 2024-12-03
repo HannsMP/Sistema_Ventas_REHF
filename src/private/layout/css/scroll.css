@@ -21,11 +21,13 @@
 }
 
 .scroll-x {
-  overflow-x: auto;
+  overflow-y: hidden;
+  overflow-x: auto !important;
 }
 
 .scroll-y {
-  overflow-y: auto;
+  overflow-y: auto !important;
+  overflow-x: hidden;
 }
 
 .scroll-x:hover::-webkit-scrollbar-thumb,

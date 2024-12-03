@@ -10,7 +10,7 @@ module.exports = {
   name: 'cache',
   cooldown: 30 * 1000,
   onColldown: {},
-  description: `Permite controlar la cache del backend. 
+  description: `Permite controlar la cache del backend.
   Uso: */cache [accion] [carpeta]*
   accion:
     *clear*: limpia el interior de una carpeta cache.

@@ -3,18 +3,7 @@ $('.content-body').ready(async () => {
 
     let bytesToKb = (bit) => (bit / (1024 ** 2)).toFixed(2);
 
-    /* 
-      ==================================================
-      =============== QUERY DATA WARNING ===============
-      ==================================================
-    */
-
-    let resWarning = await query.post.cookie("/api/logguer/warning/read");
-
-    /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-    let { text: textWarning, stat: statWarning } = await resWarning.json();
-
-    /* 
+    /*
       ==================================================
       ======================= DOM =======================
       ==================================================
@@ -30,35 +19,37 @@ $('.content-body').ready(async () => {
 
     let clearWarning = cardWarning.querySelector('#clear');
 
-    let codeWarning = new Code('.log', boxWarning, textWarning);
-
-    sizeWarning.textContent = bytesToKb(statWarning.size);
-
-    downloadWarning.addEventListener('click', () => codeWarning.download());
-
-    clearWarning.addEventListener('click', async _ => {
-      let resClear = await query.post.cookie("/api/logguer/warning/clear");
-
-      /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-      let { err } = await resClear.json();
-
-      if (err)
-        return alarm.error(`Registro no Eliminada`);
-
-      codeWarning.empty();
-
-      alarm.success(`Registro eliminada`);
-    })
-
-    /* 
+    /*
       ==================================================
-      ===================== SOCKET =====================
+      =============== QUERY DATA WARNING ===============
       ==================================================
     */
 
-    socket.on('/logger/warn/writeStart', data => {
-      codeWarning.addStart(data.log);
-      sizeWarning.textContent = bytesToKb(data.stat.size);
+    socket.emit('/read/warn', (text, stat, exist) => {
+      let code = new Code('.log', boxWarning, text);
+      downloadWarning.addEventListener('click', () => code.download());
+      sizeWarning.textContent = bytesToKb(stat.size);
+
+      /*
+        ==================================================
+        ===================== SOCKET =====================
+        ==================================================
+      */
+
+      clearWarning.addEventListener('click', async _ => {
+        socket.emit('/clear/warn', (err) => {
+          if (err)
+            return alarm.error(err);
+
+          code.empty();
+          alarm.success(`Registro eliminada`);
+        })
+      })
+
+      socket.on('/logger/warn/writeStart', data => {
+        code.addStart(data.log);
+        sizeWarning.textContent = bytesToKb(data.stat.size);
+      })
     })
 
   } catch ({ message, stack }) {

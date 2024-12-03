@@ -30,6 +30,10 @@ table.witgetTable {
     background-color: rgb(161, 8, 171);
   }
 
+  tr[ignore=true] {
+    background-color: rgb(0, 0, 0, .2);
+  }
+
   td,
   td .input-box {
     vertical-align: middle;

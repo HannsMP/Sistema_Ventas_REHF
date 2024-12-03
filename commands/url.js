@@ -7,7 +7,7 @@ module.exports = {
   name: 'url',
   cooldown: 30 * 1000,
   onColldown: {},
-  description: `Muestra la url en la cual el servidor esta alojado, si esperas un poco puede que te envie un link enriquesido. 
+  description: `Muestra la url en la cual el servidor esta alojado, si esperas un poco puede que te envie un link enriquesido.
   Uso: */url*
   No tiene parametros`,
   async run(phone, msg, arg, complete) {

@@ -63,7 +63,7 @@ $('.content-body').ready(async () => {
       {
         className: 'dtr-description',
         targets: 2,
-        render: data => '<div class="scroll-y">' + data + '</div>'
+        render: data => '<div class="scroll-y">' + (data || '-') + '</div>'
       },
       {
         className: 'dtr-tag',

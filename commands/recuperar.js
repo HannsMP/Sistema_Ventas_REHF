@@ -7,8 +7,8 @@ module.exports = {
   name: 'recuperar',
   cooldown: 5 * 60 * 1000,
   onColldown: {},
-  description: `Envia un codigo de verificacion para recupera tu cuenta, por razones de seguridad para recuperarla se tiene que hacer la solicitud desde el numero registrado, 
-  ¿cambiaste numero? ponte en contacto con el administrador 
+  description: `Envia un codigo de verificacion para recupera tu cuenta, por razones de seguridad para recuperarla se tiene que hacer la solicitud desde el numero registrado,
+  ¿cambiaste numero? ponte en contacto con el administrador
   Uso: */recuperar*
   No tiene parametros`,
   async run(phone, msg, arg, complete) {

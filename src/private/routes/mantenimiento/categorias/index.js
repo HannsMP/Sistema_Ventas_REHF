@@ -1,7 +1,7 @@
 $('.content-body').ready(async () => {
   try {
 
-    /* 
+    /*
       ==================================================
       ================== VARIABLES DOM ==================
       ==================================================
@@ -45,7 +45,7 @@ $('.content-body').ready(async () => {
 
     let $table = new Tables('#table-main');
 
-    /* 
+    /*
       ==================================================
       ===================== ESTADO =====================
       ==================================================
@@ -70,7 +70,7 @@ $('.content-body').ready(async () => {
       })
     }
 
-    /* 
+    /*
       ==================================================
       ================= DATATABLE STATE =================
       ==================================================
@@ -79,7 +79,9 @@ $('.content-body').ready(async () => {
     $table.init({
       serverSide: true,
       ajax: (data, end) => {
-        socket.emit('/read/table', data, res => end(res))
+        socket.emit('/read/table', data, res => {
+          end(res)
+        })
       },
       pageLength: 10,
       select: {
@@ -116,7 +118,7 @@ $('.content-body').ready(async () => {
           className: 'dtr-description',
           orderable: false,
           targets: 3,
-          render: data => '<div class="scroll-y">' + data + '</div>'
+          render: data => '<div class="scroll-y">' + (data || '-') + '</div>'
         },
         {
           name: 'c.creacion',
@@ -144,7 +146,7 @@ $('.content-body').ready(async () => {
 
     $table.toggleColumn(0, permiso.ocultar);
 
-    /* 
+    /*
       ==================================================
       ====================== MENU ======================
       ==================================================
@@ -153,15 +155,15 @@ $('.content-body').ready(async () => {
     let toggleMenu = {
       now: 'table',
       nuevo() {
-        this.emptyEditar();
         this.now = 'nuevo';
+        this.emptyEditar();
         $tableNuevo.show('fast');
         tableEditar.style.display = 'none';
         sideContent.scrollTop = tableNuevo.offsetTop - sideContent.offsetTop - 100;
       },
       editar() {
-        this.emptyNuevo();
         this.now = 'editar';
+        this.emptyNuevo();
         $tableEditar.show('fast');
         tableNuevo.style.display = 'none';
         sideContent.scrollTop = tableEditar.offsetTop - sideContent.offsetTop - 100;
@@ -190,7 +192,7 @@ $('.content-body').ready(async () => {
       },
     }
 
-    /* 
+    /*
       ==================================================
       =================== CALENDARIO ===================
       ==================================================
@@ -220,7 +222,7 @@ $('.content-body').ready(async () => {
       calendar.setDate(fotmatDate);
     }
 
-    /* 
+    /*
       ==================================================
       =================== CLOSE MENU ===================
       ==================================================
@@ -228,7 +230,7 @@ $('.content-body').ready(async () => {
 
     tblclose.forEach(btn => btn.addEventListener('click', () => toggleMenu.close()));
 
-    /* 
+    /*
       ==================================================
       ================= PERMISO AGREGAR =================
       ==================================================
@@ -236,7 +238,7 @@ $('.content-body').ready(async () => {
 
     if (!permiso.agregar) tblNuevo.forEach(t => t.style.display = 'none');
 
-    /* 
+    /*
       ==================================================
       ================= UNIQUE AGREGAR =================
       ==================================================
@@ -251,12 +253,12 @@ $('.content-body').ready(async () => {
           if (res)
             return inputNuevoNombre.except = null;
           inputNuevoNombre.except = `El Nombre '${value}' ya existe.`;
-          formError(inputNuevoNombre.except, inputNuevoNombre.parentNode);
+          formError(inputNuevoNombre.except, inputNuevoNombre);
         }
       )
     })
 
-    /* 
+    /*
       ==================================================
       =================== OPEN NUEVO ===================
       ==================================================
@@ -264,7 +266,7 @@ $('.content-body').ready(async () => {
 
     tblNuevo.forEach(btn => btn.addEventListener('click', () => toggleMenu.nuevo()));
 
-    /* 
+    /*
       ==================================================
       =================== NUEVA DATA ===================
       ==================================================
@@ -272,12 +274,12 @@ $('.content-body').ready(async () => {
 
     btnNuevo.addEventListener('click', async () => {
       if (inputNuevoNombre.except)
-        return formError(inputNuevoNombre.except, inputNuevoNombre.parentNode);
+        return formError(inputNuevoNombre.except, inputNuevoNombre);
 
       let jsonData = {};
 
       let nombreValue = inputNuevoNombre.value;
-      if (!nombreValue) return formError(`Se require un nombre!.`, inputNuevoProducto.parentNode);
+      if (!nombreValue) return formError(`Se require un nombre!.`, inputNuevoProducto);
       jsonData.nombre = nombreValue;
 
       let descripcionValue = inputNuevoDescripcion.value;
@@ -297,7 +299,7 @@ $('.content-body').ready(async () => {
 
 
 
-    /* 
+    /*
       ==================================================
       ================= PERMISO EDITAR =================
       ==================================================
@@ -305,7 +307,7 @@ $('.content-body').ready(async () => {
 
     if (!permiso.editar) tblEditar.forEach(t => t.style.display = 'none');
 
-    /* 
+    /*
       ==================================================
       ================ VALID CHANGE DATA ================
       ==================================================
@@ -324,7 +326,7 @@ $('.content-body').ready(async () => {
     inputEditarNombre.addEventListener('input', validChangeData);
     inputEditarDescripcion.addEventListener('input', validChangeData);
 
-    /* 
+    /*
       ==================================================
       =================== OPEN EDITAR ===================
       ==================================================
@@ -361,7 +363,7 @@ $('.content-body').ready(async () => {
       socket.emit('/readId/table', id, setterEditar);
     }))
 
-    /* 
+    /*
       ==================================================
       ================== UNIQUE EDITAR ==================
       ==================================================
@@ -376,12 +378,12 @@ $('.content-body').ready(async () => {
           if (res)
             return inputEditarNombre.except = null;
           inputEditarNombre.except = `El Nombre '${value}' ya existe.`;
-          formError(inputEditarNombre.except, inputEditarNombre.parentNode);
+          formError(inputEditarNombre.except, inputEditarNombre);
         }
       )
     })
 
-    /* 
+    /*
       ==================================================
       =================== EDITAR DATA ===================
       ==================================================
@@ -389,14 +391,14 @@ $('.content-body').ready(async () => {
 
     btnEditar.addEventListener('click', async () => {
       if (inputEditarNombre.except)
-        return formError(inputEditarNombre.except, inputEditarNombre.parentNode);
+        return formError(inputEditarNombre.except, inputEditarNombre);
 
       let jsonData = {};
 
       jsonData.id = currentEditarId;
 
       let nombreValue = inputEditarNombre.value;
-      if (!nombreValue) return formError(`Se require un nombre!.`, inputEditarProducto.parentNode);
+      if (!nombreValue) return formError(`Se require un nombre!.`, inputEditarProducto);
       jsonData.nombre = nombreValue;
 
       let descripcionValue = inputEditarDescripcion.value;
@@ -413,7 +415,7 @@ $('.content-body').ready(async () => {
     })
 
 
-    /* 
+    /*
       ==================================================
       ================ PERMISO ELIMINAR ================
       ==================================================
@@ -421,7 +423,7 @@ $('.content-body').ready(async () => {
 
     if (!permiso.eliminar) tblEliminar.forEach(t => t.style.display = 'none');
 
-    /* 
+    /*
       ==================================================
       ================== ELIMINAR DATA ==================
       ==================================================
@@ -452,7 +454,7 @@ $('.content-body').ready(async () => {
         });
     }))
 
-    /* 
+    /*
       ==================================================
       ===================== SOCKET =====================
       ==================================================
@@ -467,16 +469,19 @@ $('.content-body').ready(async () => {
         defaultEditar(data);
         validChangeData()
       }
+      if (!$table.get('#' + data.id)) return;
       $table.datatable.draw();
     })
 
-    socket.on('/categorias/data/state', () => {
+    socket.on('/categorias/data/state', data => {
+      if (!$table.get('#' + data.id)) return;
       $table.datatable.draw();
     })
 
     socket.on('/categorias/data/deleteId', data => {
       if (currentEditarId == data.id)
         toggleMenu.close()
+      if (!$table.get('#' + data.id)) return;
       $table.datatable.draw();
     })
 

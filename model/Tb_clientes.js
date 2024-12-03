@@ -13,7 +13,7 @@ const columns = {
   estado: { name: 'estado', null: false, type: 'Integer', limit: 1 }
 }
 
-/** 
+/**
  * @typedef {{
  *   id: number,
  *   nombres: string,
@@ -38,13 +38,13 @@ class Tb_clientes extends Table {
       '/control/mantenimiento/clientes',
     )
   }
-  /* 
+  /*
     ====================================================================================================
     =============================================== Tabla ===============================================
     ====================================================================================================
   */
   /**
-   * @param {import('datatables.net-dt').AjaxData} option 
+   * @param {import('datatables.net-dt').AjaxData} option
    * @returns {Promise<COLUMNS_CLIENTES[]>}
    */
   readInParts(option) {
@@ -65,17 +65,17 @@ class Tb_clientes extends Table {
             c.num_documento,
             c.creacion,
             c.estado
-          FROM 
+          FROM
             tb_clientes AS c
-          INNER 
-            JOIN 
+          INNER
+            JOIN
               tipo_cliente AS tc
-            ON 
+            ON
               tc.id = c.tipo_cliente_id
-          INNER 
-            JOIN 
+          INNER
+            JOIN
               tipo_documento AS td
-            ON 
+            ON
               td.id = c.tipo_documento_id
         `, queryParams = [];
 
@@ -130,7 +130,7 @@ class Tb_clientes extends Table {
         `;
         queryParams.push(length, start);
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
 
         res(result);
       } catch (e) {
@@ -139,7 +139,7 @@ class Tb_clientes extends Table {
     })
   }
   /**
-   * @param {import('datatables.net-dt').AjaxData} option 
+   * @param {import('datatables.net-dt').AjaxData} option
    * @returns {Promise<number>}
    */
   readInPartsCount(option) {
@@ -150,17 +150,17 @@ class Tb_clientes extends Table {
         let query = `
           SELECT
             COUNT(c.id) AS cantidad
-          FROM 
+          FROM
             tb_clientes AS c
-          INNER 
-            JOIN 
+          INNER
+            JOIN
               tipo_cliente AS tc
-            ON 
+            ON
               tc.id = c.tipo_cliente_id
-          INNER 
-            JOIN 
+          INNER
+            JOIN
               tipo_documento AS td
-            ON 
+            ON
               td.id = c.tipo_documento_id
         `, queryParams = [];
 
@@ -185,7 +185,7 @@ class Tb_clientes extends Table {
           );
         }
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
 
         res(result[0].cantidad);
       } catch (e) {
@@ -193,8 +193,8 @@ class Tb_clientes extends Table {
       }
     })
   }
-  /** 
-   * @param {COLUMNS_CLIENTES} data 
+  /**
+   * @param {COLUMNS_CLIENTES} data
    * @returns {Promise<import('mysql').OkPacket>}
    */
   insert(data) {
@@ -217,7 +217,7 @@ class Tb_clientes extends Table {
         this.constraint('tipo_documento_id', tipo_documento_id);
         this.constraint('num_documento', num_documento, { unic: true });
 
-        let [result] = await this.app.model.poolValues(`
+        let [result] = await this.app.model.pool(`
           INSERT INTO
             tb_clientes (
               nombres,
@@ -268,46 +268,7 @@ class Tb_clientes extends Table {
     })
   }
   /**
-   * @returns {Promise<COLUMNS_CLIENTES[]>}
-   */
-  readAllJoin() {
-    return new Promise(async (res, rej) => {
-      try {
-        let [result] = await this.app.model.pool(`
-          SELECT
-            c.id,
-            c.nombres,
-            c.telefono,
-            c.direccion,
-            c.tipo_cliente_id,
-            tc.nombre AS tipo_cliente_nombre,
-            c.tipo_documento_id,
-            td.nombre AS tipo_documento_nombre,
-            c.num_documento,
-            c.creacion,
-            c.estado
-          FROM 
-            tb_clientes AS c
-          INNER 
-            JOIN 
-              tipo_cliente AS tc
-            ON 
-              tc.id = c.tipo_cliente_id
-          INNER 
-            JOIN 
-              tipo_documento AS td
-            ON 
-              td.id = c.tipo_documento_id
-        `);
-
-        res(result);
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
-  /** 
- * @param {number} id 
+ * @param {number} id
  * @returns {Promise<{
  *   id:number,
  *   nombres:string,
@@ -321,13 +282,13 @@ class Tb_clientes extends Table {
  *   estado:number
  * }>}
  */
-  readIdJoin(id) {
+  readJoinId(id) {
     return new Promise(async (res, rej) => {
       try {
 
         this.constraint('id', id);
 
-        let [result] = await this.app.model.poolValues(`
+        let [result] = await this.app.model.pool(`
           SELECT
             c.id,
             c.nombres,
@@ -340,17 +301,17 @@ class Tb_clientes extends Table {
             c.num_documento,
             c.creacion,
             c.estado
-          FROM 
+          FROM
             tb_clientes AS c
-          INNER 
-            JOIN 
+          INNER
+            JOIN
               tipo_cliente AS tc
-            ON 
+            ON
               tc.id = c.tipo_cliente_id
-          INNER 
-            JOIN 
+          INNER
+            JOIN
               tipo_documento AS td
-            ON 
+            ON
               td.id = c.tipo_documento_id
           WHERE
             c.id = ?
@@ -366,9 +327,9 @@ class Tb_clientes extends Table {
       }
     })
   }
-  /** 
-   * @param {number} id 
-   * @param {COLUMNS_CLIENTES} data 
+  /**
+   * @param {number} id
+   * @param {COLUMNS_CLIENTES} data
    * @returns {Promise<import('mysql').OkPacket>}
    */
   updateId(id, data) {
@@ -391,8 +352,8 @@ class Tb_clientes extends Table {
         this.constraint('tipo_documento_id', tipo_documento_id);
         this.constraint('num_documento', num_documento, { unic: id });
 
-        let [result] = await this.app.model.poolValues(`
-          UPDATE 
+        let [result] = await this.app.model.pool(`
+          UPDATE
             tb_clientes
           SET
             nombres = ?,
@@ -401,7 +362,7 @@ class Tb_clientes extends Table {
             tipo_cliente_id = ?,
             tipo_documento_id = ?,
             num_documento = ?
-          WHERE 
+          WHERE
             id = ?
         `, [
           nombres,
@@ -432,9 +393,9 @@ class Tb_clientes extends Table {
       }
     })
   }
-  /** 
-   * @param {number} id 
-   * @param {number} estado 
+  /**
+   * @param {number} id
+   * @param {number} estado
    * @returns {Promise<import('mysql').OkPacket>}
    */
   updateIdState(id, estado) {
@@ -443,12 +404,12 @@ class Tb_clientes extends Table {
         this.constraint('id', id);
         this.constraint('estado', estado);
 
-        let [result] = await this.app.model.poolValues(`
-            UPDATE 
+        let [result] = await this.app.model.pool(`
+            UPDATE
               tb_clientes
             SET
               estado = ?
-            WHERE 
+            WHERE
               id = ?
           `, [
           estado,
@@ -466,8 +427,8 @@ class Tb_clientes extends Table {
       }
     })
   }
-  /** 
-   * @param {number} id 
+  /**
+   * @param {number} id
    * @returns {Promise<import('mysql').OkPacket>}
    */
   deleteId(id) {
@@ -475,8 +436,8 @@ class Tb_clientes extends Table {
       try {
         this.constraint('id', id);
 
-        let [result] = await this.app.model.poolValues(`
-          DELETE FROM 
+        let [result] = await this.app.model.pool(`
+          DELETE FROM
             tb_clientes
           WHERE
             id = ?
@@ -495,13 +456,13 @@ class Tb_clientes extends Table {
       }
     })
   }
-  /* 
+  /*
     ====================================================================================================
     ============================================== Selector ==============================================
     ====================================================================================================
   */
   /**
-   * @param {SelectorRequest} option 
+   * @param {SelectorRequest} option
    * @returns {Promise<COLUMNS_CLIENTES[]>}
    */
   SelectorInParts(option) {
@@ -510,13 +471,13 @@ class Tb_clientes extends Table {
         let { order, start, length, search, byId, noInclude } = option;
 
         let query = `
-          SELECT 
+          SELECT
             id,
             nombres AS name
           FROM
             tb_clientes
           WHERE
-            estado = 1 
+            estado = 1
         `, queryParams = [];
 
         if (search) {
@@ -556,7 +517,7 @@ class Tb_clientes extends Table {
 
         queryParams.push(length, start);
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
 
         res(result);
       } catch (e) {
@@ -565,7 +526,7 @@ class Tb_clientes extends Table {
     })
   }
   /**
-   * @param {SelectorRequest} option 
+   * @param {SelectorRequest} option
    * @returns {Promise<number>}
    */
   SelectorInPartsCount(option) {
@@ -574,12 +535,12 @@ class Tb_clientes extends Table {
         let { search, noInclude } = option;
 
         let query = `
-          SELECT 
+          SELECT
             COUNT(id) AS cantidad
           FROM
             tipo_documento
           WHERE
-            estado = 1 
+            estado = 1
         `, queryParams = [];
 
         if (typeof search == 'string' && search != '') {
@@ -597,7 +558,7 @@ class Tb_clientes extends Table {
           queryParams.push(...noInclude);
         }
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
 
         res(result[0].cantidad);
       } catch (e) {
@@ -605,21 +566,21 @@ class Tb_clientes extends Table {
       }
     })
   }
-  /* 
+  /*
     ====================================================================================================
     ============================================== Cards ==============================================
     ====================================================================================================
   */
-  /** 
+  /**
    * @returns {Promise<string>}
    */
   cardLastCreation() {
     return new Promise(async (res, rej) => {
       try {
         let [result] = await this.app.model.pool(`
-          SELECT 
+          SELECT
             MAX(STR_TO_DATE(creacion, '%Y-%m-%d')) AS max_creacion
-          FROM 
+          FROM
             tb_clientes
           WHERE
             estado = 1
@@ -631,16 +592,16 @@ class Tb_clientes extends Table {
       }
     })
   }
-  /** 
+  /**
    * @returns {Promise<string>}
    */
   cardCount() {
     return new Promise(async (res, rej) => {
       try {
         let [result] = await this.app.model.pool(`
-            SELECT 
+            SELECT
               COALESCE(COUNT(id), 0) AS cantidad_accesos
-            FROM 
+            FROM
               tb_clientes
             WHERE
               estado = 1

@@ -7,7 +7,7 @@ module.exports = {
   name: 'pi',
   cooldown: 5 * 1000,
   onColldown: {},
-  description: `Permite controlar el estado del dispositivo. 
+  description: `Permite controlar el estado del dispositivo.
   Uso: */pi [accion?] [force?]*
   si no se especifica accion: retorna informacion del dispositivo.
   accion:

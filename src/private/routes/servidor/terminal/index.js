@@ -3,7 +3,7 @@ $('.content-body').ready(async () => {
   let history = [];
   let position = -1;
 
-  /* 
+  /*
     ==================================================
     ======================= DOM =======================
     ==================================================
@@ -22,44 +22,47 @@ $('.content-body').ready(async () => {
 
   downloadBtn.addEventListener('click', _ => codeCmd.download(`${Date.now()}.text`));
 
-  /* 
+  /*
     ==================================================
     ====================== INIT ======================
     ==================================================
   */
 
+
+  /** @typedef {{cmd:string, code:number, killed:boolean, signal}} ExecException */
+  /** @returns {Promise<{path:string, result:string, errCmd:string, execException: ExecException }>} */
+  let queryCmd = (path = '', command = '') => new Promise(res => {
+    socket.emit('/query/cmd', path, command, (err, result) => {
+      if (err)
+        alarm.error(err);
+      res(result);
+    });
+  })
+
   let Clear = async _ => {
     codeCommand.disabled = true;
 
     codeCmd.addEnd(`
- ______   ______   ______   __   __   ______   ______       ______  __    
-/\\  __ \\ /\\  == \\ /\\  __ \\ /\\ "-.\\ \\ /\\  ___\\ /\\  ___\\     /\\  == \\/\\ \\   
-\\ \\ \\/\\ \\\\ \\  __< \\ \\  __ \\\\ \\ \\-.  \\\\ \\ \\__ \\\\ \\  __\\     \\ \\  _-/\\ \\ \\  
- \\ \\_____\\\\ \\_\\ \\_\\\\ \\_\\ \\_\\\\ \\_\\\\"\\_\\\\ \\_____\\\\ \\_____\\    \\ \\_\\   \\ \\_\\ 
-  \\/_____/ \\/_/ /_/ \\/_/\\/_/ \\/_/ \\/_/ \\/_____/ \\/_____/     \\/_/    \\/_/ 
-    
+ ______   ______   ______   __   __   ______   ______       ______  __
+/\\  __ \\ /\\  == \\ /\\  __ \\ /\\ "-.\\ \\ /\\  ___\\ /\\  ___\\     /\\  == \\/\\ \\
+\\ \\ \\/\\ \\\\ \\  __< \\ \\  __ \\\\ \\ \\-.  \\\\ \\ \\__ \\\\ \\  __\\     \\ \\  _-/\\ \\ \\
+ \\ \\_____\\\\ \\_\\ \\_\\\\ \\_\\ \\_\\\\ \\_\\\\"\\_\\\\ \\_____\\\\ \\_____\\    \\ \\_\\   \\ \\_\\
+  \\/_____/ \\/_/ /_/ \\/_/\\/_/ \\/_/ \\/_/ \\/_____/ \\/_____/     \\/_/    \\/_/
+
     `, 'bright-orange', true);
 
-    let resQuery = await query.post.json.cookie("/api/cmd/query");
-
-    /** @type {{path:string, result:string, errCmd:string, execException: execException}} */
-    let { path, dir } = await resQuery.json();
+    let { path, dir } = await queryCmd();
 
     codePath.value = path;
     sugCmd.push(dir);
 
-    let resOs = await query.post.json.cookie("/api/cpu/readOs");
+    socket.emit('/os/cmd', OsData => {
+      let { distro, arch, hostname, kernel } = OsData;
+      codeCmd.addEnd(`${distro} - ${arch} | ${hostname} - ${kernel} \n\n`);
 
-    /** @type {{OsData: import('systeminformation').Systeminformation.OsData}} */
-    let { OsData } = await resOs.json();
-
-    let { distro, arch, hostname, kernel } = OsData;
-
-    codeCmd.addEnd(`${distro} - ${arch} | ${hostname} - ${kernel} \n\n`);
-
-    codeCommand.disabled = false;
-    
-    codeCommand.focus();
+      codeCommand.disabled = false;
+      codeCommand.focus();
+    });
   }
   clearBtn.addEventListener('click', _ => {
     codeCmd.empty();
@@ -67,7 +70,7 @@ $('.content-body').ready(async () => {
   })
   Clear();
 
-  /* 
+  /*
     ==================================================
     ====================== SEND ======================
     ==================================================
@@ -84,11 +87,7 @@ $('.content-body').ready(async () => {
     history.push(commandVal);
     position++;
 
-    let resQuery = await query.post.json.cookie("/api/cmd/query", { path: pathVal, command: commandVal })
-
-    /** @typedef {{cmd:string, code:number, killed:boolean, signal}} ExecException */
-    /** @type {{path:string, result:string, errCmd:string, execException: ExecException }} */
-    let { path, result, errCmd, execException, dir } = await resQuery.json();
+    let { path, result, errCmd, execException, dir } = await queryCmd(pathVal, commandVal);
 
     codeCommand.value = '';
     inputBash(codeCommand);
@@ -101,13 +100,13 @@ $('.content-body').ready(async () => {
     result && codeCmd.addEnd(result);
 
     codePath.value = path;
-    
+
     sugCmd.push(dir);
   }
 
   codeBtn.addEventListener('click', Enter)
 
-  /* 
+  /*
     ==================================================
     ====================== SEND ======================
     ==================================================

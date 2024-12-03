@@ -1,7 +1,7 @@
 $('.content-body').ready(async () => {
   try {
 
-    /* 
+    /*
       ==================================================
       ======================= DOM =======================
       ==================================================
@@ -21,7 +21,7 @@ $('.content-body').ready(async () => {
     let cardDiscCanvas = cardDisc.querySelector('canvas');
     let [cardtittleDisc, cardMarkDisc] = cardDisc.querySelectorAll('.card-tittle');
 
-    /* 
+    /*
       ==================================================
       ====================== CHART ======================
       ==================================================
@@ -59,25 +59,18 @@ $('.content-body').ready(async () => {
       });
     }
 
-    /* 
+    /*
       ==================================================
       ==================== DATA CPU ====================
       ==================================================
     */
 
-    query.post.cookie("/api/cpu/readCpu")
-      .then(async resReadCpu => {
+    socket.emit('/cpu/sytem', CpuData => {
+      let { manufacturer, brand } = CpuData;
+      cardTittleCpu.textContent = `Procesador: ${manufacturer} - ${brand}`;
+    })
 
-        /** @type {{CpuData: import('systeminformation').Systeminformation.CpuData}} */
-        let { CpuData } = await resReadCpu.json();
-
-        let { manufacturer, brand } = CpuData;
-
-        cardTittleCpu.textContent = `Procesador: ${manufacturer} - ${brand}`
-
-      });
-
-    /* 
+    /*
       ==================================================
       =================== DATA CORES ===================
       ==================================================
@@ -85,42 +78,36 @@ $('.content-body').ready(async () => {
 
     let cores = []
 
-    query.post.cookie("/api/cpu/readCore")
-      .then(async resReadCore => {
+    socket.emit('/core/sytem', CurrentLoadData => {
+      let container = document.createElement('div');
+      container.className = 'cards';
+      cardCoresBody.append(container);
 
-        /** @type {{CurrentLoadData: import('systeminformation').Systeminformation.CurrentLoadData}} */
-        let { CurrentLoadData } = await resReadCore.json();
+      let coresLength = CurrentLoadData.cpus.length;
 
-        let container = document.createElement('div');
-        container.className = 'cards';
-        cardCoresBody.append(container);
+      for (let c = 0; c < coresLength; c += 2) {
+        let col = document.createElement('div');
+        col.className = 'f-col';
 
+        for (let r = 0; r < 2; r++) {
+          let index = c + r;
+          let core = CurrentLoadData.cpus[index];
 
-        let coresLength = CurrentLoadData.cpus.length;
+          if (!core) return;
 
-        for (let c = 0; c < coresLength; c += 2) {
-          let col = document.createElement('div');
-          col.className = 'f-col';
+          let canva = document.createElement("canvas");
+          let chart = chartTime(canva, core.load, Math.floor(core.rawLoad), `NUCLEO ${index + 1}`);
 
-          for (let r = 0; r < 2; r++) {
-            let index = c + r;
-            let core = CurrentLoadData.cpus[index];
+          col.append(canva);
+          cores.push({ core, canva, chart });
 
-            if (!core) return;
-
-            let canva = document.createElement("canvas");
-            let chart = chartTime(canva, core.load, Math.floor(core.rawLoad), `NUCLEO ${index + 1}`);
-
-            col.append(canva);
-            cores.push({ core, canva, chart });
-
-          }
-
-          container.append(col);
         }
-      });
 
-    /* 
+        container.append(col);
+      }
+    })
+
+    /*
       ==================================================
       ==================== DATA RAM ====================
       ==================================================
@@ -128,58 +115,44 @@ $('.content-body').ready(async () => {
 
     let bytesToGb = (bit) => (bit / (1024 ** 3)).toFixed(2);
     let chartRam;
-    query.post.cookie("/api/cpu/readRam")
-      .then(async resReadRam => {
 
-        /** @type {{MemData: import('systeminformation').Systeminformation.MemData}} */
-        let { MemData } = await resReadRam.json();
+    socket.emit('/ram/sytem', MemData => {
+      let totalRam = bytesToGb(MemData.total);
+      let usedRam = bytesToGb(MemData.used);
+      chartRam = chartTime(cardRamCanvas, usedRam, totalRam, `RAM ${1}`)
 
-        let totalRam = bytesToGb(MemData.total);
-        let usedRam = bytesToGb(MemData.used);
-        chartRam = chartTime(cardRamCanvas, usedRam, totalRam, `RAM ${1}`)
+      cardtittleRam.textContent = `Ram: ${totalRam} Gb`;
+    })
 
-        cardtittleRam.textContent = `Ram: ${totalRam} Gb`;
-      });
-
-    /* 
+    /*
       ==================================================
       ==================== DATA DISK ====================
       ==================================================
     */
 
-    query.post.cookie("/api/cpu/readDisk")
-      .then(async resReadDisk => {
+    socket.emit('/disk/sytem', DiskLayoutData => {
+      let { interfaceType, type, name } = DiskLayoutData[0];
 
-        /** @type {{DiskLayoutData: import('systeminformation').Systeminformation.DiskLayoutData[]}} */
-        let { DiskLayoutData } = await resReadDisk.json();
+      cardMarkDisc.textContent = `${interfaceType} - ${type} : ${name}`;
+    })
 
-        let { interfaceType, type, name } = DiskLayoutData[0];
-
-        cardMarkDisc.textContent = `${interfaceType} - ${type} : ${name}`;
-
-      });
-
-    /* 
+    /*
       ==================================================
       ===================== DATA FS =====================
       ==================================================
     */
 
     let chartDisk;
-    query.post.cookie("/api/cpu/readFs")
-      .then(async resReadFs => {
 
-        /** @type {{FsSizeData: import('systeminformation').Systeminformation.FsSizeData[]}} */
-        let { FsSizeData } = await resReadFs.json();
+    socket.emit('/fs/sytem', FsSizeData => {
+      let useDisk = FsSizeData[0].use;
+      chartDisk = chartTime(cardDiscCanvas, useDisk, 100, `${FsSizeData[0].fs} ${1} &`)
 
-        let useDisk = FsSizeData[0].use;
-        chartDisk = chartTime(cardDiscCanvas, useDisk, 100, `${FsSizeData[0].fs} ${1} &`)
+      let totalDisk = bytesToGb(FsSizeData[0].size);
+      cardtittleDisc.textContent = `Disco: ${totalDisk} Gb`;
+    })
 
-        let totalDisk = bytesToGb(FsSizeData[0].size);
-        cardtittleDisc.textContent = `Disco: ${totalDisk} Gb`;
-      });
-
-    /* 
+    /*
       ==================================================
       ===================== APAGAR =====================
       ==================================================
@@ -200,14 +173,16 @@ $('.content-body').ready(async () => {
           color: 'rgb(255, 255, 255)',
         })
           .then(async (result) => {
-            if (!result.isConfirmed) return;
-
-            query.post.cookie("/api/cpu/powerOff");
+            if (result.isConfirmed)
+              socket.emit('/power/sytem', err => {
+                if (err)
+                  alarm.error(err);
+              })
           });
       })
     }
 
-    /* 
+    /*
       ==================================================
       ==================== REINICIAR ====================
       ==================================================
@@ -228,14 +203,16 @@ $('.content-body').ready(async () => {
           color: 'rgb(255, 255, 255)',
         })
           .then(async (result) => {
-            if (!result.isConfirmed) return;
-
-            query.post.cookie("/api/cpu/reset");
+            if (result.isConfirmed)
+              socket.emit('/reset/sytem', err => {
+                if (err)
+                  alarm.error(err);
+              })
           });
       })
     }
 
-    /* 
+    /*
       ==================================================
       ===================== SOCKET =====================
       ==================================================

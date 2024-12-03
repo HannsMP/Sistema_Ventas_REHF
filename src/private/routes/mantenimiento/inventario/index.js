@@ -1,7 +1,7 @@
 $('.content-body').ready(async () => {
   try {
 
-    /* 
+    /*
       ==================================================
       ================== VARIABLES DOM ==================
       ==================================================
@@ -65,7 +65,7 @@ $('.content-body').ready(async () => {
 
     let $table = new Tables('#table-main');
 
-    /* 
+    /*
       ==================================================
       ===================== ESTADO =====================
       ==================================================
@@ -90,7 +90,7 @@ $('.content-body').ready(async () => {
       })
     }
 
-    /* 
+    /*
       ==================================================
       ==================== DATATABLE ====================
       ==================================================
@@ -136,7 +136,7 @@ $('.content-body').ready(async () => {
           className: 'dtr-description',
           orderable: false,
           targets: 3,
-          render: data => '<div class="scroll-y">' + data + '</div>'
+          render: data => '<div class="scroll-y">' + (data || '-') + '</div>'
         },
         {
           name: 'c.nombre',
@@ -177,7 +177,7 @@ $('.content-body').ready(async () => {
 
     $table.toggleColumn(0, permiso.ocultar);
 
-    /* 
+    /*
       ==================================================
       ==================== SELECTOR ====================
       ==================================================
@@ -213,7 +213,7 @@ $('.content-body').ready(async () => {
       selectorOptionsCategorias.delete(data.id);
     })
 
-    /* 
+    /*
       ==================================================
       ================== SELECTOR UNIC ==================
       ==================================================
@@ -235,7 +235,7 @@ $('.content-body').ready(async () => {
       { justChange: true }
     );
 
-    /* 
+    /*
       ==================================================
       ===================== IMAGEN =====================
       ==================================================
@@ -244,7 +244,7 @@ $('.content-body').ready(async () => {
     let imagenNuevoUnic = new ImagenUnic(inputNuevoImagen);
     let imagenEditarUnic = new ImagenUnic(inputEditarImagen);
 
-    /* 
+    /*
       ==================================================
       ====================== MENU ======================
       ==================================================
@@ -253,15 +253,15 @@ $('.content-body').ready(async () => {
     let toggleMenu = {
       now: 'table',
       nuevo() {
-        this.emptyNuevo();
         this.now = 'nuevo';
+        this.emptyNuevo();
         $tableNuevo.show('fast');
         tableEditar.style.display = 'none';
         sideContent.scrollTop = tableNuevo.offsetTop - sideContent.offsetTop - 100;
       },
       editar() {
-        this.emptyEditar();
         this.now = 'editar';
+        this.emptyEditar();
         $tableEditar.show('fast');
         tableNuevo.style.display = 'none';
         sideContent.scrollTop = tableEditar.offsetTop - sideContent.offsetTop - 100;
@@ -295,7 +295,7 @@ $('.content-body').ready(async () => {
       },
     }
 
-    /* 
+    /*
       ==================================================
       =================== CALENDARIO ===================
       ==================================================
@@ -325,7 +325,7 @@ $('.content-body').ready(async () => {
       calendar.setDate(fotmatDate);
     }
 
-    /* 
+    /*
       ==================================================
       =================== CLOSE MENU ===================
       ==================================================
@@ -333,7 +333,7 @@ $('.content-body').ready(async () => {
 
     tblclose.forEach(btn => btn.addEventListener('click', () => toggleMenu.close()));
 
-    /* 
+    /*
       ==================================================
       ================= PERMISO AGREGAR =================
       ==================================================
@@ -341,7 +341,7 @@ $('.content-body').ready(async () => {
 
     if (!permiso.agregar) tblNuevo.forEach(t => t.style.display = 'none');
 
-    /* 
+    /*
       ==================================================
       ================== PREDICCIONES ==================
       ==================================================
@@ -350,7 +350,7 @@ $('.content-body').ready(async () => {
     inputNuevoPrecioCompra.addEventListener('input', () => {
       if (inputNuevoPrecioVenta.noPredict) {
         if (Number(inputNuevoPrecioVenta.value) < Number(inputNuevoPrecioCompra.value))
-          formError(`El precio de compra es mayor al de venta.`, inputNuevoPrecioCompra.parentNode);
+          formError(`El precio de compra es mayor al de venta.`, inputNuevoPrecioCompra);
         return;
       }
 
@@ -365,10 +365,10 @@ $('.content-body').ready(async () => {
     inputNuevoPrecioVenta.addEventListener('input', () => {
       inputNuevoPrecioVenta.noPredict = inputNuevoPrecioVenta.value != '';
       if (Number(inputNuevoPrecioVenta.value) < Number(inputNuevoPrecioCompra.value))
-        formError(`El precio de venta es menor al de compra.`, inputNuevoPrecioVenta.parentNode);
+        formError(`El precio de venta es menor al de compra.`, inputNuevoPrecioVenta);
     })
 
-    /* 
+    /*
       ==================================================
       =================== OPEN NUEVO ===================
       ==================================================
@@ -376,7 +376,7 @@ $('.content-body').ready(async () => {
 
     tblNuevo.forEach(btn => btn.addEventListener('click', () => toggleMenu.nuevo()));
 
-    /* 
+    /*
       ==================================================
       =================== NUEVA DATA ===================
       ==================================================
@@ -386,18 +386,18 @@ $('.content-body').ready(async () => {
       let formData = new FormData();
 
       let productoValue = inputNuevoProducto.value;
-      if (!productoValue) return formError(`Se require un nombre!.`, inputNuevoProducto.parentNode);
+      if (!productoValue) return formError(`Se require un nombre!.`, inputNuevoProducto);
       formData.append('producto', productoValue);
 
       let precioVentaValue = inputNuevoPrecioVenta.value;
-      if (!precioVentaValue) return formError(`Se require un precio de venta!.`, inputNuevoPrecioVenta.parentNode);
+      if (!precioVentaValue) return formError(`Se require un precio de venta!.`, inputNuevoPrecioVenta);
       formData.append('venta', Number(precioVentaValue));
 
       let descripcionValue = inputNuevoDescripcion.value;
       formData.append('descripcion', descripcionValue);
 
       let selectCategoria = selectorNuevoCategoria.selected[0];
-      if (!selectCategoria) return formError(`Selecciona una categoria`, inputNuevoSelectorCategoria.parentNode);
+      if (!selectCategoria) return formError(`Selecciona una categoria`, inputNuevoSelectorCategoria);
       formData.append('categoria_id', Number(selectCategoria.id));
 
       let file = imagenNuevoUnic.files[0]
@@ -411,15 +411,15 @@ $('.content-body').ready(async () => {
 
       if (avanzadoChecked) {
         let cantidadVentaValue = inputNuevoCantidad.value;
-        if (!cantidadVentaValue) return formError(`Se require una cantidad!.`, inputNuevoCantidad.parentNode);
+        if (!cantidadVentaValue) return formError(`Se require una cantidad!.`, inputNuevoCantidad);
         formData.append('cantidad', Number(cantidadVentaValue));
 
         let precioCompraValue = inputNuevoPrecioCompra.value;
-        if (!precioCompraValue) return formError(`Se require un precio de compra!.`, inputNuevoPrecioCompra.parentNode);
+        if (!precioCompraValue) return formError(`Se require un precio de compra!.`, inputNuevoPrecioCompra);
         formData.append('compra', Number(precioCompraValue));
 
         let selectProveedor = selectorNuevoProveedor.selected[0];
-        if (!selectProveedor) return formError(`Selecciona un proveedor`, inputNuevoSelectorProveedor.parentNode);
+        if (!selectProveedor) return formError(`Selecciona un proveedor`, inputNuevoSelectorProveedor);
         formData.append('proveedor_id', Number(selectProveedor.id));
       }
 
@@ -436,7 +436,7 @@ $('.content-body').ready(async () => {
     })
 
 
-    /* 
+    /*
       ==================================================
       ================= PERMISO EDITAR =================
       ==================================================
@@ -444,7 +444,7 @@ $('.content-body').ready(async () => {
 
     if (!permiso.editar) tblEditar.forEach(t => t.style.display = 'none');
 
-    /* 
+    /*
       ==================================================
       ================ VALID CHANGE DATA ================
       ==================================================
@@ -467,7 +467,7 @@ $('.content-body').ready(async () => {
     inputEditarDescripcion.addEventListener('input', validChangeData);
     selectorEditarCategoria.on('change', validChangeData)
 
-    /* 
+    /*
       ==================================================
       =================== OPEN EDITAR ===================
       ==================================================
@@ -518,7 +518,7 @@ $('.content-body').ready(async () => {
       socket.emit('/readId/table', id, setterEditar);
     }))
 
-    /* 
+    /*
       ==================================================
       =================== EDITAR DATA ===================
       ==================================================
@@ -530,18 +530,18 @@ $('.content-body').ready(async () => {
       formData.append('id', currentEditarId);
 
       let productoValue = inputEditarProducto.value;
-      if (!productoValue) return formError(`Se require un nombre!.`, inputEditarProducto.parentNode);
+      if (!productoValue) return formError(`Se require un nombre!.`, inputEditarProducto);
       formData.append('producto', productoValue);
 
       let precioVentaValue = inputEditarPrecioVenta.value;
-      if (!precioVentaValue) return formError(`Se require un precio de venta!.`, inputEditarPrecioVenta.parentNode);
+      if (!precioVentaValue) return formError(`Se require un precio de venta!.`, inputEditarPrecioVenta);
       formData.append('venta', Number(precioVentaValue));
 
       let descripcionValue = inputEditarDescripcion.value;
       formData.append('descripcion', descripcionValue);
 
       let selectCategoria = selectorEditarCategoria.selected[0];
-      if (!selectCategoria) return formError(`Selecciona una categoria`, inputNuevoSelectorCategoria.parentNode);
+      if (!selectCategoria) return formError(`Selecciona una categoria`, inputNuevoSelectorCategoria);
       formData.append('categoria_id', selectCategoria.id | selectorEditarCategoria.currentValue);
 
       let file = imagenEditarUnic.files[0];
@@ -562,7 +562,7 @@ $('.content-body').ready(async () => {
 
 
 
-    /* 
+    /*
       ==================================================
       ================ PERMISO ELIMINAR ================
       ==================================================
@@ -570,7 +570,7 @@ $('.content-body').ready(async () => {
 
     if (!permiso.eliminar) tblEliminar.forEach(t => t.style.display = 'none');
 
-    /* 
+    /*
     ==================================================
     ================== ELIMINAR DATA ==================
     ==================================================
@@ -601,7 +601,7 @@ $('.content-body').ready(async () => {
         });
     }))
 
-    /* 
+    /*
       ==================================================
       ===================== SOCKET =====================
       ==================================================
@@ -616,20 +616,24 @@ $('.content-body').ready(async () => {
         await defaultEditar(data);
         validChangeData()
       }
+      if (!$table.get('#' + data.id)) return;
       $table.datatable.draw();
     })
 
-    socket.on('/productos/data/updateIdBussines', () => {
+    socket.on('/productos/data/updateIdBussines', data => {
+      if (!$table.get('#' + data.id)) return;
       $table.datatable.draw();
     })
 
-    socket.on('/productos/data/state', () => {
+    socket.on('/productos/data/state', data => {
+      if (!$table.get('#' + data.id)) return;
       $table.datatable.draw();
     })
 
     socket.on('/productos/data/deleteId', data => {
       if (currentEditarId == data.id)
         toggleMenu.close()
+      if (!$table.get('#' + data.id)) return;
       $table.datatable.draw();
     })
 

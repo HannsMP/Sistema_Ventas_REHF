@@ -16,7 +16,7 @@ const columns = {
   estado: { name: 'estado', null: false, type: 'Integer', limit: 1 }
 }
 
-/** 
+/**
  * @typedef {{
  *   id: number,
  *   codigo: string,
@@ -48,13 +48,13 @@ class Tb_productos extends Table {
       '/control/mantenimiento/inventario',
     )
   }
-  /* 
+  /*
     ====================================================================================================
     =============================================== Tabla ===============================================
     ====================================================================================================
   */
   /**
-   * @param {import('datatables.net-dt').AjaxData} option 
+   * @param {import('datatables.net-dt').AjaxData} option
    * @returns {Promise<COLUMNS_PRODUCTOS[]>}
    */
   readInParts(option) {
@@ -63,7 +63,7 @@ class Tb_productos extends Table {
         let { order, start, length, search } = option;
 
         let query = `
-          SELECT 
+          SELECT
             p.id,
             p.codigo,
             p.producto,
@@ -78,15 +78,15 @@ class Tb_productos extends Table {
             p.estado
           FROM
             tb_productos AS p
-          LEFT 
-            JOIN 
+          LEFT
+            JOIN
               tb_categorias AS c
-            ON 
+            ON
               c.id = p.categoria_id
-          LEFT 
-            JOIN 
+          LEFT
+            JOIN
               tb_fotos AS f
-            ON 
+            ON
               f.id = p.foto_id
           WHERE
             p.estado in (1, 0)
@@ -138,7 +138,7 @@ class Tb_productos extends Table {
         `;
         queryParams.push(length, start);
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
 
         res(result);
       } catch (e) {
@@ -147,7 +147,7 @@ class Tb_productos extends Table {
     })
   }
   /**
-   * @param {import('datatables.net-dt').AjaxData} option 
+   * @param {import('datatables.net-dt').AjaxData} option
    * @returns {Promise<number>}
    */
   readInPartsCount(option) {
@@ -192,7 +192,7 @@ class Tb_productos extends Table {
           );
         }
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
 
         res(result[0].cantidad);
       } catch (e) {
@@ -200,8 +200,8 @@ class Tb_productos extends Table {
       }
     })
   }
-  /** 
-   * @param {COLUMNS_PRODUCTOS} data 
+  /**
+   * @param {COLUMNS_PRODUCTOS} data
    * @returns {Promise<import('mysql').OkPacket>}
    */
   insert(data) {
@@ -224,7 +224,7 @@ class Tb_productos extends Table {
         this.constraint('categoria_id', categoria_id);
         this.constraint('estado', estado);
 
-        let [result] = await this.app.model.poolValues(`
+        let [result] = await this.app.model.pool(`
           INSERT INTO
             tb_productos (
               codigo,
@@ -257,7 +257,7 @@ class Tb_productos extends Table {
 
         this.io.emitSocket(
           '/productos/data/insert',
-          _ => this.readIdJoin(result.insertId)
+          _ => this.readJoinId(result.insertId)
         )
 
         res(result)
@@ -266,9 +266,9 @@ class Tb_productos extends Table {
       }
     })
   }
-  /** 
-   * @param {number} id 
-   * @param {COLUMNS_PRODUCTOS} data 
+  /**
+   * @param {number} id
+   * @param {COLUMNS_PRODUCTOS} data
    * @returns {Promise<import('mysql').OkPacket>}
    */
   updateId(id, data) {
@@ -299,8 +299,8 @@ class Tb_productos extends Table {
 
         values.push(id);
 
-        let [result] = await this.app.model.poolValues(`
-          UPDATE 
+        let [result] = await this.app.model.pool(`
+          UPDATE
             tb_productos
           SET
             producto = ?,
@@ -320,7 +320,7 @@ class Tb_productos extends Table {
 
         this.io.emitSocket(
           '/productos/data/updateId',
-          _ => this.readIdJoin(id)
+          _ => this.readJoinId(id)
         )
 
         res(result)
@@ -329,12 +329,12 @@ class Tb_productos extends Table {
       }
     })
   }
-  /** 
-   * @param {number} id 
+  /**
+   * @param {number} id
    * @param {{
    *   stock_disponible?: number,
    *   venta?: number
-   * }} data 
+   * }} data
    * @returns {Promise<import('mysql').OkPacket>}
    */
   updateIdBussines(id, data) {
@@ -345,8 +345,9 @@ class Tb_productos extends Table {
           venta
         } = data;
 
+        if (!stock_disponible && !venta) return;
         let query = `
-          UPDATE 
+          UPDATE
             tb_productos
           SET
             ${stock_disponible ? `stock_disponible = stock_disponible ${stock_disponible > 0 ? '+' : '-'} ?` : ''}
@@ -371,7 +372,7 @@ class Tb_productos extends Table {
 
         queryParams.push(id);
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
 
         this.io.emitSocket(
           '/productos/data/updateIdBussines',
@@ -388,9 +389,9 @@ class Tb_productos extends Table {
       }
     })
   }
-  /** 
-   * @param {number} id 
-   * @param {number} estado 
+  /**
+   * @param {number} id
+   * @param {number} estado
    * @returns {Promise<import('mysql').OkPacket>}
    */
   updateIdState(id, estado) {
@@ -399,12 +400,15 @@ class Tb_productos extends Table {
         this.constraint('id', id);
         this.constraint('estado', estado);
 
-        let [result] = await this.app.model.poolValues(`
+        if (estado)
+          this.refreshStockId(id);
+
+        let [result] = await this.app.model.pool(`
           UPDATE
             tb_productos
           SET
             estado = ?
-          WHERE 
+          WHERE
               id = ?
           AND(
             estado = 1
@@ -418,7 +422,7 @@ class Tb_productos extends Table {
         this.io.emitSocket(
           '/productos/data/state',
           estado
-            ? _ => this.readIdJoin(id)
+            ? _ => this.readJoinId(id)
             : { id, estado }
         )
 
@@ -428,8 +432,8 @@ class Tb_productos extends Table {
       }
     })
   }
-  /** 
-   * @param {number} id 
+  /**
+   * @param {number} id
    * @returns {Promise<import('mysql').OkPacket>}
    */
   deleteId(id) {
@@ -437,7 +441,7 @@ class Tb_productos extends Table {
       try {
         this.constraint('id', id);
 
-        let [result] = await this.app.model.poolValues(`
+        let [result] = await this.app.model.pool(`
           DELETE FROM
             tb_productos
           WHERE
@@ -462,48 +466,7 @@ class Tb_productos extends Table {
     })
   }
   /**
-   * @returns {Promise<COLUMNS_PRODUCTOS[]>}
-   */
-  readAllJoin() {
-    return new Promise(async (res, rej) => {
-      try {
-        let [result] = await this.app.model.pool(`
-          SELECT 
-            p.id,
-            p.codigo,
-            p.producto,
-            p.descripcion,
-            p.venta,
-            p.categoria_id,
-            c.nombre AS categoria_nombre,
-            p.foto_id,
-            f.src AS foto_src,
-            p.creacion,
-            p.estado
-          FROM
-            tb_productos AS p
-          LEFT 
-            JOIN 
-              tb_categorias AS c
-            ON 
-              c.id = p.categoria_id
-          LEFT 
-            JOIN 
-              tb_fotos AS f
-            ON 
-              f.id = p.foto_id
-          WHERE
-            p.estado in (1, 0)
-        `);
-
-        res(result);
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
-  /** 
-   * @param {number} id 
+   * @param {number} id
    * @returns {Promise<{
    *   id:number,
    *   codigo:string,
@@ -518,14 +481,14 @@ class Tb_productos extends Table {
    *   estado:number
    * }>}
    */
-  readIdJoin(id) {
+  readJoinId(id) {
     return new Promise(async (res, rej) => {
       try {
 
         this.constraint('id', id);
 
-        let [result] = await this.app.model.poolValues(`
-          SELECT 
+        let [result] = await this.app.model.pool(`
+          SELECT
             p.id,
             p.codigo,
             p.producto,
@@ -540,15 +503,15 @@ class Tb_productos extends Table {
             p.estado
           FROM
             tb_productos AS p
-          LEFT 
-            JOIN 
+          LEFT
+            JOIN
               tb_categorias AS c
-            ON 
+            ON
               c.id = p.categoria_id
-          LEFT 
-            JOIN 
+          LEFT
+            JOIN
               tb_fotos AS f
-            ON 
+            ON
               f.id = p.foto_id
           WHERE
             p.id = ?
@@ -568,19 +531,19 @@ class Tb_productos extends Table {
       }
     })
   }
-  /* 
+  /*
     ====================================================================================================
     ============================================= Categoria =============================================
     ====================================================================================================
   */
   /**
-   * @param {CatalogueRequest} option 
+   * @param {CatalogueRequest} option
    * @returns {Promise<Item[]>}
    */
   catalogueInParts(option) {
     return new Promise(async (res, rej) => {
       try {
-        let { order, start, length, filter } = option;
+        let { order, visibility, start, length, filter } = option;
 
         let query = `
           SELECT
@@ -595,54 +558,55 @@ class Tb_productos extends Table {
             f.src AS src
           FROM
             tb_productos AS p
-          LEFT 
-            JOIN 
-              tb_categorias AS c 
-            ON 
+          LEFT
+            JOIN
+              tb_categorias AS c
+            ON
               c.id = p.categoria_id
-          LEFT 
-            JOIN 
-              tb_fotos AS f 
-            ON 
+          LEFT
+            JOIN
+              tb_fotos AS f
+            ON
               f.id = p.foto_id
           WHERE
             p.estado = 1
+            ${visibility ? '' : 'AND p.stock_disponible !=0'}
         `, queryParams = [];
 
         if (filter.code) {
-          query += ` 
-            AND p.codigo = ? 
+          query += `
+            AND p.codigo = ?
           `;
-          queryParams.push(filter.code);
+          queryParams.push(`${filter.code}%`);
         }
         else {
           if (filter.value) {
-            query += ` 
-              AND p.producto LIKE ? 
+            query += `
+              AND p.producto LIKE ?
             `;
             queryParams.push(`%${filter.value}%`);
           }
           if (typeof filter.rangeMin == 'number' && 0 <= filter.rangeMin) {
-            query += ` 
-              AND p.venta >= ? 
+            query += `
+              AND p.venta >= ?
             `;
             queryParams.push(filter.rangeMin);
           }
           if (typeof filter.rangeMax == 'number' && 0 <= filter.rangeMax) {
-            query += ` 
-              AND p.venta <= ? 
+            query += `
+              AND p.venta <= ?
             `;
             queryParams.push(filter.rangeMax);
           }
           if (filter.nameTags?.length) {
-            query += ` 
-              AND p.categoria_id IN (${filter.nameTags.map(() => '?').join(', ')}) 
+            query += `
+              AND p.categoria_id IN (${filter.nameTags.map(() => '?').join(', ')})
             `;
             queryParams.push(...filter.nameTags);
           }
         }
 
-        query += ` 
+        query += `
           ORDER BY
             p.producto ${order == 'asc' ? 'ASC' : 'DESC'}
         `;
@@ -653,7 +617,7 @@ class Tb_productos extends Table {
         `;
         queryParams.push(length, start);
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
         res(result);
       } catch (e) {
         rej(e);
@@ -662,7 +626,7 @@ class Tb_productos extends Table {
   }
 
   /**
-   * @param {CatalogueRequest} option 
+   * @param {CatalogueRequest} option
    * @returns {Promise<number>}
    */
   catalogueInPartsCount(option) {
@@ -671,17 +635,17 @@ class Tb_productos extends Table {
         let { filter } = option;
 
         let query = `
-          SELECT 
+          SELECT
             COUNT(p.id) AS cantidad
           FROM
             tb_productos AS p
           LEFT
-            JOIN 
+            JOIN
               tb_categorias AS c
             ON
               c.id = p.categoria_id
           LEFT
-            JOIN 
+            JOIN
               tb_fotos AS f
             ON
               f.id = p.foto_id
@@ -714,7 +678,7 @@ class Tb_productos extends Table {
           query += ` ORDER BY p.producto ${filter.order === 'asc' ? 'ASC' : 'DESC'} `;
         }
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
 
         res(result[0].cantidad);
       } catch (e) {
@@ -723,7 +687,7 @@ class Tb_productos extends Table {
     })
   }
   /**
-   * @param {number} categoria_id 
+   * @param {number} categoria_id
    * @returns {Promise<{id:number}[]>}
    */
   readCategoriaId(categoria_id) {
@@ -732,8 +696,8 @@ class Tb_productos extends Table {
 
         this.app.model.tb_categorias.constraint('id', categoria_id);
 
-        let [result] = await this.app.model.poolValues(`
-          SELECT 
+        let [result] = await this.app.model.pool(`
+          SELECT
             p.id
           FROM
             tb_productos AS p
@@ -749,9 +713,9 @@ class Tb_productos extends Table {
       }
     })
   }
-  /** 
-   * @param {number} categoria_id 
-   * @param {number} estado 
+  /**
+   * @param {number} categoria_id
+   * @param {number} estado
    * @returns {Promise<import('mysql').OkPacket>}
    */
   updateStateCategoriaId(categoria_id, estado) {
@@ -761,7 +725,7 @@ class Tb_productos extends Table {
         this.constraint('estado', estado);
 
         let [result] = estado
-          ? await this.app.model.poolValues(`
+          ? await this.app.model.pool(`
               UPDATE
                 tb_productos
               SET
@@ -782,11 +746,11 @@ class Tb_productos extends Table {
             `, [
             categoria_id
           ])
-          : await this.app.model.poolValues(`
+          : await this.app.model.pool(`
               UPDATE
                 tb_productos
               SET
-                estado = 
+                estado =
                 CASE
                   WHEN
                     estado = 1
@@ -822,23 +786,35 @@ class Tb_productos extends Table {
       }
     })
   }
-  /* 
+  /*
     ====================================================================================================
     ============================================ Transaccion ============================================
     ====================================================================================================
   */
-  /** 
-   * @returns {Promise<{venta:number}[]>}
+  /**
+   * @returns {Promise<{venta:number, compra_prom:number}[]>}
    */
-  readPriceUnic() {
+  readSalePriceMax() {
     return new Promise(async (res, rej) => {
       try {
 
         let [result] = await this.app.model.pool(`
-          SELECT 
-            MAX(venta) as venta
-          FROM 
-            tb_productos
+          SELECT
+          	AVG(c.compra) AS compra_prom,
+            p.venta
+          FROM
+            tb_productos AS p
+          RIGHT
+          	JOIN
+            	tb_compras AS c
+			      ON
+            	c.producto_id = p.id
+          WHERE
+            p.estado = 1
+          GROUP BY 
+            p.id
+          ORDER BY
+            compra_prom
         `);
 
         res(result);
@@ -847,18 +823,22 @@ class Tb_productos extends Table {
       }
     })
   }
-  /** 
-   * @param {number} id 
-   * @returns {Promise<{venta:number}>}
+  /**
+   * @param {number} id
+   * @returns {Promise<{
+   *   venta:number,
+   *   stock_disponible:number
+   * }>}
    */
   readPriceId(id) {
     return new Promise(async (res, rej) => {
       try {
         this.constraint('id', id);
 
-        let [result] = await this.app.model.poolValues(`
+        let [result] = await this.app.model.pool(`
           SELECT
-            venta
+            venta,
+            stock_disponible
           FROM
             tb_productos
           WHERE
@@ -873,39 +853,13 @@ class Tb_productos extends Table {
       }
     })
   }
-  /** 
-   * @param {number[]} ids 
-   * @returns {Promise<{venta:number}[]>}
-   */
-  readPriceIds(...ids) {
-    return new Promise(async (res, rej) => {
-      try {
-        ids.forEach(id => this.constraint('id', id));
-
-        let [result] = await this.app.model.poolValues(`
-          SELECT
-            venta
-          FROM
-            tb_productos
-          WHERE
-            id IN(${ids.map(_ => '?').join(',')})
-        `,
-          ids
-        );
-
-        res(result);
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
-  /* 
+  /*
     ====================================================================================================
     ============================================== Selector ==============================================
     ====================================================================================================
   */
   /**
-   * @param {SelectorRequest} option 
+   * @param {SelectorRequest} option
    * @returns {Promise<COLUMNS_PRODUCTOS[]>}
    */
   SelectorInParts(option) {
@@ -926,7 +880,7 @@ class Tb_productos extends Table {
             ON
               f.id = p.foto_id
           WHERE
-            p.estado = 1 
+            p.estado = 1
         `, queryParams = [];
 
         if (search) {
@@ -966,7 +920,7 @@ class Tb_productos extends Table {
 
         queryParams.push(length, start);
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
 
         res(result);
       } catch (e) {
@@ -975,7 +929,7 @@ class Tb_productos extends Table {
     })
   }
   /**
-   * @param {SelectorRequest} option 
+   * @param {SelectorRequest} option
    * @returns {Promise<number>}
    */
   SelectorInPartsCount(option) {
@@ -984,12 +938,12 @@ class Tb_productos extends Table {
         let { search, noInclude } = option;
 
         let query = `
-          SELECT 
+          SELECT
             COUNT(id) AS cantidad
           FROM
             tb_productos
           WHERE
-            estado = 1 
+            estado = 1
         `, queryParams = [];
 
         if (typeof search == 'string' && search != '') {
@@ -1007,7 +961,7 @@ class Tb_productos extends Table {
           queryParams.push(...noInclude);
         }
 
-        let [result] = await this.app.model.poolValues(query, queryParams);
+        let [result] = await this.app.model.pool(query, queryParams);
 
         res(result[0].cantidad);
       } catch (e) {
@@ -1015,12 +969,12 @@ class Tb_productos extends Table {
       }
     })
   }
-  /* 
+  /*
     ====================================================================================================
-    ============================================== codigo ==============================================
+    ============================================= Bussines =============================================
     ====================================================================================================
   */
-  /** 
+  /**
    * @returns {Promise<string>}
    */
   getCodigo() {
@@ -1031,7 +985,7 @@ class Tb_productos extends Table {
         while (existKey) {
           uniqueKey = this.id.generate();
 
-          let [result] = await this.app.model.poolValues(`
+          let [result] = await this.app.model.pool(`
             SELECT
               1
             FROM
@@ -1051,12 +1005,72 @@ class Tb_productos extends Table {
       }
     })
   }
-  /* 
+  refreshStock() {
+    return new Promise(async (res, rej) => {
+      try {
+        let [result] = await this.app.model.pool(`
+            UPDATE
+              tb_productos AS p
+            SET
+              p.stock_disponible = (
+                SELECT
+                  COALESCE(SUM(c.cantidad),0)
+                FROM
+                  tb_compras AS c
+                WHERE
+                  c.producto_id = p.id
+              ) - (
+                SELECT
+                  COALESCE(SUM(v.cantidad),0)
+                FROM
+                  tb_ventas AS v
+                WHERE
+                  v.producto_id = p.id
+              )
+          `)
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
+  refreshStockId(id) {
+    return new Promise(async (res, rej) => {
+      try {
+        let [result] = await this.app.model.pool(`
+            UPDATE
+              tb_productos AS p
+            SET
+              p.stock_disponible = (
+                SELECT
+                  COALESCE(SUM(c.cantidad),0)
+                FROM
+                  tb_compras AS c
+                WHERE
+                  c.producto_id = p.id
+              ) - (
+                SELECT
+                  COALESCE(SUM(v.cantidad),0)
+                FROM
+                  tb_ventas AS v
+                WHERE
+                  v.producto_id = p.id
+              )
+            WHERE
+              p.id = ?
+          `, [
+          id
+        ])
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
+  /*
     ====================================================================================================
     ============================================== Cards ==============================================
     ====================================================================================================
   */
-  /** 
+  /**
    * @returns {Promise<string>}
    */
   cardLastCreation() {
@@ -1075,7 +1089,7 @@ class Tb_productos extends Table {
       }
     })
   }
-  /** 
+  /**
    * @returns {Promise<string>}
    */
   cardCount() {
@@ -1094,12 +1108,12 @@ class Tb_productos extends Table {
       }
     })
   }
-  /* 
+  /*
     ====================================================================================================
     ============================================== Grafico ==============================================
     ====================================================================================================
   */
-  /** 
+  /**
    * @returns {Promise<{label:string[], data:number[]}>}
    */
   chartCountProducs() {
@@ -1109,9 +1123,9 @@ class Tb_productos extends Table {
           SELECT
             c.nombre AS categoria_nombre,
             COALESCE(AVG(p.venta), 0) AS promedio_precios
-          FROM 
+          FROM
             tb_productos AS p
-          LEFT JOIN 
+          LEFT JOIN
             tb_categorias AS c
             ON
               p.categoria_id = c.id

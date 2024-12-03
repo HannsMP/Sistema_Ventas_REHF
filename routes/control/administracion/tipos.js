@@ -4,19 +4,18 @@ const { resolve } = require('path');
 /** @typedef {import('../../../utils/SocketNode')} SocketNode */
 /** @typedef {Array.<(this: App, req: import('express').Request, res: import('express').Response, next: import('express').NextFunction)=>void>} routeArr */
 
-/** 
+/**
  * @type {{
- *   load:boolean, 
- *   route:string, 
- *   viewLayoutPath:string, 
- *   viewRenderPath:string, 
- *   viewErrorPath:string, 
- *   use: routeArr, 
- *   get: routeArr, 
+ *   load:boolean,
+ *   route:string,
+ *   viewLayoutPath:string,
+ *   viewRenderPath:string,
+ *   viewErrorPath:string,
+ *   use: routeArr,
+ *   get: routeArr,
  *   post: routeArr,
- *   nodeOption: {last:boolean, tagsName:boolean, collector:boolean},
- *   nodeRoute: (this: App, node: SocketNode)=>void
- * }} 
+ *   nodeRoute: {last:boolean, tagsName:boolean, collector:boolean} | (this: App, node: SocketNode)=>void
+ * }}
 */
 module.exports = {
   load: true,
@@ -38,10 +37,10 @@ module.exports = {
       res.render(module.exports.viewRenderPath, { session, userLayout });
     },
   ],
-  nodeOption: {
-    last: true,
-  },
   nodeRoute: function (node) {
+    node.setOption({
+      last: true
+    })
 
     /** @param {import('datatables.net-dt').AjaxData} tableReq @param {(res:import('datatables.net-dt').AjaxResponse)=>void} res */
     let readTipoMetodoPago = async (tableReq, res) => {
@@ -149,9 +148,9 @@ module.exports = {
       }
 
       try {
-        let data = this.model.tipo_rol.readInParts(tableReq);
-        let recordsFiltered = this.model.tipo_rol.readInPartsCount(tableReq);
-        let recordsTotal = this.model.tipo_rol.readCount();
+        let data = this.model.tipo_roles.readInParts(tableReq);
+        let recordsFiltered = this.model.tipo_roles.readInPartsCount(tableReq);
+        let recordsTotal = this.model.tipo_roles.readCount();
 
         result.data = await data;
         result.recordsFiltered = await recordsFiltered;

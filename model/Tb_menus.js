@@ -7,7 +7,7 @@ const columns = {
   ruta: { name: 'ruta', null: false, type: 'String', limit: 100, unic: true }
 }
 
-/** 
+/**
  * @typedef {{
 *   id: number,
 *   principal: string,
@@ -21,14 +21,115 @@ class Tb_menus extends Table {
     super(name);
     this.columns = columns;
     this.app = app;
+
+    this.io = app.socket.node.selectNode('/control/administracion/acceso', true);
   }
-  /* 
+  /*
     ====================================================================================================
     =============================================== Tabla ===============================================
     ====================================================================================================
   */
-  /** 
-   * @param {COLUMNS_MENUS} data 
+  /**
+   * @param {import('datatables.net-dt').AjaxData} option
+   * @returns {Promise<COLUMNS_ACCESOS[]>}
+   */
+  readInParts(option) {
+    return new Promise(async (res, rej) => {
+      try {
+        let { order, start, length, search } = option;
+
+        let query = `
+          SELECT
+            *
+          FROM
+            tb_menus
+        `, queryParams = [];
+
+        if (search.value) {
+          query += `
+            WHERE
+              ruta LIKE ?
+              OR principal LIKE ?
+          `;
+
+          queryParams.push(
+            `%${search.value}%`,
+            `%${search.value}%`
+          );
+        }
+
+        let columnsSet = new Set([
+          'ruta',
+          'principal'
+        ]);
+
+        order = order.filter(d => columnsSet.has(d.name));
+
+        if (order?.length) {
+          query += `
+            ORDER BY
+          `
+          order.forEach(({ dir, name }, index) => {
+            query += `
+              ${name} ${dir == 'asc' ? 'ASC' : 'DESC'}`;
+
+            if (index < order.length - 1)
+              query += ', ';
+          })
+        }
+
+        query += `
+          LIMIT ? OFFSET ?
+        `;
+        queryParams.push(length, start);
+
+        let [result] = await this.app.model.pool(query, queryParams);
+
+        res(result);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
+  /**
+   * @param {import('datatables.net-dt').AjaxData} option
+   * @returns {Promise<number>}
+   */
+  readInPartsCount(option) {
+    return new Promise(async (res, rej) => {
+      try {
+        let { search } = option;
+
+        let query = `
+          SELECT
+            COUNT(id) AS cantidad
+          FROM
+            tb_menus
+        `, queryParams = [];
+
+        if (search.value) {
+          query += `
+              WHERE
+                ruta LIKE ?
+                OR principal LIKE ?
+            `;
+
+          queryParams.push(
+            `%${search.value}%`,
+            `%${search.value}%`
+          );
+        }
+
+        let [result] = await this.app.model.pool(query, queryParams);
+
+        res(result[0].cantidad);
+      } catch (e) {
+        rej(e);
+      }
+    })
+  }
+  /**
+   * @param {COLUMNS_MENUS} data
    * @returns {Promise<import('mysql').OkPacket>}
    */
   insert(data) {
@@ -42,7 +143,7 @@ class Tb_menus extends Table {
         this.constraint('principal', principal);
         this.constraint('ruta', ruta, { unic: true });
 
-        let [result] = await this.app.model.poolValues(`
+        let [result] = await this.app.model.pool(`
           INSERT INTO
             tb_menus (
               principal,
@@ -57,6 +158,15 @@ class Tb_menus extends Table {
           ruta
         ]);
 
+        this.io.sockets.emit(
+          '/menu/data/insert',
+          {
+            id: result.insertId,
+            principal,
+            ruta
+          }
+        )
+
         res(result);
       } catch (e) {
         rej(e);
@@ -64,11 +174,11 @@ class Tb_menus extends Table {
     })
   }
   /**
-   * @param {number} id 
+   * @param {number} id
    * @param {{
    *   principal: string,
    *   ruta: string
-   * }} data 
+   * }} data
    * @returns {Promise<import('mysql').OkPacket>}
    */
   updateId(id, data) {
@@ -85,19 +195,28 @@ class Tb_menus extends Table {
         this.constraint('principal', principal);
         this.constraint('ruta', ruta, { unic: id });
 
-        let [result] = await this.app.model.poolValues(`
-           UPDATE 
+        let [result] = await this.app.model.pool(`
+           UPDATE
              tb_menus
            SET
              principal = ?,
              ruta = ?
-           WHERE 
+           WHERE
              id = ?;
          `, [
           principal,
           ruta,
           id
         ]);
+
+        this.io.sockets.emit(
+          '/menu/data/updateId',
+          {
+            id,
+            principal,
+            ruta
+          }
+        )
 
         res(result);
       } catch (e) {
@@ -106,7 +225,7 @@ class Tb_menus extends Table {
     })
   }
   /**
-   * @param {number} id 
+   * @param {number} id
    * @returns {Promise<import('mysql').OkPacket>}
    */
   deleteId(id) {
@@ -114,10 +233,10 @@ class Tb_menus extends Table {
       try {
         this.constraint('id', id);
 
-        let [result] = await this.app.model.poolValues(`
-          DELETE FROM 
+        let [result] = await this.app.model.pool(`
+          DELETE FROM
             tb_menus
-          WHERE 
+          WHERE
             id = ?
         `, [
           id
@@ -129,44 +248,20 @@ class Tb_menus extends Table {
       }
     })
   }
-  /* 
-    ====================================================================================================
-    ============================================== Unicos ==============================================
-    ====================================================================================================
-  */
-  /** 
-   * @returns {Promise<COLUMNS_MENUS[]>}
-   */
-  readAllUnique() {
-    return new Promise(async (res, rej) => {
-      try {
-        let [result] = await this.app.model.pool(`
-          SELECT 
-            ruta
-          FROM
-            tb_menus
-        `)
-
-        res(result);
-      } catch (e) {
-        rej(e);
-      }
-    })
-  }
-  /* 
+  /*
     ====================================================================================================
     ============================================== Cards ==============================================
     ====================================================================================================
   */
-  /** 
+  /**
    * @returns {Promise<string>} */
   cardCount() {
     return new Promise(async (res, rej) => {
       try {
         let [result] = await this.app.model.pool(`
-            SELECT 
+            SELECT
               COALESCE(COUNT(id), 0) AS cantidad_menus
-            FROM 
+            FROM
               tb_menus
           `)
 

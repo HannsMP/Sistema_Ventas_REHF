@@ -1,10 +1,10 @@
 class FileUnic {
-  /** 
+  /**
    * @type {EventListener<{
    *   upload: {file:File},
    *   remove: {file:File},
    *   empty: undefined
-   * }>} 
+   * }>}
    */
   ev = new EventListener
   files = [];
@@ -82,12 +82,12 @@ class FileUnic {
 }
 
 class FileMulti {
-  /** 
+  /**
    * @type {EventListener<{
    *   upload: {file:File},
    *   remove: {file:File},
    *   empty: undefined
-   * }>} 
+   * }>}
    */
   ev = new EventListener
   files = [];

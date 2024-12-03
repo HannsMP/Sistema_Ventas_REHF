@@ -3,10 +3,10 @@ class Event {
   /** @type {{[event: string]: {once:boolean, persistence:boolean, callback:(...data:any[])=>void}[]}} */
   #data = {};
 
-  /** 
+  /**
    * @template O
    * @param {O | keyof E} name
-   * @param {E[O]} [data] 
+   * @param {E[O]} [data]
    */
   emit(name, data) {
     if (typeof name != 'string')
@@ -20,11 +20,11 @@ class Event {
     }
   }
 
-  /** 
+  /**
    * @template O
    * @param {O | keyof E} name
-   * @param {(data: E[O]) => void} [callback] 
-   * @param {{once: boolean, persistence: boolean}} [option]  
+   * @param {(data: E[O]) => void} [callback]
+   * @param {{once: boolean, persistence: boolean}} [option]
    */
   on(name, callback, option = { once: false, persistence: false }) {
     if (typeof name != 'string')
@@ -38,10 +38,10 @@ class Event {
     this.#data[name].push({ callback, once: option.once, persistence: option.persistence });
   }
 
-  /** 
+  /**
    * @template O
    * @param {O | keyof E} name
-   * @param {(data: E[O]) => void} eventFun 
+   * @param {(data: E[O]) => void} eventFun
    */
   off(name, eventFun) {
     if (typeof name != 'string')
@@ -55,8 +55,8 @@ class Event {
     }
   }
 
-  /** 
-   * @param {keyof E} name  
+  /**
+   * @param {keyof E} name
    */
   empty(name) {
     if (typeof name != 'string')

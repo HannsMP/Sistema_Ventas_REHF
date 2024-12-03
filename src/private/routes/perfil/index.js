@@ -1,7 +1,7 @@
 $('.content-body').ready(() => {
   try {
 
-    /* 
+    /*
       ==================================================
       ===================== IMAGEN =====================
       ==================================================
@@ -17,7 +17,7 @@ $('.content-body').ready(() => {
       let formData = new FormData();
 
       let file = editarImagenUnic.files[0];
-      if (!file) return formError('cambia de imagen para guardar', inputFoto.parentNode);
+      if (!file) return formError('cambia de imagen para guardar', inputFoto);
 
       formData.append('foto_file', file);
 
@@ -33,7 +33,7 @@ $('.content-body').ready(() => {
 
     })
 
-    /* 
+    /*
       ==================================================
       ===================== CHANGE =====================
       ==================================================
@@ -64,17 +64,17 @@ $('.content-body').ready(() => {
       if (valueNew == valueRepite)
         return passwordRepite.except = null;
       passwordRepite.except = 'La nueva contraseña es diferente.';
-      formError(passwordRepite.except, passwordRepite.parentNode)
+      formError(passwordRepite.except, passwordRepite)
     }))
 
     btnCambio.addEventListener('click', async () => {
       let jsonData = {};
 
       let valueCurrent = jsonData.passwordCurrent = passwordCurrent.value;
-      if (!valueCurrent) return formError(`Se requiere la actual contraseña.`, passwordCurrent.parentNode);
+      if (!valueCurrent) return formError(`Se requiere la actual contraseña.`, passwordCurrent);
       let valueRepite = jsonData.passwordNew = passwordRepite.value;
-      if (!valueRepite) return formError(`Se requiere la nueva contraseña.`, passwordRepite.parentNode);
-      if (valueRepite.except) return formError(valueRepite.except, valueRepite.parentNode);
+      if (!valueRepite) return formError(`Se requiere la nueva contraseña.`, passwordRepite);
+      if (valueRepite.except) return formError(valueRepite.except, valueRepite);
 
       let resChangePasword = await query.post.json.cookie("/api/usuarios/profile/updatePassword", jsonData);
 
@@ -87,7 +87,7 @@ $('.content-body').ready(() => {
       alarm.success(`Contraseña Actualizada`);
     })
 
-    /* 
+    /*
       ==================================================
       ===================== SOCKET =====================
       ==================================================
