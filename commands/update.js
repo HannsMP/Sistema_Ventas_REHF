@@ -16,8 +16,15 @@ module.exports = {
     let msgCurrent = await msg.reply('Iniciando actualizacion remota...');
     complete();
 
-    await this.system.cmd('(cd /home/eliux/servidor && ping -c 1 google.com && git fetch origin && git reset --hard origin/main) >> /home/eliux/logs/server_cron_log.log 2>&1');
-    await this.system.reboot();
+    let timeoutId = setTimeout(() => {
+      this.system.reboot();
+    }, 30 * 1000);
+
+    try {
+      await this.system.cmd('(cd /home/eliux/servidor && git fetch origin && git reset --hard origin/main) >> /home/eliux/logs/server_cron_log.log 2>&1');
+    } catch (e) {
+      clearTimeout(timeoutId);
+    }
 
     setTimeout(() => {
       msgCurrent.edit('⚠ El proceso fallo.');

@@ -219,12 +219,13 @@ $('.content-body').ready(async () => {
       }
     });
 
-    socket.emit('/stop/bot', id, (err, labelRxC, dataRxC) => {
+    socket.emit('/commands/bot', (err, labelRxC, dataRxC) => {
       if (err)
         return alarm.error(err);
 
       chartRxC.data.labels = labelRxC;
       chartRxC.data.datasets[0].data = dataRxC;
+      chartRxC.update();
     })
 
     /*

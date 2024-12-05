@@ -214,7 +214,9 @@ class Tb_productos extends Table {
           foto_id,
           venta,
           categoria_id,
-          estado = 1
+          estado = 1,
+
+          stock_disponible = 0
         } = data;
 
         this.constraint('codigo', codigo);
@@ -223,6 +225,7 @@ class Tb_productos extends Table {
         this.constraint('venta', venta);
         this.constraint('categoria_id', categoria_id);
         this.constraint('estado', estado);
+        this.constraint('stock_disponible', stock_disponible);
 
         let [result] = await this.app.model.pool(`
           INSERT INTO
@@ -233,6 +236,7 @@ class Tb_productos extends Table {
               venta,
               categoria_id,
               estado,
+              stock_disponible,
               foto_id
             )
           VALUES (
@@ -252,6 +256,7 @@ class Tb_productos extends Table {
           venta.toFixed(2),
           categoria_id,
           estado,
+          stock_disponible,
           foto_id || 2
         ]);
 
@@ -279,6 +284,7 @@ class Tb_productos extends Table {
           descripcion,
           categoria_id,
           venta,
+
           foto_id
         } = data;
 

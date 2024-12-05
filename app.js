@@ -181,8 +181,8 @@ class App {
     else
       this.logError.writeStart(e.message, e.stack);
 
-    // Internal Server Error
-    if (e?.clienteMessage) res.status(500).json({ err: e.clienteMessage })
+    if (e?.clienteMessage)
+      res.status(500).json({ err: e.clienteMessage });
   }
 
   listen() {

@@ -1,6 +1,6 @@
 {
   "name": "rehf",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "Sistema de ventas como parte de un proyecto personal. Tanto el servidor, la DB y los recursor del servidor estaran alojado en una orange pi de manera local.",
   "main": "index.js",
   "type": "commonjs",

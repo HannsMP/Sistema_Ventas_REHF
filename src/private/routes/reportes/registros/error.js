@@ -26,7 +26,7 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    socket.emit('/read/success', (text, stat, exist) => {
+    socket.emit('/read/error', (text, stat, exist) => {
       let code = new Code('.log', boxError, text);
       downloadError.addEventListener('click', () => code.download());
       sizeError.textContent = bytesToKb(stat.size);
@@ -38,7 +38,7 @@ $('.content-body').ready(async () => {
       */
 
         clearError.addEventListener('click', async _ => {
-        socket.emit('/clear/success', (err) => {
+        socket.emit('/clear/error', (err) => {
           if (err)
             return alarm.error(err);
 
@@ -47,7 +47,7 @@ $('.content-body').ready(async () => {
         })
       })
 
-      socket.on('/logger/success/writeStart', data => {
+      socket.on('/logger/error/writeStart', data => {
         code.addStart(data.log);
         sizeError.textContent = bytesToKb(data.stat.size);
       })

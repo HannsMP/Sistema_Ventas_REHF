@@ -42,7 +42,7 @@ module.exports = {
     /** @param {number} myId @param {()=>void} res */
     let cardProductos = async (myId, res) => {
       try {
-        let permiso = await this.model.tb_permisos.userPathDelete(myId, '/control/mantenimiento/categorias');
+        let permiso = await this.model.tb_permisos.userPathView(myId, '/control/mantenimiento/categorias');
         if (!permiso) return;
 
         let max_creacion = await this.model.tb_productos.cardLastCreation();
@@ -63,7 +63,7 @@ module.exports = {
     /** @param {number} myId @param {()=>void} res */
     let cardCategorias = async (myId, res) => {
       try {
-        let permiso = await this.model.tb_permisos.userPathDelete(myId, '/control/mantenimiento/inventario');
+        let permiso = await this.model.tb_permisos.userPathView(myId, '/control/mantenimiento/inventario');
         if (!permiso) return;
 
         let max_creacion = await this.model.tb_categorias.cardLastCreation();
@@ -84,7 +84,7 @@ module.exports = {
     /** @param {number} myId @param {()=>void} res */
     let cardClientes = async (myId, res) => {
       try {
-        let permiso = await this.model.tb_permisos.userPathDelete(myId, '/control/mantenimiento/clientes');
+        let permiso = await this.model.tb_permisos.userPathView(myId, '/control/mantenimiento/clientes');
         if (!permiso) return;
 
         let max_creacion = await this.model.tb_clientes.cardLastCreation();
@@ -106,7 +106,7 @@ module.exports = {
     /** @param {number} myId @param {()=>void} res */
     let cardProveedores = async (myId, res) => {
       try {
-        let permiso = await this.model.tb_permisos.userPathDelete(myId, '/control/mantenimiento/proveedores');
+        let permiso = await this.model.tb_permisos.userPathView(myId, '/control/mantenimiento/proveedores');
         if (!permiso) return;
 
         let max_creacion = await this.model.tb_proveedores.cardLastCreation();

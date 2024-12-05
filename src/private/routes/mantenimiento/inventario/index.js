@@ -241,8 +241,12 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    let imagenNuevoUnic = new ImagenUnic(inputNuevoImagen);
-    let imagenEditarUnic = new ImagenUnic(inputEditarImagen);
+    let imagenNuevoUnic = new ImageManager(inputNuevoImagen, {
+      autohide: true
+    });
+    let imagenEditarUnic = new ImageManager(inputEditarImagen, {
+      justChange: true
+    });
 
     /*
       ==================================================
@@ -383,58 +387,56 @@ $('.content-body').ready(async () => {
     */
 
     btnNuevo.addEventListener('click', async () => {
-      let formData = new FormData();
+      let jsonData = {};
 
       let productoValue = inputNuevoProducto.value;
       if (!productoValue) return formError(`Se require un nombre!.`, inputNuevoProducto);
-      formData.append('producto', productoValue);
+      jsonData.producto = productoValue;
 
       let precioVentaValue = inputNuevoPrecioVenta.value;
       if (!precioVentaValue) return formError(`Se require un precio de venta!.`, inputNuevoPrecioVenta);
-      formData.append('venta', Number(precioVentaValue));
+      jsonData.venta = Number(precioVentaValue);
 
       let descripcionValue = inputNuevoDescripcion.value;
-      formData.append('descripcion', descripcionValue);
+      jsonData.descripcion = descripcionValue;
 
       let selectCategoria = selectorNuevoCategoria.selected[0];
       if (!selectCategoria) return formError(`Selecciona una categoria`, inputNuevoSelectorCategoria);
-      formData.append('categoria_id', Number(selectCategoria.id));
-
-      let file = imagenNuevoUnic.files[0]
-      if (file) formData.append('foto_file', file);
+      jsonData.categoria_id = Number(selectCategoria.id);
 
       let estado = checkboxNuevoEstado.checked ? 1 : 0;
-      formData.append('estado', estado);
+      jsonData.estado = estado;
 
       let avanzadoChecked = checkboxNuevoAvanzado.checked
-      formData.append('avanzado', avanzadoChecked);
+      jsonData.avanzado = !!avanzadoChecked;
 
       if (avanzadoChecked) {
         let cantidadVentaValue = inputNuevoCantidad.value;
         if (!cantidadVentaValue) return formError(`Se require una cantidad!.`, inputNuevoCantidad);
-        formData.append('cantidad', Number(cantidadVentaValue));
+        jsonData.cantidad = Number(cantidadVentaValue);
 
         let precioCompraValue = inputNuevoPrecioCompra.value;
         if (!precioCompraValue) return formError(`Se require un precio de compra!.`, inputNuevoPrecioCompra);
-        formData.append('compra', Number(precioCompraValue));
+        jsonData.compra = Number(precioCompraValue);
 
         let selectProveedor = selectorNuevoProveedor.selected[0];
         if (!selectProveedor) return formError(`Selecciona un proveedor`, inputNuevoSelectorProveedor);
-        formData.append('proveedor_id', Number(selectProveedor.id));
+        jsonData.proveedor_id = Number(selectProveedor.id);
       }
 
-      let resUsuarios = await query.post.form.cookie("/api/productos/table/insert", formData);
+      let file = imagenNuevoUnic.files[0];
+      let dataBuffer = file && file.toBuffer
+        ? await file?.toBuffer()
+        : null;
 
-      /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-      let { err } = await resUsuarios.json();
+      socket.emit('/insert/table', dataBuffer, jsonData, err => {
+        if (err)
+          return alarm.error(err);
 
-      if (err)
-        return alarm.warn('No se pudo agregar')
-
-      alarm.success(`Fila Agregada`);
-      toggleMenu.close();
+        alarm.success(`Fila Agregada`);
+        toggleMenu.close();
+      })
     })
-
 
     /*
       ==================================================
@@ -456,6 +458,7 @@ $('.content-body').ready(async () => {
       valid ||= Number(inputEditarPrecioVenta.value) != Number(inputEditarPrecioVenta.currentValue);
       valid ||= inputEditarDescripcion.value != inputEditarDescripcion.currentValue;
       valid ||= selectorEditarCategoria?.selected[0]?.id != selectorEditarCategoria.currentValue;
+      valid ||= imagenEditarUnic.files[0];
 
       valid
         ? btnEditar.classList.remove('disabled')
@@ -466,7 +469,7 @@ $('.content-body').ready(async () => {
     inputEditarPrecioVenta.addEventListener('input', validChangeData);
     inputEditarDescripcion.addEventListener('input', validChangeData);
     selectorEditarCategoria.on('change', validChangeData)
-
+    imagenEditarUnic.ev.on('insert', validChangeData)
     /*
       ==================================================
       =================== OPEN EDITAR ===================
@@ -489,6 +492,9 @@ $('.content-body').ready(async () => {
       let asyncCategoria = selectorEditarCategoria.select(data.categoria_id);
       selectorEditarCategoria.currentValue = data.categoria_id;
 
+      imagenEditarUnic.charge(data.foto_src);
+      imagenEditarUnic.currentValue = data.foto_src
+
       await asyncCategoria;
     }
 
@@ -503,8 +509,6 @@ $('.content-body').ready(async () => {
 
       inputEditarDescripcion.value
         = data.descripcion;
-
-      imagenEditarUnic.charge(data.foto_src);
 
       defaultEditar(data);
       btnEditar.classList.add('disabled');
@@ -525,42 +529,38 @@ $('.content-body').ready(async () => {
     */
 
     btnEditar.addEventListener('click', async () => {
-      let formData = new FormData();
+      let jsonData = {};
 
-      formData.append('id', currentEditarId);
+      jsonData.id = currentEditarId;
 
       let productoValue = inputEditarProducto.value;
       if (!productoValue) return formError(`Se require un nombre!.`, inputEditarProducto);
-      formData.append('producto', productoValue);
+      jsonData.producto = productoValue;
 
       let precioVentaValue = inputEditarPrecioVenta.value;
       if (!precioVentaValue) return formError(`Se require un precio de venta!.`, inputEditarPrecioVenta);
-      formData.append('venta', Number(precioVentaValue));
+      jsonData.venta = Number(precioVentaValue);
 
       let descripcionValue = inputEditarDescripcion.value;
-      formData.append('descripcion', descripcionValue);
+      jsonData.descripcion = descripcionValue;
 
       let selectCategoria = selectorEditarCategoria.selected[0];
       if (!selectCategoria) return formError(`Selecciona una categoria`, inputNuevoSelectorCategoria);
-      formData.append('categoria_id', selectCategoria.id | selectorEditarCategoria.currentValue);
+      jsonData.categoria_id = Number(selectCategoria.id) || selectorEditarCategoria.currentValue;
 
       let file = imagenEditarUnic.files[0];
-      if (file) formData.append('foto_file', file);
+      let dataBuffer = file && file.toBuffer
+        ? await file?.toBuffer()
+        : null;
 
-      let resUsuarios = await query.post.form.cookie("/api/productos/table/updateId", formData);
+      socket.emit('/updateId/table', dataBuffer, jsonData, err => {
+        if (err)
+          return alarm.error(err);
 
-      /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-      let { err } = await resUsuarios.json();
-
-      if (err)
-        return alarm.warn('No se pudo Editar');
-
-      alarm.success(`Fila actualizada`);
-      toggleMenu.close();
-      $table.datatable.rows().deselect();
+        alarm.success(`Fila Agregada`);
+        toggleMenu.close();
+      })
     })
-
-
 
     /*
       ==================================================

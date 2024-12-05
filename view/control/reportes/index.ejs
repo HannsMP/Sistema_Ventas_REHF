@@ -24,6 +24,44 @@
 <div class="content-body">
   <div class="menu-body">
     <div class="cards">
+      <% if(userLayout['/control/reportes/compras']?.ver){ %>
+      <div class="f-col">
+        <div class="card">
+          <div class="card-head">
+            <h3 class="card-tittle">Compras</h3>
+            <form action="/control/reportes/compras" method="get">
+              <input class="card-search" type="search" name="tb_search" placeholder="Buscar Compra">
+            </form>
+          </div>
+          <a class="card-data" href="/control/reportes/compras">
+            <div class="card-icon">
+              <i class="bx bxs-cart-download"></i>
+            </div>
+            <div class="card-col">
+              <div class="data-box" id="categorias-cantidad">
+                <span class="data-tittle">Cantidad:</span>
+                <small class="data"></small>
+              </div>
+              <div class="data-box" id="categorias-fecha">
+                <span class="data-tittle">Ultima Insersion:</span>
+                <small class="data"></small>
+                <small class="data"></small>
+              </div>
+            </div>
+          </a>
+        </div>
+        <div class="card" style="display: none;">
+          <div class="card-head">
+            <h3 class="card-tittle">Grafico Cantidad Categorias</h3>
+          </div>
+          <div class="card-data">
+            <canvas id="chart-categorias"></canvas>
+          </div>
+        </div>
+      </div>
+      <script src="/src/private/routes/reportes/dash/compras.js"></script>
+      <% } %>
+
       <% if(userLayout['/control/reportes/ventas']?.ver){ %>
       <div class="f-col">
         <div class="card">
@@ -50,7 +88,7 @@
             </div>
           </a>
         </div>
-        <div class="card">
+        <div class="card" style="display: none;">
           <div class="card-head">
             <h3 class="card-tittle">Grafico Cantidad Categorias</h3>
           </div>
@@ -59,7 +97,47 @@
           </div>
         </div>
       </div>
-      <!-- <script src="/src/private/routes/reportes/dash/ventas.js"></script> -->
+      <script src="/src/private/routes/reportes/dash/ventas.js"></script>
+      <% } %>
+    </div>
+
+    <div class="cards">
+      <% if(userLayout['/control/reportes/yapes']?.ver){ %>
+      <div class="f-col">
+        <div class="card">
+          <div class="card-head">
+            <h3 class="card-tittle">Yapes</h3>
+            <form action="/control/reportes/yapes" method="get">
+              <input class="card-search" type="search" name="tb_search" placeholder="Buscar Yape">
+            </form>
+          </div>
+          <a class="card-data" href="/control/reportes/yapes">
+            <div class="card-icon">
+              <i class="bx bxs-report"></i>
+            </div>
+            <div class="card-col">
+              <div class="data-box" id="clientes-cantidad">
+                <span class="data-tittle">Cantidad:</span>
+                <small class="data"></small>
+              </div>
+              <div class="data-box" id="clientes-fecha">
+                <span class="data-tittle">Ultima Insersion:</span>
+                <small class="data"></small>
+                <small class="data"></small>
+              </div>
+            </div>
+          </a>
+        </div>
+        <div class="card" style="display: none;">
+          <div class="card-head">
+            <h3 class="card-tittle">Grafico Usuarios vs Roles</h3>
+          </div>
+          <div class="card-data">
+            <canvas id="chart-clientes"></canvas>
+          </div>
+        </div>
+      </div>
+      <script src="/src/private/routes/reportes/dash/yapes.js"></script>
       <% } %>
 
       <% if(userLayout['/control/reportes/asistencia']?.ver){ %>
@@ -88,7 +166,7 @@
             </div>
           </a>
         </div>
-        <div class="card">
+        <div class="card" style="display: none;">
           <div class="card-head">
             <h3 class="card-tittle">Grafico Usuarios vs Roles</h3>
           </div>
@@ -97,9 +175,11 @@
           </div>
         </div>
       </div>
-      <!-- <script src="/src/private/routes/reportes/dash/asistencia.js"></script> -->
+      <script src="/src/private/routes/reportes/dash/asistencia.js"></script>
       <% } %>
+    </div>
 
+    <div class="cards">
       <% if(userLayout['/control/reportes/registros']?.ver){ %>
       <div class="f-col">
         <a class="card" href="/control/reportes/registros">
@@ -111,30 +191,34 @@
               <i class="bx bxs-file-json"></i>
             </div>
             <div class="card-col">
-              <div class="data-box" id="inventario-cantidad">
-                <span class="data-tittle">Cantidad:</span>
+              <div class="data-box" id="success-ultima-modificacion">
+                <span class="data-tittle">Ultima registro satisfactorio:</span>
+                <small class="data"></small>
                 <small class="data"></small>
               </div>
-              <div class="data-box" id="inventario-fecha">
-                <span class="data-tittle">Ultima Insersion:</span>
+              <div class="data-box" id="warning-ultima-modificacion">
+                <span class="data-tittle">Ultima registro de advertencia:</span>
+                <small class="data"></small>
+                <small class="data"></small>
+              </div>
+            </div>
+            <div class="card-col">
+              <div class="data-box" id="error-ultima-modificacion">
+                <span class="data-tittle">Ultima registro: de error</span>
+                <small class="data"></small>
+                <small class="data"></small>
+              </div>
+              <div class="data-box" id="system-ultima-modificacion">
+                <span class="data-tittle">Ultima registro del sistema:</span>
                 <small class="data"></small>
                 <small class="data"></small>
               </div>
             </div>
           </div>
         </a>
-        <div class="card">
-          <div class="card-head">
-            <h3 class="card-tittle">Grafico Precio Por Categoria</h3>
-          </div>
-          <div class="card-data">
-            <canvas id="chart-inventario"></canvas>
-          </div>
-        </div>
       </div>
-      <!-- <script src="/src/private/routes/reportes/dash/registros.js"></script> -->
+      <script src="/src/private/routes/reportes/dash/registros.js"></script>
       <% } %>
     </div>
   </div>
 </div>
-<!-- <script src="/src/private/routes/reportes/index.js"></script> -->

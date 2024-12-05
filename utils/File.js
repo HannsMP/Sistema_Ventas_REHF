@@ -15,10 +15,9 @@ class File {
   constructor(pathFile, option) {
     this.#option = mergeObjects(defaultOption, option);
 
-    if (isAbsolute(pathFile))
-      this.#pathFile = pathFile;
-    else
-      this.#pathFile = resolve(pathFile);
+    this.#pathFile = isAbsolute(pathFile)
+      ? pathFile
+      : resolve(pathFile);
 
     if (extname(pathFile).toLowerCase() != this.#option.extname)
       throw new Error(`Formate del archivo válido. Asegúrese de que la extencion sea ${this.#option.extname}`);

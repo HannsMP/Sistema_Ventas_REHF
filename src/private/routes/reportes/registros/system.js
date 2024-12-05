@@ -25,9 +25,11 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    socket.emit('/read/success', (text, stat, exist) => {
+    socket.emit('/read/system', (text, stat, exist) => {
       if (!exist)
         return cardSystem.remove();
+
+      cardSystem.style.direction = '';
 
       let code = new Code('.log', boxSystem, text);
       downloadSystem.addEventListener('click', () => code.download());
@@ -40,7 +42,7 @@ $('.content-body').ready(async () => {
       */
 
       clearSystem.addEventListener('click', async _ => {
-        socket.emit('/clear/success', (err) => {
+        socket.emit('/clear/system', (err) => {
           if (err)
             return alarm.error(err);
 
@@ -49,7 +51,7 @@ $('.content-body').ready(async () => {
         })
       })
 
-      socket.on('/logger/success/writeStart', data => {
+      socket.on('/logger/system/writeStart', data => {
         code.addStart(data.log);
         sizeSystem.textContent = bytesToKb(data.stat.size);
       })

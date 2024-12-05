@@ -3,7 +3,7 @@ $('.content-body').ready(() => {
 
     /*
       ==================================================
-      ===================== IMAGEN =====================
+      ======================= DOM =======================
       ==================================================
     */
 
@@ -11,26 +11,34 @@ $('.content-body').ready(() => {
     let inputFoto = cardFotoActual.querySelector('.imagen-unic');
     let btnFoto = cardFotoActual.querySelector('.btn');
 
-    let editarImagenUnic = new ImagenUnic(inputFoto);
+    let cardCambioContraseña = document.getElementById('cambio-contraseña');
+    let toggleCambio = cardCambioContraseña.querySelectorAll('.bx-show');
+    let [passwordCurrent, passwordNew, passwordRepite] = cardCambioContraseña.querySelectorAll('input');
+    let btnCambio = cardCambioContraseña.querySelector('.btn');
+
+    /*
+      ==================================================
+      ===================== IMAGEN =====================
+      ==================================================
+    */
+
+    let editarImagenUnic = new ImageManager(inputFoto, {
+      justChange: true
+    });
+
+    editarImagenUnic.ev.on('insert', () => btnFoto.classList.remove('disabled'))
 
     btnFoto.addEventListener('click', async () => {
-      let formData = new FormData();
-
       let file = editarImagenUnic.files[0];
       if (!file) return formError('cambia de imagen para guardar', inputFoto);
 
-      formData.append('foto_file', file);
+      socket.emit('/updateAvatar/profile', await file.toBuffer(), err => {
+        if (err)
+          return alarm.error(err);
 
-      let resUsuarios = await query.post.form.cookie("/api/usuarios/profile/updateFoto", formData);
-
-      /** @type {{err: string, OkPacket: import('mysql').OkPacket, list: {[column:string]: string|number}[]}} */
-      let { err } = await resUsuarios.json();
-
-      if (err)
-        return alarm.warn('No se pudo Editar');
-
-      alarm.success(`Avatar actualizado`);
-
+        alarm.success('Avatar actualizada');
+        btnFoto.classList.add('disabled')
+      })
     })
 
     /*
@@ -38,11 +46,6 @@ $('.content-body').ready(() => {
       ===================== CHANGE =====================
       ==================================================
     */
-
-    let cardCambioContraseña = document.getElementById('cambio-contraseña');
-    let toggleCambio = cardCambioContraseña.querySelectorAll('.bx-show');
-    let [passwordCurrent, passwordNew, passwordRepite] = cardCambioContraseña.querySelectorAll('input');
-    let btnCambio = cardCambioContraseña.querySelector('.btn');
 
     toggleCambio.forEach(t => t.addEventListener('click', () => {
       let has = t.classList.contains('bx-show');

@@ -78,8 +78,8 @@ module.exports = {
       }
     }
 
-    /** @param {()=>void} res */
-    let stateBot = async (res) => {
+    /** @param {number} myId @param {()=>void} res */
+    let stateBot = async (myId, res) => {
       try {
         let permiso = await this.model.tb_permisos.userPathHide(myId, module.exports.route);
         if (!permiso) return res('No tienes Permisos para controlar el estado del los bot.');
@@ -88,7 +88,7 @@ module.exports = {
 
         if (state == 'CONNECTED')
           await this.bot.off();
-        else
+        else if ((state != 'INITIALIZE'))
           await this.bot.on();
 
         let stateCurrent = this.bot.state();
@@ -100,9 +100,12 @@ module.exports = {
       }
     }
 
-    /** @param {()=>void} res */
-    let stopBot = async (res) => {
+    /** @param {number} myId @param {()=>void} res */
+    let stopBot = async (myId, res) => {
       try {
+        let permiso = await this.model.tb_permisos.userPathHide(myId, module.exports.route);
+        if (!permiso) return res('No tienes Permisos para controlar el estado del los bot.');
+
         let state = this.bot.state();
 
         if (state == 'CONNECTED')
@@ -134,7 +137,6 @@ module.exports = {
         res('Ocurrio un error, ponte en contacto con el administrador.');
       }
     }
-
 
     node.ev.on('connected', socket => {
       let myId = socket.session.usuario_id;

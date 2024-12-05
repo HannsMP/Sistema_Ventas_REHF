@@ -14,7 +14,7 @@ const deletePath = require('../utils/function/deletePath');
 class Bot {
   cacheSession = resolve('.cache', 'session');
   cacheWwebjs = resolve('.cache', 'wwebjs');
-
+  /** @type { 'UNDEFINED' | 'INITIALIZE'| 'READY'| 'PUPPETTER_ERROR'| 'CONNECTED'| 'DISCONNECTED'| 'LOGOUT'| 'AUTHENTICATING'| 'AUTHENTICATION_FAILURE' } */
   #state = 'UNDEFINED';
   /** @type {CollectionCommands} */
   collection = {};
@@ -147,19 +147,6 @@ class Bot {
       this._LoadCommands(f)
     });
   }
-  /**
-   * @returns {
-   * 'UNDEFINED' |
-   * 'READY'|
-   * 'PUPPETTER_ERROR'|
-   * 'CONNECTED'|
-   * 'DISCONNECTED'|
-   * 'LOGOUT'|
-   * 'AUTHENTICATING'|
-   * 'AUTHENTICATION_FAILURE'|
-   * 'UNDEFINED'
-   * }
-   */
   state() {
     return this.#state
   }
@@ -177,9 +164,10 @@ class Bot {
     return info
   }
   async on() {
+    this.#state = 'INITIALIZE';
+    this.io.sockets.emit('/bot/initialize');
     await this.client.initialize();
     this.#state = 'AUTHENTICATING';
-    this.io.sockets.emit('/bot/initialize');
   }
   async off() {
     await this.client.destroy();

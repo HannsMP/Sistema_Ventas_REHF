@@ -202,7 +202,9 @@ $('.content-body').ready(async () => {
       ===================== IMAGEN =====================
       ==================================================
     */
-    let imagenEditarAvatar = new ImagenUnic(inputEditarImagen);
+    let imagenEditarAvatar = new ImageManager(inputEditarImagen, {
+      justChange: true
+    });
 
     /*
       ==================================================

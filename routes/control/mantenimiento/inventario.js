@@ -1,4 +1,14 @@
-const { resolve } = require('path');
+const { resolve, relative, join, basename } = require('path');
+const Upload = require('../../../utils/Upload');
+
+const dirwork = resolve();
+const dest = join(dirwork, '.temp', 'img');
+const destSrc = join(dirwork, 'src', 'resource', 'productos');
+
+let upload = new Upload({
+  directory: dest,
+  validFormats: /jpeg|jpg|png|webp|tiff|gif|avif/
+})
 
 /** @typedef {import('../../../app')} App */
 /** @typedef {import('../../../utils/SocketNode')} SocketNode */
@@ -73,6 +83,183 @@ module.exports = {
         res(data)
       } catch (e) {
         this.logError.writeStart(e.message, e.stack)
+      }
+    }
+
+    /** @param {number} myId @param {Upload.DataUpdate} file @param {()=>void} res */
+    let insertTable = async (myId, file, data, res) => {
+      let imagenData;
+
+      try {
+        let permiso = await this.model.tb_permisos.userPathAdd(myId, module.exports.route);
+        if (!permiso) return res('No tienes Permisos para insertar nuevos productos.');
+
+        let foto_id = 2;
+
+        if (file) {
+          imagenData = upload.single(file);
+          let imagenHash = imagenData.hash();
+
+          let dataFoto = await this.model.tb_fotos.readHash(imagenHash);
+
+          if (!dataFoto) {
+            await imagenData.save();
+
+            let baseFile = basename(imagenData.path);
+            let ext = imagenData.ext;
+
+            let normalSizePath = join(destSrc, 'normal', baseFile);
+            let smallSizePath = join(destSrc, 'small', baseFile);
+
+            let asyncNormal = imagenData.resize(normalSizePath, 500);
+            let asyncSmall = imagenData.resize(smallSizePath, 50);
+
+            await asyncNormal;
+            await asyncSmall;
+
+            let src = '/' + relative(dirwork, normalSizePath).replaceAll('\\', '/');
+            let src_small = '/' + relative(dirwork, smallSizePath).replaceAll('\\', '/');
+
+            let { insertId } = await this.model.tb_fotos.insert({
+              hash: imagenHash,
+              tipo: ext,
+              tabla: this.model.tb_usuarios.name,
+              nombre: imagenData.originalname,
+              src_small,
+              src
+            });
+
+            if (insertId)
+              dataFoto = { id: insertId, src, src_small }
+            else
+              return res('Ocurrio un error, al crear la imagen.');
+          }
+
+          foto_id = dataFoto.id;
+        }
+
+        let {
+          categoria_id,
+          descripcion,
+          producto,
+          estado,
+          venta,
+
+          avanzado,
+          cantidad,
+          compra,
+          proveedor_id
+        } = data;
+
+        let codigo = await this.model.tb_productos.getCodigo();
+
+        let result = await this.model.tb_productos.insert({
+          foto_id,
+          codigo,
+
+          categoria_id,
+          descripcion,
+          producto,
+          estado,
+          venta
+        });
+
+        if (avanzado) {
+          let resultTransCompra = await this.model.tb_transacciones_compras.insert({
+            codigo: await this.model.tb_transacciones_compras.getCodigo(),
+            usuario_id: myId,
+            proveedor_id,
+            importe_total: cantidad * compra,
+            metodo_pago_id: 1
+          })
+
+          this.model.tb_compras.insert({
+            transaccion_id: resultTransCompra.insertId,
+            producto_id: result.insertId,
+            cantidad,
+            compra
+          })
+        }
+
+        if (result.affectedRows) res();
+      } catch (e) {
+        this.logError.writeStart(e.message, e.stack)
+        res('Ocurrio un error, ponte en contacto con el administrador.');
+      }
+    }
+
+    /** @param {number} myId @param {Upload.DataUpdate} file @param {()=>void} res */
+    let updateIdTable = async (myId, file, data, res) => {
+      let imagenData;
+
+      try {
+        let permiso = await this.model.tb_permisos.userPathUpdate(myId, module.exports.route);
+        if (!permiso) return res('No tienes Permisos para editar los productos.');
+
+        let foto_id = 0;
+
+        if (file) {
+          imagenData = upload.single(file);
+          let imagenHash = imagenData.hash();
+
+          let dataFoto = await this.model.tb_fotos.readHash(imagenHash);
+
+          if (!dataFoto) {
+            await imagenData.save();
+
+            let baseFile = basename(imagenData.path);
+            let ext = imagenData.ext;
+
+            let normalSizePath = join(destSrc, 'normal', baseFile);
+            let smallSizePath = join(destSrc, 'small', baseFile);
+
+            let asyncNormal = imagenData.resize(normalSizePath, 500);
+            let asyncSmall = imagenData.resize(smallSizePath, 50);
+
+            await asyncNormal;
+            await asyncSmall;
+
+            let src = '/' + relative(dirwork, normalSizePath).replaceAll('\\', '/');
+            let src_small = '/' + relative(dirwork, smallSizePath).replaceAll('\\', '/');
+
+            let { insertId } = await this.model.tb_fotos.insert({
+              hash: imagenHash,
+              tipo: ext,
+              tabla: this.model.tb_usuarios.name,
+              nombre: imagenData.originalname,
+              src_small,
+              src
+            });
+
+            if (insertId)
+              dataFoto = { id: insertId, src, src_small }
+            else
+              return res('Ocurrio un error, al crear la imagen.');
+          }
+
+          foto_id = dataFoto.id;
+        }
+
+        let {
+          id,
+          producto,
+          descripcion,
+          categoria_id,
+          venta
+        } = data;
+
+        let result = await this.model.tb_productos.updateId(id, {
+          foto_id,
+
+          categoria_id,
+          descripcion,
+          producto,
+          venta,
+        });
+        if (result.affectedRows) res();
+      } catch (e) {
+        this.logError.writeStart(e.message, e.stack)
+        res('Ocurrio un error, ponte en contacto con el administrador.');
       }
     }
 
@@ -165,6 +352,8 @@ module.exports = {
 
       socket.on('/read/table', readTable)
       socket.on('/readId/table', readIdTable)
+      socket.on('/insert/table', insertTable.bind(null, myId))
+      socket.on('/updateId/table', updateIdTable.bind(null, myId))
       socket.on('/stateId/table', stateIdTable.bind(null, myId))
       socket.on('/deleteId/table', deleteIdTable.bind(null, myId))
       socket.on('/predict/precio_venta', predictPrecioVenta)

@@ -126,7 +126,9 @@ module.exports = {
           text = this.logSystem.readFile();
           stat = this.logSystem.statFile();
           exist = true;
-        } catch {
+        } catch (e) {
+          console.log(e);
+
           text = '';
           stat = { size: 0 };
           exist = false;
@@ -161,8 +163,8 @@ module.exports = {
       socket.on('/clear/warn', clearWarning.bind(null, myId))
       socket.on('/read/error', readError)
       socket.on('/clear/error', clearError.bind(null, myId))
-      socket.on('/read/sytem', readSystem)
-      socket.on('/clear/sytem', clearSystem.bind(null, myId))
+      socket.on('/read/system', readSystem)
+      socket.on('/clear/system', clearSystem.bind(null, myId))
     })
   }
 }

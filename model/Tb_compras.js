@@ -207,7 +207,7 @@ class Tb_compras extends Table {
           compra,
           cantidad,
           producto_id,
-          transaccion_id
+          transaccion_id,
         } = data;
 
         console.log(data);
