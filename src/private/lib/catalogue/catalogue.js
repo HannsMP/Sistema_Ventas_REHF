@@ -151,10 +151,12 @@ class Catalogue {
   set(id, data, about = true) {
     if (!this.#data.has(id)) return;
     let d = this.#data.get(id);
+
     if (typeof data == 'function')
       data(d.data)
     else if (about)
       d.data = { ...d.data, ...data };
+
     d.productHTML.innerHTML = this.factoryCallback(d.data);
   }
 

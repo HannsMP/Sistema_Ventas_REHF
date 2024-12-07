@@ -52,13 +52,78 @@ module.exports = {
       last: true
     })
 
-    /** @param {number} myId @param {Upload.DataUpdate} file @param {()=>void} res */
-    let updateAvatarProfile = async (myId, file, res) => {
-      try {
-        let permiso = await this.model.tb_permisos.userPathUpdate(myId, module.exports.route);
-        if (!permiso) return res('No tienes Permisos para actualizar el avatar de tu usuario.');
+    /** 
+     * @typedef {Map<number, {
+     *   data:Upload.DataUpdate,
+     *   chunkLength:number,
+     *   chunks:Uint8Array[]
+     * }>} MapUpload 
+     */
 
-        let imagenData = upload.single(file);
+    /** 
+     * @param {number} myId 
+     * @param {MapUpload} uploadMap
+     * @param {{
+     *   id:number,
+     *   data?:Upload.DataUpdate,
+     *   chunkLength?:number,
+     *   chunk?:Uint8Array,
+     * }} fileData
+     * @param {()=>void} res 
+     */
+    let updateAvatarProfile = async (myId, uploadMap, fileData, res) => {
+      let fileId = fileData?.id;
+
+      try {
+        if (!fileId) return res('Imagen no definida');
+
+        let has = uploadMap.has(fileId);
+
+        if (!has) {
+          let { chunkLength, data } = fileData;
+
+          if (!chunkLength && !data) return res('Imagen sin campos especificos');
+
+          let permiso = await this.model.tb_permisos.userPathUpdate(myId, module.exports.route);
+          if (!permiso) return res('No tienes Permisos para actualizar el avatar de tu usuario.');
+
+          uploadMap.set(fileId, { data, chunkLength, chunks: [] });
+
+          return res(null, {
+            index: 0,
+            complete: false
+          })
+        }
+
+        let collector = uploadMap.get(fileId);
+        if (!collector) return res('A ocurrido un error inesperado, intentalo de nuevo');
+
+        let { data, chunkLength, chunks } = collector;
+        let { chunk } = fileData;
+
+        if (!(chunk instanceof Uint8Array)) {
+          uploadMap.delete(fileId);
+          return res('Imagen dañada, vuelve a intentarlo');
+        }
+        chunks.push(chunk);
+
+        let complete = chunkLength == chunks.length;
+
+        if (!complete)
+          return res(null, {
+            index: chunks.length,
+            complete
+          })
+
+        data.buffer = new Uint8Array(data.size);
+        let offset = 0;
+
+        for (let chunk of chunks) {
+          data.buffer.set(chunk, offset);
+          offset += chunk.length;
+        }
+
+        let imagenData = upload.single(data);
         let imagenHash = imagenData.hash();
 
         let dataFoto = await this.model.tb_fotos.readHash(imagenHash);
@@ -92,8 +157,10 @@ module.exports = {
 
           if (insertId)
             dataFoto = { id: insertId, src, src_small }
-          else
+          else {
+            uploadMap.delete(fileId);
             return res('Ocurrio un error, al crear la imagen.');
+          }
         }
 
         let result = await this.model.tb_usuarios.updateIdFotoId(myId, dataFoto.id, {
@@ -102,17 +169,18 @@ module.exports = {
           src_small: dataFoto.src_small
         });
 
-        if (result.affectedRows) res();
+        uploadMap.delete(fileId);
+        if (result.affectedRows) res(null, { complete });
       } catch (e) {
         this.logError.writeStart(e.message, e.stack)
+        uploadMap.delete(fileId);
         res('Ocurrio un error, ponte en contacto con el administrador.');
       }
     }
 
     node.ev.on('connected', socket => {
       let myId = socket.session.usuario_id;
-
-      socket.on('/updateAvatar/profile', updateAvatarProfile.bind(null, myId))
+      socket.on('/updateAvatar/profile', updateAvatarProfile.bind(null, myId, new Map))
     })
   }
 }

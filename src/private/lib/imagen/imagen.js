@@ -1,18 +1,31 @@
 class DataImage {
+  static identifier = 1;
+
   /** @param {File} file  */
   constructor(file) {
     this.file = file;
+    this.id = DataImage.identifier;
+    DataImage.identifier++;
   }
 
-  async toBuffer() {
+  async toBuffer(chunkSize = 64 * 1024) {
     let arrayBuffer = await this.file.arrayBuffer();
+    let completeBuffer = new Uint8Array(arrayBuffer);
+
+    let chunks = [];
+    for (let i = 0; i < completeBuffer.length; i += chunkSize)
+      chunks.push(completeBuffer.slice(i, i + chunkSize));
+
     return {
-      destination: this.file.webkitRelativePath || null,
-      buffer: new Uint8Array(arrayBuffer),
-      lastModified: this.file.lastModified,
-      originalname: this.file.name,
-      mimetype: this.file.type,
-      size: this.file.size,
+      data: {
+        destination: this.file.webkitRelativePath || null,
+        lastModified: this.file.lastModified,
+        originalname: this.file.name,
+        mimetype: this.file.type,
+        size: this.file.size,
+      },
+      chunkSize,
+      chunks
     };
   }
 }

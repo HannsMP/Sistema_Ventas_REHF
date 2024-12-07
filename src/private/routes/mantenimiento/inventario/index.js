@@ -425,17 +425,31 @@ $('.content-body').ready(async () => {
       }
 
       let file = imagenNuevoUnic.files[0];
-      let dataBuffer = file && file.toBuffer
-        ? await file?.toBuffer()
-        : null;
 
-      socket.emit('/insert/table', dataBuffer, jsonData, err => {
-        if (err)
-          return alarm.error(err);
+      if (!file)
+        return socket.emit('/insert/table', jsonData, null, (err) => {
+          if (err)
+            return alarm.error(err);
 
-        alarm.success(`Fila Agregada`);
-        toggleMenu.close();
-      })
+          alarm.success(`Fila Agregada`);
+          toggleMenu.close();
+        })
+
+      let { data, chunkSize, chunks } = await file.toBuffer();
+
+      let upload = (prod, data) =>
+        socket.emit('/insert/table', prod, data, (err, info) => {
+          if (err)
+            return alarm.error(err);
+
+          if (info?.complete == false)
+            return upload(null, { id: file.id, chunk: chunks[info?.index] });
+
+          alarm.success(`Fila Agregada`);
+          toggleMenu.close();
+        })
+
+      upload(jsonData, { data, chunkSize, chunkLength: chunks.length, id: file.id });
     })
 
     /*
@@ -549,17 +563,31 @@ $('.content-body').ready(async () => {
       jsonData.categoria_id = Number(selectCategoria.id) || selectorEditarCategoria.currentValue;
 
       let file = imagenEditarUnic.files[0];
-      let dataBuffer = file && file.toBuffer
-        ? await file?.toBuffer()
-        : null;
 
-      socket.emit('/updateId/table', dataBuffer, jsonData, err => {
-        if (err)
-          return alarm.error(err);
+      if (!file)
+        return socket.emit('/updateId/table', jsonData, null, (err) => {
+          if (err)
+            return alarm.error(err);
 
-        alarm.success(`Fila Agregada`);
-        toggleMenu.close();
-      })
+          alarm.success(`Fila Actulizada`);
+          toggleMenu.close();
+        })
+
+      let { data, chunkSize, chunks } = await file.toBuffer();
+
+      let upload = (prod, data) =>
+        socket.emit('/updateId/table', prod, data, (err, info) => {
+          if (err)
+            return alarm.error(err);
+
+          if (info?.complete == false)
+            return upload(null, { id: file.id, chunk: chunks[info?.index] });
+
+          alarm.success(`Fila Actulizada`);
+          toggleMenu.close();
+        })
+
+      upload(jsonData, { data, chunkSize, chunkLength: chunks.length, id: file.id });
     })
 
     /*

@@ -52,6 +52,16 @@ module.exports = {
       last: true
     })
 
+    /** 
+     * @typedef {Map<number, {
+     *   data:Upload.DataUpdate,
+     *   dataSave: {}
+     *   chunkLength:number,
+     *   chunkSize:number,
+     *   chunks:Uint8Array[]
+     * }>} MapUpload 
+     */
+
     /** @param {import('datatables.net-dt').AjaxData} tableReq @param {(res:import('datatables.net-dt').AjaxResponse)=>void} res */
     let readTable = async (tableReq, res) => {
       let result = {
@@ -86,18 +96,73 @@ module.exports = {
       }
     }
 
-    /** @param {number} myId @param {Upload.DataUpdate} file @param {()=>void} res */
-    let insertTable = async (myId, file, data, res) => {
-      let imagenData;
+    /** 
+     * @param {number} myId 
+     * @param {MapUpload} uploadMap
+     * @param {{
+     *   id:number,
+     *   data?:Upload.DataUpdate,
+     *   chunkLength?:number,
+     *   chunk?:Uint8Array,
+     * }?} fileData
+     * @param {()=>void} res 
+     */
+    let insertTable = async (myId, uploadMap, productoData, fileData, res) => { // id, file
+      let fileId = fileData?.id;
 
       try {
-        let permiso = await this.model.tb_permisos.userPathAdd(myId, module.exports.route);
-        if (!permiso) return res('No tienes Permisos para insertar nuevos productos.');
+        let has = uploadMap.has(fileId);
+
+        if (!has) {
+          permiso = await this.model.tb_permisos.userPathUpdate(myId, module.exports.route);
+          if (!permiso) return res('No tienes Permisos para insertar nuevos productos.');
+        }
 
         let foto_id = 2;
 
-        if (file) {
-          imagenData = upload.single(file);
+        if (fileId) {
+
+          if (!has) {
+            let { chunkLength, data } = fileData;
+
+            if (!chunkLength || !data) return res('Imagen sin campos especificos');
+
+            uploadMap.set(fileId, { data, chunkLength, producto: productoData, chunks: [] });
+
+            return res(null, {
+              index: 0,
+              complete: false
+            })
+          }
+
+          let collector = uploadMap.get(fileId);
+          if (!collector) return res('A ocurrido un error inesperado, intentalo de nuevo');
+
+          let { data, producto, chunkLength, chunks } = collector;
+          let { chunk } = fileData;
+
+          if (!(chunk instanceof Uint8Array)) {
+            uploadMap.delete(fileId);
+            return res('Imagen dañada, vuelve a intentarlo');
+          }
+          chunks.push(chunk);
+
+          let complete = chunkLength == chunks.length;
+          if (!complete)
+            return res(null, {
+              index: chunks.length,
+              complete
+            })
+
+          data.buffer = new Uint8Array(data.size);
+          let offset = 0;
+
+          for (let chunk of chunks) {
+            data.buffer.set(chunk, offset);
+            offset += chunk.length;
+          }
+
+          let imagenData = upload.single(data);
           let imagenHash = imagenData.hash();
 
           let dataFoto = await this.model.tb_fotos.readHash(imagenHash);
@@ -131,11 +196,15 @@ module.exports = {
 
             if (insertId)
               dataFoto = { id: insertId, src, src_small }
-            else
-              return res('Ocurrio un error, al crear la imagen.');
+            else {
+              uploadMap.delete(fileId);
+              return res('Ocurrió un error al crear la imagen.');
+            }
           }
 
           foto_id = dataFoto.id;
+          productoData = producto;
+          uploadMap.delete(fileId);
         }
 
         let {
@@ -149,7 +218,7 @@ module.exports = {
           cantidad,
           compra,
           proveedor_id
-        } = data;
+        } = productoData;
 
         let codigo = await this.model.tb_productos.getCodigo();
 
@@ -161,7 +230,9 @@ module.exports = {
           descripcion,
           producto,
           estado,
-          venta
+          venta,
+
+          stock_disponible: avanzado ? cantidad || 0 : 0
         });
 
         if (avanzado) {
@@ -179,27 +250,95 @@ module.exports = {
             cantidad,
             compra
           })
+
+          this.model.tb_compras.io.tagsName.get(`usr:${myId}`)?.emit(
+            '/transacciones_compras/data/insert',
+            _ => [{
+              transaccion_id: resultTransCompra.insertId,
+              producto_id: result.insertId,
+              cantidad,
+              compra
+            }]
+          )
         }
 
-        if (result.affectedRows) res();
+        if (result.affectedRows) res(null, { complete: true });
       } catch (e) {
         this.logError.writeStart(e.message, e.stack)
+        if (fileId) uploadMap.delete(fileId);
         res('Ocurrio un error, ponte en contacto con el administrador.');
       }
     }
 
-    /** @param {number} myId @param {Upload.DataUpdate} file @param {()=>void} res */
-    let updateIdTable = async (myId, file, data, res) => {
-      let imagenData;
+    /** 
+    * @param {number} myId 
+    * @param {MapUpload} uploadMap
+    * @param {{
+     *   id:number,
+     *   data?:Upload.DataUpdate,
+     *   chunkLength?:number,
+     *   chunk?:Uint8Array,
+     * }?} fileData
+     * @param {()=>void} res 
+     */
+    let updateIdTable = async (myId, uploadMap, productoData, fileData, res) => {
+      let fileId = fileData?.id;
 
       try {
-        let permiso = await this.model.tb_permisos.userPathUpdate(myId, module.exports.route);
-        if (!permiso) return res('No tienes Permisos para editar los productos.');
+        let has = uploadMap.has(fileId);
+
+        if (!has) {
+          let permiso = await this.model.tb_permisos.userPathUpdate(myId, module.exports.route);
+          if (!permiso) return res('No tienes Permisos para editar los productos.');
+        }
 
         let foto_id = 0;
 
-        if (file) {
-          imagenData = upload.single(file);
+        if (fileId) {
+
+          if (!has) {
+            let { chunkLength, data } = fileData;
+
+            if (!chunkLength || !data) return res('Imagen sin campos especificos');
+
+            uploadMap.set(fileId, { data, chunkLength, dataSave: productoData, chunks: [] });
+
+            return res(null, {
+              index: 0,
+              complete: false
+            })
+          }
+
+          let collector = uploadMap.get(fileId);
+          if (!collector) return res('A ocurrido un error inesperado, intentalo de nuevo');
+
+          let { data, dataSave, chunkLength, chunks } = collector;
+          let { chunk } = fileData;
+
+          if (!(chunk instanceof Uint8Array)) {
+            uploadMap.delete(fileId);
+            return res('Imagen dañada, vuelve a intentarlo');
+          }
+
+          chunks.push(chunk);
+
+          let complete = chunkLength == chunks.length;
+          if (!complete)
+            return res(null, {
+              index: chunks.length,
+              complete
+            })
+
+          data.buffer = new Uint8Array(data.size);
+          let offset = 0;
+
+          for (let chunk of chunks) {
+            data.buffer.set(chunk, offset);
+            offset += chunk.length;
+          }
+
+
+          let imagenData = upload.single(data);
           let imagenHash = imagenData.hash();
 
           let dataFoto = await this.model.tb_fotos.readHash(imagenHash);
@@ -233,22 +372,26 @@ module.exports = {
 
             if (insertId)
               dataFoto = { id: insertId, src, src_small }
-            else
-              return res('Ocurrio un error, al crear la imagen.');
+            else {
+              uploadMap.delete(fileId);
+              return res('Ocurrió un error al crear la imagen.');
+            }
           }
 
           foto_id = dataFoto.id;
+          productoData = dataSave;
+          uploadMap.delete(fileId);
         }
 
         let {
-          id,
+          id: producto_id,
           producto,
           descripcion,
           categoria_id,
           venta
-        } = data;
+        } = productoData;
 
-        let result = await this.model.tb_productos.updateId(id, {
+        let result = await this.model.tb_productos.updateId(producto_id, {
           foto_id,
 
           categoria_id,
@@ -349,11 +492,13 @@ module.exports = {
 
     node.ev.on('connected', socket => {
       let myId = socket.session.usuario_id;
+      /** @type {MapUpload} */
+      let upload = new Map;
 
       socket.on('/read/table', readTable)
       socket.on('/readId/table', readIdTable)
-      socket.on('/insert/table', insertTable.bind(null, myId))
-      socket.on('/updateId/table', updateIdTable.bind(null, myId))
+      socket.on('/insert/table', insertTable.bind(null, myId, upload))
+      socket.on('/updateId/table', updateIdTable.bind(null, myId, upload))
       socket.on('/stateId/table', stateIdTable.bind(null, myId))
       socket.on('/deleteId/table', deleteIdTable.bind(null, myId))
       socket.on('/predict/precio_venta', predictPrecioVenta)

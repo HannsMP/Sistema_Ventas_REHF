@@ -586,7 +586,7 @@ class Tb_transacciones_compras extends Table {
     })
   }
   /**
-   * @param {{producto_id:number, cantidad:number, precio_compra:number, precio_venta:number}[]} productos
+   * @param {{producto_id:number, cantidad:number, precio_compra:number, importe:number}[]} productos
    * @param {number} metodo_pago_id
    * @param {number} importe_total
    * @returns {Promise<{
@@ -595,7 +595,6 @@ class Tb_transacciones_compras extends Table {
    *   totalCompraReal: number,
    *   listCompras: {
    *     producto_id: number,
-   *     precio_venta:number,
    *     cantidad: number,
    *     precio_compra:number,
    *     importe: number

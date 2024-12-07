@@ -32,13 +32,21 @@ $('.content-body').ready(() => {
       let file = editarImagenUnic.files[0];
       if (!file) return formError('cambia de imagen para guardar', inputFoto);
 
-      socket.emit('/updateAvatar/profile', await file.toBuffer(), err => {
-        if (err)
-          return alarm.error(err);
+      let { data, chunks } = await file.toBuffer();
 
-        alarm.success('Avatar actualizada');
-        btnFoto.classList.add('disabled')
-      })
+      let upload = d =>
+        socket.emit('/updateAvatar/profile', d, (err, info) => {
+          if (err)
+            return alarm.error(err);
+
+          if (info?.complete == false)
+            return upload({ id: file.id, chunk: chunks[info?.index] });
+
+          alarm.success('Avatar actualizada');
+          btnFoto.classList.add('disabled');
+        });
+
+      upload({ data, chunkLength: chunks.length, id: file.id });
     })
 
     /*

@@ -92,7 +92,7 @@ $('.content-body').ready(async () => {
         <div class="product ${data.stock_disponible == 0 ? 'out' : ''}">
           <div class="product-imagen">
             <img src="${data.src}" class="imagen">
-            <span class="product-counter">${data.stock_disponible == 0 ? 'sin stock' : data.stock_disponible}</span>
+            <span class="product-counter">${!data.stock_disponible ? 'sin stock' : data.stock_disponible}</span>
           </div>
           <div class="product-details">
             <span class="detail-name">${data.producto}</span>
@@ -268,16 +268,7 @@ $('.content-body').ready(async () => {
     })
 
     socket.on('/productos/data/updateId', data => {
-      catalogo.set(data.id, {
-        codigo: data.codigo,
-        producto: data.producto,
-        descripcion: data.descripcion,
-        venta: data.venta,
-        stock_disponible: data.stock_disponible,
-        categoria_id: data.categoria_id,
-        categoria_nombre: data.categoria_nombre,
-        src: data.foto_src
-      })
+      catalogo.set(data.id, data);
     })
 
     socket.on('/productos/data/updateIdBussines', data => {

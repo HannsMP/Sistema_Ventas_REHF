@@ -210,8 +210,6 @@ class Tb_compras extends Table {
           transaccion_id,
         } = data;
 
-        console.log(data);
-
         this.constraint('compra', compra);
         this.constraint('cantidad', cantidad);
         this.constraint('producto_id', producto_id);

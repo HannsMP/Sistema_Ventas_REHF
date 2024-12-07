@@ -6,12 +6,15 @@ const sharp = require('sharp');
 
 /**
  * @typedef {{
+ *   id: number,
+ *   chunkSize: number,
+ *   totalChunks: number,
  *   lastModified: number,
  *   originalname: string,
  *   destination: string,
  *   mimetype: string,
  *   buffer: Buffer,
- *   size: number
+ *   size: number,
  * }} DataUpdate
  * @typedef {{
  *   directory: string,
