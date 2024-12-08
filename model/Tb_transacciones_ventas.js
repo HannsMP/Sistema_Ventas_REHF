@@ -586,16 +586,16 @@ class Tb_transacciones_ventas extends Table {
 
           if (!has) {
             setProdutoId.add(venta.producto_id);
-            return false;
+            return true;
           }
 
           if (mapProductos.has(venta.producto_id))
             mapProductos.get(venta.producto_id).push(venta);
           else
-            mapProductos.set(venta.producto_id, venta);
+            mapProductos.set(venta.producto_id, [venta]);
 
           dltVentaId.push(venta.id);
-          return true;
+          return false;
         })
 
         let importeReal = totalVentaReal + (totalVentaReal * igv);

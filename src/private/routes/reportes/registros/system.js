@@ -29,7 +29,7 @@ $('.content-body').ready(async () => {
       if (!exist)
         return cardSystem.remove();
 
-      cardSystem.style.direction = '';
+      cardSystem.style.display = '';
 
       let code = new Code('.log', boxSystem, text);
       downloadSystem.addEventListener('click', () => code.download());

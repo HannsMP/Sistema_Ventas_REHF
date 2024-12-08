@@ -236,6 +236,10 @@ class Tb_compras extends Table {
           transaccion_id
         ]);
 
+        if (result.affectedRows) this.app.model.tb_productos.updateIdBussines(producto_id, {
+          stock_disponible: cantidad
+        })
+
         res(result)
       } catch (e) {
         rej(e);
@@ -420,7 +424,7 @@ class Tb_compras extends Table {
 
         if (currentProductoCompra.producto_id == producto_id) {
 
-          if (currentProductoCompra.cantidad == cantidad)
+          if (currentProductoCompra.cantidad != cantidad)
             this.app.model.tb_productos.updateIdBussines(currentProductoCompra.producto_id, {
               stock_disponible: cantidad - currentProductoCompra.cantidad
             })

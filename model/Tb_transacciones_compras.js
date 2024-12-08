@@ -515,22 +515,23 @@ class Tb_transacciones_compras extends Table {
 
           if (!has) {
             setProdutoId.add(key);
-            return false;
+            return true;
           }
 
           if (mapProductos.has(key))
             mapProductos.get(key).push(compra);
           else
-            mapProductos.set(key, compra);
+            mapProductos.set(key, [compra]);
 
           dltCompraId.push(compra.id);
-          return true;
+          return false;
         });
 
         let importeReal = totalCompraReal + (totalCompraReal * igv);
 
         comprasFilter.forEach(compraFilter => {
           let key = `${compraFilter.producto_id}:${compraFilter.compra}`;
+
           mapProductos.get(key)?.forEach(compraDuplicate => {
             compraFilter.cantidad += compraDuplicate.cantidad;
           });

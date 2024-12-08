@@ -17,7 +17,7 @@ class Precio_venta {
 
     this.io = app.socket.node.selectNode('/control/servidor/cerebro');
 
-    let { create, netJson, limit, trainResult, optionNeural = this.optionNeural } = this.fileJSON.readJSON();
+    let { create, netJson, limit, optionNeural = this.optionNeural } = this.fileJSON.readJSON();
 
     this.neural = new NeuralNetwork(optionNeural);
 
@@ -74,30 +74,42 @@ class Precio_venta {
         ((p.venta - sub.min_venta) / (sub.max_venta - sub.min_venta)) AS output
       FROM
         tb_productos p
-      INNER
-        JOIN
-          tb_compras c
-        ON
-          c.producto_id = p.id
-      INNER
-        JOIN
-          (
-            SELECT
-              MIN(c.compra) AS min_compra,
-              MAX(c.compra) AS max_compra,
-              MIN(p.venta) AS min_venta,
-              MAX(p.venta) AS max_venta
-            FROM
-              tb_productos p
-            INNER JOIN
-              tb_compras c
-            ON
-              c.producto_id = p.id
-            WHERE
-              p.estado = 1 AND c.compra IS NOT NULL
-          ) sub
-        ON
-          c.producto_id = p.id
+      INNER JOIN
+        (
+          SELECT
+            c.producto_id,
+            c.compra,
+            t.creacion
+          FROM
+            tb_compras c
+          INNER JOIN
+            tb_transacciones_compras t
+          ON
+            c.transaccion_id = t.id
+          WHERE
+            t.creacion = (
+              SELECT MAX(t2.creacion)
+              FROM tb_compras c2
+              INNER JOIN tb_transacciones_compras t2 ON c2.transaccion_id = t2.id
+              WHERE c2.producto_id = c.producto_id
+            )
+        ) c ON c.producto_id = p.id
+      INNER JOIN
+        (
+          SELECT
+            MIN(c.compra) AS min_compra,
+            MAX(c.compra) AS max_compra,
+            MIN(p.venta) AS min_venta,
+            MAX(p.venta) AS max_venta
+          FROM
+            tb_productos p
+          INNER JOIN
+            tb_compras c
+          ON
+            c.producto_id = p.id
+          WHERE
+            p.estado = 1 AND c.compra IS NOT NULL
+        ) sub ON c.producto_id = p.id
       WHERE
         p.estado = 1 AND c.compra IS NOT NULL;
     `)
@@ -110,10 +122,7 @@ class Precio_venta {
     iterations ??= 25000;
     errorThresh ??= 0.005;
 
-    let trainResult = this.neural.train(data, {
-      iterations,
-      errorThresh
-    });
+    let trainResult = this.neural.train(data, { iterations, errorThresh });
 
     let netJson = this.neural.toJSON();
 

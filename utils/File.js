@@ -24,16 +24,20 @@ class File {
 
     this.property = parse(this.#pathFile)
 
-    this.#ensuringExist();
+    this.mkdir();
   }
-  #ensuringExist() {
-    if (existsSync(this.#pathFile)) return true;
+  mkdir() {
+    if (this.exist()) return true;
+
     mkdirSync(dirname(this.#pathFile), { recursive: true });
     this.writeFile(this.#option.default);
   }
   /** @param {boolean} state  */
-  saveChanges(state) {
+  setAutoSave(state) {
     this.#option.autoSave = state;
+  }
+  exist() {
+    return existsSync(this.#pathFile);
   }
   /** @param {string} data  */
   writeFile(data) {

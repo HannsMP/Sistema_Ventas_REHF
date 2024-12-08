@@ -25,7 +25,7 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
-    socket.emit('/read/success', (text, stat, exist) => {
+    socket.emit('/read/success', (text, stat) => {
       let code = new Code('.log', boxSuccess, text);
       downloadSuccess.addEventListener('click', () => code.download());
       sizeSuccess.textContent = bytesToKb(stat.size);

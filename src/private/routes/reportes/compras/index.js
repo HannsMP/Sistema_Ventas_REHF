@@ -591,7 +591,7 @@ $('.content-body').ready(async () => {
 
       let compraValue = Number(inputEditarComprasPrecio.value);
       if (!compraValue) return formError(`Se require una cantidad!.`, inputEditarComprasPrecio);
-      if (Number(inputEditarComprasPrecio.value) < smallEditarComprasVenta.currentValue)
+      if (Number(inputEditarComprasPrecio.value) > smallEditarComprasVenta.currentValue)
         return formError(`El precio de compra es mayor al de venta!.`, inputEditarComprasPrecio);
       jsonData.compra = compraValue;
 

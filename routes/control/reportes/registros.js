@@ -120,19 +120,10 @@ module.exports = {
     /** @param {()=>void} res */
     let readSystem = async (res) => {
       try {
-        let text, stat, exist;
+        let exist = this.logSystem.exist();
 
-        try {
-          text = this.logSystem.readFile();
-          stat = this.logSystem.statFile();
-          exist = true;
-        } catch (e) {
-          console.log(e);
-
-          text = '';
-          stat = { size: 0 };
-          exist = false;
-        }
+        let text = exist ? this.logSystem.readFile() : '';
+        let stat = exist ? this.logSystem.statFile() : { size: 0 };
 
         res(text, stat, exist)
       } catch (e) {

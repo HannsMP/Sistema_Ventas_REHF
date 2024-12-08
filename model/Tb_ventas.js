@@ -445,7 +445,7 @@ class Tb_ventas extends Table {
         if (currentProductoVenta.producto_id == producto_id) {
           importe = cantidad * (currentProductoVenta.importe / currentProductoVenta.cantidad);
 
-          if (currentProductoVenta.cantidad == cantidad)
+          if (currentProductoVenta.cantidad != cantidad)
             this.app.model.tb_productos.updateIdBussines(currentProductoVenta.producto_id, {
               stock_disponible: currentProductoVenta.cantidad - cantidad
             })

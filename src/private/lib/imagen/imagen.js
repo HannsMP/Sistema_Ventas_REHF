@@ -162,10 +162,7 @@ class ImageManager {
     if (dataImage) this.files = this.files.filter(f => f !== dataImage);
 
     imgDiv.remove();
-
     this.ev.emit('remove', imgDiv);
-
-    console.log(this.#options);
 
     if (!this.#options.multi && this.#options.autohide)
       this.upload.style.display = '';
@@ -174,6 +171,9 @@ class ImageManager {
   empty() {
     this.files = [];
     this.imgBox.innerHTML = '';
+
+    if (!this.#options.multi && this.#options.autohide)
+      this.upload.style.display = '';
   }
 
   charge(imageSrc) {
