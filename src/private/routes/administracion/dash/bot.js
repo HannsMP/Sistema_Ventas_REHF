@@ -50,7 +50,7 @@ $('.content-body').ready(async () => {
         botUsuarioSmall.textContent = name?.toUpperCase();
         botUsuario.computedStyleMap.display = '';
 
-        socket.emit('/dash/bot', (err, avatar) => {
+        socket.emit('/imagen/bot', (err, avatar) => {
           if (err)
             return alarm.error(err);
           

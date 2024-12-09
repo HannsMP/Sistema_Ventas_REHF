@@ -350,8 +350,6 @@ class Tb_productos extends Table {
           stock_disponible,
           venta
         } = data;
-
-        console.log(id, data);
         
         if (!stock_disponible && !venta) return;
         let query = `

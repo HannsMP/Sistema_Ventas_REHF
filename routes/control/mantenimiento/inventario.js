@@ -217,7 +217,8 @@ module.exports = {
           avanzado,
           cantidad,
           compra,
-          proveedor_id
+          proveedor_id,
+          transaccion_id
         } = productoData;
 
         let codigo = await this.model.tb_productos.getCodigo();
@@ -232,30 +233,42 @@ module.exports = {
           estado,
           venta,
 
-          stock_disponible: avanzado ? cantidad || 0 : 0
+          stock_disponible: 0
         });
 
+        let producto_id = result.insertId;
+
         if (avanzado) {
-          let resultTransCompra = await this.model.tb_transacciones_compras.insert({
-            codigo: await this.model.tb_transacciones_compras.getCodigo(),
-            usuario_id: myId,
-            proveedor_id,
-            importe_total: cantidad * compra,
-            metodo_pago_id: 1
-          })
+
+          let isRefresh = !!transaccion_id;
+
+          if (!transaccion_id) {
+            let resultTransCompra = await this.model.tb_transacciones_compras.insert({
+              codigo: await this.model.tb_transacciones_compras.getCodigo(),
+              usuario_id: myId,
+              proveedor_id,
+              importe_total: cantidad * compra,
+              metodo_pago_id: 1
+            })
+
+            transaccion_id = resultTransCompra.insertId;
+          }
 
           this.model.tb_compras.insert({
-            transaccion_id: resultTransCompra.insertId,
-            producto_id: result.insertId,
+            transaccion_id,
+            producto_id,
             cantidad,
             compra
           })
 
+          if (isRefresh)
+            await this.model.tb_transacciones_compras.refreshId(Number(transaccion_id));
+
           this.model.tb_compras.io.tagsName.get(`usr:${myId}`)?.emit(
             '/transacciones_compras/data/insert',
             _ => [{
-              transaccion_id: resultTransCompra.insertId,
-              producto_id: result.insertId,
+              transaccion_id,
+              producto_id,
               cantidad,
               compra
             }]
@@ -271,9 +284,9 @@ module.exports = {
     }
 
     /** 
-    * @param {number} myId 
-    * @param {MapUpload} uploadMap
-    * @param {{
+     * @param {number} myId 
+     * @param {MapUpload} uploadMap
+     * @param {{
      *   id:number,
      *   data?:Upload.DataUpdate,
      *   chunkLength?:number,
@@ -490,6 +503,29 @@ module.exports = {
       res(result)
     }
 
+    /** @param {number} myId @param {SelectorRequest} selectorReq @param {SelectorEnd} res */
+    let selectorCompra = async (myId, selectorReq, res) => {
+      let result = {
+        recordsTotal: 0,
+        recordsFiltered: 0,
+        data: []
+      }
+
+      try {
+        let data = this.model.tb_transacciones_compras.SelectorInParts(selectorReq, myId);
+        let recordsFiltered = this.model.tb_transacciones_compras.SelectorInPartsCount(selectorReq, myId);
+        let recordsTotal = this.model.tb_transacciones_compras.readCount();
+
+        result.data = await data;
+        result.recordsFiltered = await recordsFiltered;
+        result.recordsTotal = await recordsTotal;
+      } catch (e) {
+        return this.logError.writeStart(e.message, e.stack)
+      }
+
+      res(result)
+    }
+
     node.ev.on('connected', socket => {
       let myId = socket.session.usuario_id;
       /** @type {MapUpload} */
@@ -504,6 +540,7 @@ module.exports = {
       socket.on('/predict/precio_venta', predictPrecioVenta)
       socket.on('/selector/categorias', selectorCategoria)
       socket.on('/selector/proveedor', selectorProveedor)
+      socket.on('/selector/compra', selectorCompra.bind(null, myId))
     })
   }
 }

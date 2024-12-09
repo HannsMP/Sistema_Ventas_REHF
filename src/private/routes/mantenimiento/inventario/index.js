@@ -40,6 +40,8 @@ $('.content-body').ready(async () => {
     /** @type {HTMLInputElement} */
     let inputNuevoSelectorProveedor = document.getElementById('nuevo-proveedor');
     /** @type {HTMLInputElement} */
+    let inputNuevoSelectorCompra = document.getElementById('transaccion-compra');
+    /** @type {HTMLInputElement} */
     let checkboxNuevoEstado = document.getElementById('nuevo-estado');
     /** @type {HTMLAnchorElement} */
     let btnNuevo = tableNuevo.querySelector('.btn');
@@ -191,6 +193,10 @@ $('.content-body').ready(async () => {
       (req, end) => socket.emit('/selector/proveedor', req, res => end(res)),
       { showIndex: false, order: 'asc', noInclude: true }
     );
+    let selectorOptionsCompras = new OptionsServerside(
+      (req, end) => socket.emit('/selector/compra', req, res => end(res)),
+      { showIndex: false, order: 'desc', noInclude: true }
+    );
 
     /* ===================== SOCKET ===================== */
 
@@ -219,6 +225,11 @@ $('.content-body').ready(async () => {
       ==================================================
     */
 
+    let selectorTransaccionCompra = new SelectorInput(
+      inputNuevoSelectorCompra,
+      selectorOptionsCompras,
+      { autohide: true }
+    );
     let selectorNuevoProveedor = new SelectorInput(
       inputNuevoSelectorProveedor,
       selectorOptionsProveedor,
@@ -287,8 +298,6 @@ $('.content-body').ready(async () => {
       emptyNuevo() {
         if (this.now != 'nuevo') return;
         inputNuevoText.forEach(i => i.value = '');
-        selectorNuevoCategoria.empty();
-        selectorNuevoProveedor.empty();
         imagenNuevoUnic.empty();
       },
       emptyEditar() {
@@ -422,6 +431,10 @@ $('.content-body').ready(async () => {
         let selectProveedor = selectorNuevoProveedor.selected[0];
         if (!selectProveedor) return formError(`Selecciona un proveedor`, inputNuevoSelectorProveedor);
         jsonData.proveedor_id = Number(selectProveedor.id);
+
+        selectorTransaccionCompra
+        let selectCompra = selectorTransaccionCompra.selected[0];
+        jsonData.transaccion_id = Number(selectCompra?.id) || null;
       }
 
       let file = imagenNuevoUnic.files[0];
